@@ -1,6 +1,6 @@
 ---
 title: "Backing the favourite wins one race in three and loses money"
-dek: "Across 33,508 races, the morning favourite won 32.8% of the time and returned −3.90% after commission. The place favourite at short odds won 78.8% of its bets and still lost. Strike rate and profit are different quantities."
+dek: "Across 33,508 races, the morning favourite won 32.8% of the time and returned −3.90% after commission. The place favourite, where it started at 1.5 or shorter, won 78.8% of its bets and still lost. Strike rate and profit are different quantities."
 description: "33,508 UK and Irish races measured: the favourite wins 32.8% of the time and loses 3.90% per bet after commission. Why strike rate is not profit."
 sample: "33,508 races · UK & Ireland · 6.5% commission applied"
 window: "1 January 2024 – 5 September 2026"
@@ -54,7 +54,7 @@ No filters. No staking plan. Every race in the window, flat stakes.
       <td data-label="95% interval" class="num faint">−3.17% to −1.23%</td>
     </tr>
     <tr>
-      <td data-label="Bet">Place favourite, odds-on</td>
+      <td data-label="Bet">Place favourite, 1.5 or shorter</td>
       <td data-label="Strike rate" class="num">78.8%</td>
       <td data-label="Before commission" class="num">—</td>
       <td data-label="After commission" class="num">−1.22%</td>
@@ -75,7 +75,7 @@ All four intervals sit entirely below zero. This is not the familiar "the result
 
 ## Being right 78.8% of the time
 
-The third row is the sharpest version of the point. Restrict the bet to the place favourite in races where it started odds-on, and you win **78.8%** of your bets. Four winners in every five. It still returns **−1.22%**.
+The third row is the sharpest version of the point. Restrict the bet to the place favourite in races where it started at **1.5 or shorter**, and you win **78.8%** of your bets. Four winners in every five. It still returns **−1.22%**.
 
 The arithmetic is not subtle. A bet that wins 78.8% of the time pays short, because that is what 78.8% is worth. Each winner returns a fraction of the stake; each loser costs the stake in full. At a fair price those two quantities cancel exactly. Commission is then deducted from the winners and from nothing else, so the cancellation breaks in one direction only.
 
