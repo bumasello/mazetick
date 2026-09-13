@@ -124,15 +124,31 @@ quebrar. Nove checagens:
 | sem script externo além do beacon | e o beacon está declarado na política |
 | sem literal de cor no fonte | os tokens são a única fonte |
 
-**A regra que este arquivo aplica: toda checagem varre TODAS as páginas
-geradas, nunca uma amostra e nunca uma região.** Ela existe porque a lista
-manual anterior checava "links do rodapé: nenhum 404" e passava — os `href`
-estavam certos, e o que quebrou foi o texto ao redor deles. E a inspeção do
-artigo varreu só o `<main>`, deixando de fora o rodapé, que está em toda página.
-Escopo de verificação é onde este projeto mais escorrega.
+Duas regras governam este arquivo:
 
-Para conferir que o verificador ainda morde, quebre algo de propósito e rode o
-build: ele tem de falhar.
+**1. Toda checagem varre TODAS as páginas geradas, nunca uma amostra e nunca
+uma região.** A lista manual anterior checava "links do rodapé: nenhum 404" e
+passava — os `href` estavam certos, e o que quebrou foi o texto ao redor deles.
+E a inspeção do artigo varreu só o `<main>`, deixando de fora o rodapé, que está
+em toda página. Escopo de verificação é onde este projeto mais escorrega.
+
+**2. Um verificador que nunca falhou não foi verificado.** Ao acrescentar uma
+checagem, quebre de propósito o que ela deve pegar, confirme que o build falha,
+restaure, confirme que passa. E confira o código de saída: um script que imprime
+"FALHOU" e devolve 0 é decoração.
+
+```bash
+npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
+```
+
+## Artigos segurados
+
+`draft: true` no frontmatter tira o artigo do índice **e não gera a rota** —
+nada é publicado. O cabeçalho do arquivo tem de dizer por que está segurado e o
+que precisa acontecer para sair.
+
+Hoje: `cost-of-crossing-the-spread.md`, medido em um dia só, aguardando
+remedição contra os 26 dias já coletados.
 
 Visual (precisa de `libasound2` no WSL):
 `npx playwright install chromium && sudo npx playwright install-deps`

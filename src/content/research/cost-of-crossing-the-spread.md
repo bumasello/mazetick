@@ -10,6 +10,24 @@ measured: 2026-08-20
 published: 2026-09-13
 verdict: negative
 order: 5
+
+# ⛔ SEGURADO — não publicar até a remedição (decidido em 2026-09-13)
+#
+# Este artigo está medido em UM DIA (20/08/2026, 16.569 cotações, 148 corridas)
+# — exatamente o defeito que fez o artigo do each-way ser segurado e remedido
+# no mesmo dia. O coletor do Smarkets roda desde 20/08: já são 26 dias e
+# 402.233 cotações, 24× a amostra, sem custo nenhum.
+#
+# E aqui a aposta é maior que o artigo. O dia medido foi a quinta-feira da
+# semana do Ebor em York, quando a liquidez é alta demais — se enviesa, enviesa
+# para livro APERTADO, ou seja, para um custo MENOR que o normal. O custo de
+# atravessar o spread é o número que matou a nossa estratégia de trading; se ele
+# mudar, muda a decisão, não só o texto.
+#
+# A remedição é trabalho de laboratório e roda na sessão de orquestração.
+# Quando o número novo chegar: atualizar sample/window/windowShort/measured e
+# a seção "A célula que decidiu", e só então remover `draft`.
+draft: true
 limits:
   - "This is one day — a Thursday of a major festival week. If a busy day biases the result, it biases it towards tighter books and a more favourable answer than normal, not a worse one."
   - "It is one exchange, and a smaller one. Its books are wider than the largest exchange's, so this is an upper bound on cost, not a measurement of the cheapest venue available. It cannot show that trading is expensive everywhere; it shows that cheap execution cannot be assumed without measuring it."
