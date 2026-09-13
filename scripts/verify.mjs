@@ -150,18 +150,40 @@ check(
   })(),
 );
 
-// 10. Cor hardcoded no HTML GERADO. Distinta da checagem 9: aquela olha o
-//     fonte, e esta existe porque o realce de sintaxe do Astro injetava um tema
-//     com background-color:#24292e direto no HTML — um bloco escuro fora do
-//     sistema, que a checagem sobre src/ não tinha como ver. Mesma classe de
-//     erro das outras duas: a verificação olhava a região errada.
-check(
-  'Sem cor hardcoded no HTML gerado',
-  pages.flatMap((f) => {
-    const m = read(f).match(/style="[^"]*(?:background-)?color\s*:\s*#[0-9A-Fa-f]{3,8}[^"]*"/g);
-    return m ? [...new Set(m)].map((x) => `${rel(f)}: ${x.slice(0, 70)}`) : [];
-  }),
-);
+// 10. Cor fora dos tokens no ARTEFATO SERVIDO — HTML e bundle CSS.
+//
+//     A checagem 9 vigia a intenção (nenhum componente escreve cor literal);
+//     esta vigia o que o leitor recebe, e as duas não são a mesma pergunta. Ela
+//     nasceu porque o realce de sintaxe do Astro injetava background-color
+//     #24292e direto no HTML, onde a 9 não tinha como ver.
+//
+//     Varre também o CSS gerado, e não só o HTML: cor pode entrar no bundle por
+//     um <style> de componente, por uma dependência ou por uma integração, e aí
+//     nem a 9 nem uma checagem só de HTML a veriam. A lista de permitidas é
+//     derivada de tokens.css — a única fonte de cor do sistema.
+{
+  const allowed = new Set(
+    (fs.readFileSync('src/styles/tokens.css', 'utf8').match(/#[0-9A-Fa-f]{3,8}\b/g) || [])
+      .map((c) => c.toLowerCase()),
+  );
+  const problems = [];
+
+  for (const f of pages) {
+    const m = read(f).match(/style="[^"]*#[0-9A-Fa-f]{3,8}[^"]*"/g) || [];
+    for (const x of new Set(m)) problems.push(`${rel(f)}: ${x.slice(0, 70)}`);
+  }
+
+  for (const f of all.filter((x) => x.endsWith('.css'))) {
+    const found = new Set(
+      (read(f).match(/#[0-9A-Fa-f]{3,8}\b/g) || []).map((c) => c.toLowerCase()),
+    );
+    for (const c of found) {
+      if (!allowed.has(c)) problems.push(`${rel(f)}: ${c} não está em tokens.css`);
+    }
+  }
+
+  check('Sem cor fora dos tokens no artefato servido', problems);
+}
 
 console.log();
 if (fail.length) {

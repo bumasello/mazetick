@@ -1,5 +1,5 @@
 ---
-title: "Crossing the spread costs 7.1%, and our first measurement was wrong"
+title: "Crossing the spread costs 3.5%, and our first measurement was wrong"
 dek: "We measured the cost of trading a race market, published the figure internally, and abandoned a strategy partly because of it. Then we found the bug: one line of our filter read the year out of a URL instead of the course, so a third of the quotes were not British or Irish racing at all."
 description: "212,373 order-book quotes over 26 days: crossing the spread costs 3.53%. Our first figure was inflated by a filter that never filtered."
 sample: "212,373 quotes · 1,089 races · 26 consecutive days · UK & Ireland"
@@ -55,19 +55,21 @@ An earlier draft of this very article contained the sentence: *"Note that the bo
   <thead>
     <tr>
       <th scope="col">Odds band</th>
-      <th scope="col" class="num">Morning</th>
+      <th scope="col" class="num">Morning width</th>
       <th scope="col" class="num">Ticks</th>
       <th scope="col" class="num">Afternoon</th>
       <th scope="col" class="num">Near the off</th>
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Band">4 – 8</td><td data-label="Morning" class="num">7.1%</td><td data-label="Ticks" class="num">3.0</td><td data-label="Afternoon" class="num">5.6%</td><td data-label="Near off" class="num">3.8%</td></tr>
-    <tr><td data-label="Band">8 – 13</td><td data-label="Morning" class="num">11.7%</td><td data-label="Ticks" class="num">3.2</td><td data-label="Afternoon" class="num">9.0%</td><td data-label="Near off" class="num">6.4%</td></tr>
-    <tr><td data-label="Band">13 – 20</td><td data-label="Morning" class="num">14.9%</td><td data-label="Ticks" class="num">5.0</td><td data-label="Afternoon" class="num">11.7%</td><td data-label="Near off" class="num">8.3%</td></tr>
+    <tr><td data-label="Band">4 – 8</td><td data-label="Morning width" class="num">7.1%</td><td data-label="Ticks" class="num">3.0</td><td data-label="Afternoon" class="num">5.6%</td><td data-label="Near off" class="num">3.8%</td></tr>
+    <tr><td data-label="Band">8 – 13</td><td data-label="Morning width" class="num">11.7%</td><td data-label="Ticks" class="num">3.2</td><td data-label="Afternoon" class="num">9.0%</td><td data-label="Near off" class="num">6.4%</td></tr>
+    <tr><td data-label="Band">13 – 20</td><td data-label="Morning width" class="num">14.9%</td><td data-label="Ticks" class="num">5.0</td><td data-label="Afternoon" class="num">11.7%</td><td data-label="Near off" class="num">8.3%</td></tr>
   </tbody>
 </table>
 </div>
+
+Those figures are the **width** of the book — the whole gap between the two sides. Crossing it costs **half** of that against the mid price, because you cross one side, not both. The distinction matters: at odds 4 to 8 in the morning the book is 7.1% wide and entering a position costs 3.53%.
 
 The book tightens through the day in every band, by roughly half between morning and the off. That is what an order book is supposed to do, and it is the first sign that the instrument is now reading something real.
 
@@ -79,7 +81,7 @@ The signal we were evaluating entered at a median price of about 5.85 — the fi
 <table class="dense">
   <thead>
     <tr>
-      <th scope="col">Spread, odds 4–8, morning</th>
+      <th scope="col">Spread width, odds 4–8, morning</th>
       <th scope="col" class="num">p10</th>
       <th scope="col" class="num">p25</th>
       <th scope="col" class="num">median</th>
@@ -88,13 +90,13 @@ The signal we were evaluating entered at a median price of about 5.85 — the fi
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Measure">As % of price</td><td data-label="p10" class="num">3.4</td><td data-label="p25" class="num">5.2</td><td data-label="median" class="num"><strong>7.1</strong></td><td data-label="p75" class="num">10.1</td><td data-label="p90" class="num">14.1</td></tr>
+    <tr><td data-label="Measure">Width, % of price</td><td data-label="p10" class="num">3.4</td><td data-label="p25" class="num">5.2</td><td data-label="median" class="num"><strong>7.1</strong></td><td data-label="p75" class="num">10.1</td><td data-label="p90" class="num">14.1</td></tr>
     <tr><td data-label="Measure">In ticks</td><td data-label="p10" class="num">—</td><td data-label="p25" class="num">2.0</td><td data-label="median" class="num"><strong>3.0</strong></td><td data-label="p75" class="num">4.0</td><td data-label="p90" class="num">6.0</td></tr>
   </tbody>
 </table>
 </div>
 
-Crossing a spread costs half of it against the mid price: **3.53%**, against a gross signal of 5.39%. **65% of the edge, consumed on entry.**
+Half of that median width is what entering costs against the mid price: **3.53%**, against a gross signal of 5.39%. **65% of the edge, consumed on entry** — and that is one side only, before any cost of getting out.
 
 Twenty-two per cent of quotes show a two-tick book, 72% fit within four ticks, and 91% within six. Liquidity was never the constraint — the amount available at the best price had a median of about £45, with £12 at the tenth percentile, which is ample for any stake under discussion.
 
