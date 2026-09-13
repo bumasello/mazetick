@@ -1,11 +1,42 @@
-# mazetick.com
+# mazetick
 
-Portal de dados de turfe de UK/IRE. O produto é a **camada de mercado carimbada
-no tempo** — o que se sabia a cada hora do dia.
+**Time-stamped market data for UK and Irish horse racing** — a record of what
+could be known at each hour of the day, and the measurements behind it.
 
-Site estático (Astro), publicado no **Cloudflare Pages**. O repositório do
-laboratório (modelos, coleta, sondas) é o `horsing-maze` e fica **separado deste
-de propósito**: aqui não entra segredo, chave nem acesso a banco.
+Racing Post, Sporting Life and At The Races already publish the racecard, the
+form and the prices, free and better than we would. What none of them publishes
+is *how any of it moved through the day*: which each-way terms a bookmaker was
+advertising at 10:00 and again at 14:00, how wide the book was, whether the
+going changed after the 04:00 declaration. Those facts exist only if somebody
+records them continuously, and once the day is over they cannot be recovered.
+
+**We publish measurements, not tips.** We do not sell selections and we do not
+promise a return — because we spent two years trying to beat these markets with
+machine learning and with classic handicapping rules, measured it honestly, and
+neither worked. Those failures are published rather than buried, with their
+sample sizes. A site that tells you a bet winning 78.8% of the time still loses
+money has no reason to flatter the next number it shows you.
+
+This repository is the website: a static Astro site, deployed to Cloudflare
+Pages. The research that feeds it lives in
+[horsing-maze](https://github.com/bumasello/horsing-maze), kept **separate on
+purpose** — no key, no secret and no database access belongs here.
+
+### What is worth stealing from this repo
+
+Two things, if you build anything that publishes numbers:
+
+- **`src/content.config.ts`** makes sample size, window, method and measurement
+  date *required* fields. An article whose sample is not declared does not
+  compile.
+- **`scripts/verify.mjs`** runs inside `npm run build` and fails the build. Ten
+  checks, governed by two rules learned the hard way — see
+  [Verificação](#verificação).
+
+---
+
+*O restante deste README está em português, que é a língua de trabalho do
+projeto. O site é em inglês britânico.*
 
 ## Regras invioláveis
 
@@ -152,3 +183,14 @@ remedição contra os 26 dias já coletados.
 
 Visual (precisa de `libasound2` no WSL):
 `npx playwright install chromium && sudo npx playwright install-deps`
+
+## Licence
+
+The code in this repository is licensed under the MIT Licence
+(see `LICENSE`).
+
+The written content — the articles under `src/content/`, together with the
+measurements and figures they report — is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). You are free to
+share and adapt it, including commercially, provided you credit mazetick.com
+and link back.
