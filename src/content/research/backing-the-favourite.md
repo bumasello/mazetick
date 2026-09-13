@@ -4,6 +4,7 @@ dek: "Across 33,508 races, the morning favourite won 32.8% of the time and retur
 description: "33,508 UK and Irish races measured: the favourite wins 32.8% of the time and loses 3.90% per bet after commission. Why strike rate is not profit."
 sample: "33,508 races · UK & Ireland · 6.5% commission applied"
 window: "1 January 2024 – 5 September 2026"
+windowShort: "Jan 2024 – Sep 2026"
 method: "Selection at the morning price; every bet settled at the exchange starting price. No filters, no staking plan."
 measured: 2026-09-06
 published: 2026-09-13

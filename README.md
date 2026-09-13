@@ -107,14 +107,32 @@ src/
 └── pages/
 ```
 
-## Verificação antes de publicar
+## Verificação
 
-```bash
-npm run build
-grep -c 'data-density="full"' dist/*.html          # estado inicial indexável
-grep -ho 'rel="canonical"[^>]*' dist/*.html        # sem .html, casa com o sitemap
-grep -ri 'betfair' dist/                           # tem de dar VAZIO (regra 2)
-```
+`npm run build` roda `scripts/verify.mjs` no fim e **falha com exit 1** se algo
+quebrar. Nove checagens:
+
+| checagem | por quê |
+|---|---|
+| sem Betfair/BSP no HTML | regra 2 — nenhum preço deles vira campo na tela |
+| espaçamento em volta de `<a>` inline | o compilador apara a quebra de linha em vez de virar espaço, e o texto gruda |
+| `data-density="full"` no HTML servido | é o estado que o Google indexa |
+| `lang="en-GB"` | o site é britânico |
+| canônica sem `.html` | tem de casar com o sitemap |
+| canônicas ⊆ sitemap | senão a página compete consigo mesma no índice |
+| links internos | nenhum 404 |
+| sem script externo além do beacon | e o beacon está declarado na política |
+| sem literal de cor no fonte | os tokens são a única fonte |
+
+**A regra que este arquivo aplica: toda checagem varre TODAS as páginas
+geradas, nunca uma amostra e nunca uma região.** Ela existe porque a lista
+manual anterior checava "links do rodapé: nenhum 404" e passava — os `href`
+estavam certos, e o que quebrou foi o texto ao redor deles. E a inspeção do
+artigo varreu só o `<main>`, deixando de fora o rodapé, que está em toda página.
+Escopo de verificação é onde este projeto mais escorrega.
+
+Para conferir que o verificador ainda morde, quebre algo de propósito e rode o
+build: ele tem de falhar.
 
 Visual (precisa de `libasound2` no WSL):
 `npx playwright install chromium && sudo npx playwright install-deps`

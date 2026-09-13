@@ -27,9 +27,10 @@ const jsonLd = {
   author: { '@id': 'https://mazetick.com/#org' },
 };
 
+// O rótulo descreve o destino da afirmação testada, não a qualidade do achado.
 const verdictLabel: Record<typeof d.verdict, string> = {
-  negative: 'Negative result',
-  positive: 'Positive result',
+  negative: 'Refuted',
+  positive: 'Held up',
   inconclusive: 'Inconclusive',
 };
 ---

@@ -22,8 +22,10 @@ const research = defineCollection({
       // --- O bloco de método. Obrigatório, sem excepção. ---
       /** ex.: "33,508 races · 6.5% commission applied" */
       sample: z.string(),
-      /** ex.: "1 Jan 2024 – 5 Sep 2026" */
+      /** A janela por extenso, para o bloco de método. ex.: "1 January 2024 – 5 September 2026" */
       window: z.string(),
+      /** A mesma janela em forma escaneável, para a tabela do índice. */
+      windowShort: z.string().max(26),
       /** Como foi medido, em uma frase legível. */
       method: z.string(),
       /** Data da medição, ISO. Alimenta o MethodBox E o JSON-LD. */
@@ -33,8 +35,12 @@ const research = defineCollection({
       updated: z.coerce.date().optional(),
 
       /**
-       * O veredicto em uma palavra. O site publica resultado negativo com
-       * amostra grande — é o conteúdo que ninguém no nicho tem.
+       * O que aconteceu com a AFIRMAÇÃO TESTADA, não com o nosso humor:
+       *   negative      → a afirmação caiu (rótulo: "Refuted")
+       *   positive      → sobreviveu ao teste (rótulo: "Held up")
+       *   inconclusive  → a amostra não decide
+       * O site publica refutação com amostra grande — é o conteúdo que ninguém
+       * no nicho tem, e é o motivo para acreditar no resto das páginas.
        */
       verdict: z.enum(['negative', 'positive', 'inconclusive']),
 
