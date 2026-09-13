@@ -1,0 +1,58 @@
+---
+// O único JS de aplicação da página. Troca data-density no <html> e guarda a
+// escolha no navegador do leitor. Renderiza apenas onde há algo para apertar.
+---
+<div class="toggle" role="group" aria-label="Table density">
+  <button type="button" data-density-set="full" aria-pressed="true">Full</button>
+  <button type="button" data-density-set="compact" aria-pressed="false">Compact</button>
+</div>
+
+<style>
+  .toggle {
+    display: flex;
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .toggle button {
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    padding: var(--toggle-y) var(--sp-3);
+    border: 0;
+    background: transparent;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .toggle button[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--ground);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll('[data-density-set]');
+
+    function paint() {
+      var current = root.dataset.density || 'full';
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.densitySet === current));
+      });
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () {
+        root.dataset.density = b.dataset.densitySet;
+        try {
+          localStorage.setItem('mazetick:density', b.dataset.densitySet);
+        } catch (e) {
+          /* Sem localStorage a escolha vale só para esta visita. Tudo bem. */
+        }
+        paint();
+      });
+    });
+
+    paint();
+  })();
+</script>

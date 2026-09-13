@@ -1,0 +1,114 @@
+/* ============================================================================
+   mazetick — design tokens
+   ----------------------------------------------------------------------------
+   Transcrição 1:1 de docs/site_handoff.md → docs/design_tokens.md §1–3
+   (repo horsing-maze), extraídos da direção aprovada em 2026-09-13.
+
+   REGRA: nenhum componente escreve cor, tamanho ou espaçamento literal.
+   Se um valor não está aqui, ele não existe.
+   ========================================================================== */
+
+:root {
+  /* -- §1 Cor ---------------------------------------------------------------
+     Um acento só. Tudo o mais é neutro de tom frio-esverdeado — escolhido para
+     não brigar com o verde e para não parecer papel amarelado. */
+  --ground:       #FCFBF8;  /* fundo da página */
+  --panel:        #F3F5F0;  /* cartão de "mudou hoje" — único preenchimento */
+  --ink:          #171A19;  /* texto principal, régua pesada de seção */
+  --ink-muted:    #4B534C;  /* texto de apoio, coluna de tipo de corrida */
+  --ink-faint:    #7C867F;  /* rótulos, unidades, carimbo de hora */
+  --ink-ghost:    #ADB3A9;  /* valor antigo riscado (4 → 5) */
+  --rule:         #EAEBE3;  /* linha entre linhas de tabela */
+  --rule-med:     #E3E4DC;  /* divisor de seção, borda de controle */
+  --accent:       #1F5E4B;  /* verde: "melhor que o padrão" */
+  --accent-hover: #14402F;
+
+  /* A REGRA SEMÂNTICA, que vale mais que os hex:
+       --accent     → "melhor que o padrão" (mais vagas, upgrade hoje)
+       --ink-faint  → "igual ao padrão": discreto, NUNCA cinza "apagado"
+       --ink-ghost  → valor ANTERIOR numa mudança, com line-through
+
+     ⚠️ Verde NÃO quer dizer "aposte aqui". Quer dizer "difere do padrão para
+     cima". A página não recomenda nada — regra 1 do site_handoff.md. */
+
+  /* -- §2 Tipografia -------------------------------------------------------
+     Três famílias, três funções. Nenhuma é Inter, Roboto ou Arial. */
+  --font-display: "Newsreader Variable", "Newsreader", Georgia, serif;
+  --font-body:    "Archivo Variable", "Archivo", system-ui, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+
+  --fs-display-xl:  52px;   /* numeral da barra lateral */
+  --fs-display-l:   46px;   /* manchete */
+  --fs-numeral:     34px;   /* valor novo numa mudança */
+  --fs-numeral-old: 30px;   /* valor antigo, riscado */
+  --fs-display-s:   26px;   /* numeral do cabeçalho compacto */
+  --fs-lead:        16.5px; /* parágrafo de abertura */
+  --fs-body:        14.5px; /* tabela em modo Full */
+  --fs-body-dense:  13.5px; /* tabela em modo Compact */
+  --fs-caption:     12.5px; /* nota de rodapé, rótulo de coluna */
+  --fs-label:       10.5px; /* mono em caixa alta */
+  --ls-label:       .11em;  /* letter-spacing do rótulo mono */
+
+  /* -- §3 Espaçamento ------------------------------------------------------ */
+  --sp-1:  4px;   --sp-2:  8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 20px;   --sp-6: 24px;   --sp-8: 32px;  --sp-11: 44px;
+
+  --page-x: 56px;      /* respiro lateral da página */
+  --row-y: 13px;       /* altura de linha em Full    — fora da escala de propósito */
+  --row-y-dense: 7px;  /* altura de linha em Compact */
+
+  /* Raio e sombra: 2px no toggle e NADA MAIS. Sem sombra em lugar nenhum.
+     Se um elemento precisa de borda, sombra e raio para se separar do fundo,
+     ele está no lugar errado. */
+  --radius: 2px;
+
+  /* Medida de linha. Prosa longa não se lê em 76ch. */
+  --measure:      68ch;
+  --measure-note: 76ch;
+
+  /* Valores fora da escala de 4, observados na maquete e mantidos como estavam:
+     são ajustes ao olho, como --row-y. Ficam aqui para não virarem literal solto
+     num componente. */
+  --rule-pad:   9px;    /* respiro sob o rótulo da régua de seção */
+  --toggle-y:   5px;    /* altura interna do toggle de densidade */
+  --label-gap:  6px;    /* numeral grande → rótulo mono */
+  --tick:       4px;    /* traço que marca item de lista */
+
+  /* Intrínsecos de layout */
+  --page-max: 1180px;   /* largura das pranchetas do canvas */
+  --card-min: 260px;    /* menor cartão antes de a grade quebrar */
+  --col-min:  180px;    /* menor coluna do bloco de método */
+
+  /* Ponto de virada da tabela para lista. NÃO é usável em @media — variável CSS
+     não resolve em media query —, então o valor está repetido lá. Se mudar aqui,
+     mudar nos @media de tokens.css e base.css. */
+  --bp-mobile: 720px;
+}
+
+/* -- §4 A alavanca de densidade ---------------------------------------------
+   Não são dois layouts — é um, com dois estados. O HTML estático sai SEMPRE em
+   "full": é o que o Google indexa e o que o visitante novo vê. O script inline
+   de BaseLayout troca para "compact" antes da pintura, só para quem já escolheu.
+   ------------------------------------------------------------------------- */
+:root,
+:root[data-density="full"] {
+  --density-row-y: var(--row-y);
+  --density-fs:    var(--fs-body);
+}
+
+:root[data-density="compact"] {
+  --density-row-y: var(--row-y-dense);
+  --density-fs:    var(--fs-body-dense);
+}
+
+/* -- Escala móvel ----------------------------------------------------------
+   design_tokens.md §5 deixou isto em aberto e apontou o caminho: "provavelmente
+   virar lista, não tabela rolando". Aqui só encolhe o respiro lateral; a virada
+   tabela→lista está em base.css. */
+@media (max-width: 720px) {
+  :root {
+    --page-x: var(--sp-5);
+    --fs-display-l:  32px;
+    --fs-display-xl: 40px;
+  }
+}

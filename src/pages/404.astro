@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Not found — mazetick" description="That page does not exist." noindex>
+  <h1 class="display title">Not found</h1>
+  <div class="prose body">
+    <p>
+      That page does not exist. Try <a href="/research">Research</a>, or start from
+      the <a href="/">front page</a>.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .title { font-size: var(--fs-display-l); line-height: 1.1; letter-spacing: -0.015em; }
+  .body { margin-top: var(--sp-5); }
+</style>

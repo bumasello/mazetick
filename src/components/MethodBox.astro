@@ -1,0 +1,37 @@
+---
+// Regra 4 do site_handoff.md: todo número na tela carrega o instante em que era
+// verdade. Num artigo de pesquisa isso vira amostra + janela + método + data da
+// medição, visíveis antes do texto — não numa nota de rodapé.
+interface Props {
+  sample: string;
+  window: string;
+  method: string;
+  measured: string;
+}
+const { sample, window, method, measured } = Astro.props;
+---
+<dl class="method">
+  <div><dt class="mono">Sample</dt><dd class="n">{sample}</dd></div>
+  <div><dt class="mono">Window</dt><dd class="n">{window}</dd></div>
+  <div><dt class="mono">Method</dt><dd>{method}</dd></div>
+  <div><dt class="mono">Measured</dt><dd class="n">{measured}</dd></div>
+</dl>
+
+<style>
+  .method {
+    background: var(--panel);      /* o único preenchimento do sistema */
+    padding: var(--sp-5) var(--sp-5);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr));
+    gap: var(--sp-5);
+    max-width: var(--measure-note);
+  }
+  .method dt { margin-bottom: var(--sp-1); }
+  .method dd {
+    margin: 0;
+    font-size: var(--fs-caption);
+    line-height: 1.5;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

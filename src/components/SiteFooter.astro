@@ -1,0 +1,58 @@
+---
+// 18+ e jogo responsável não são rodapé decorativo: são exigência de análise de
+// afiliado e do AdSense, e condição para ser levado a sério.
+const year = new Date().getUTCFullYear();
+---
+<footer class="foot">
+  <p class="age">
+    <strong>18+</strong> Gambling can be addictive. Please play responsibly.
+    Free, confidential help is available from
+    <a href="https://www.begambleaware.org/" rel="noopener noreferrer external" target="_blank">BeGambleAware</a>
+    and
+    <a href="https://www.gamcare.org.uk/" rel="noopener noreferrer external" target="_blank">GamCare</a>
+    (National Gambling Helpline, 0808 8020 133).
+  </p>
+
+  <nav class="links" aria-label="Site information">
+    <a href="/about">About</a>
+    <a href="/research">Research</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/cookies">Cookies</a>
+    <a href="/responsible-gambling">Responsible gambling</a>
+    <a href="/contact">Contact</a>
+  </nav>
+
+  <p class="note">
+    mazetick publishes measurements, not tips. We do not sell selections and we
+    do not promise a return. Nothing here is betting advice. &copy; {year} mazetick.
+  </p>
+</footer>
+
+<style>
+  .foot {
+    margin-top: var(--sp-11);
+    padding-top: var(--sp-5);
+    border-top: 1px solid var(--rule-med);
+  }
+  .age {
+    font-size: var(--fs-caption);
+    color: var(--ink-muted);
+    max-width: var(--measure-note);
+    margin-bottom: var(--sp-4);
+  }
+  .age strong {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: .04em;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-5);
+    font-size: var(--fs-caption);
+    margin-bottom: var(--sp-4);
+  }
+  .links a { color: var(--ink-muted); text-decoration: none; }
+  .links a:hover { color: var(--accent); }
+</style>

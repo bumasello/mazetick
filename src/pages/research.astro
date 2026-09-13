@@ -1,0 +1,88 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const articles = (await getCollection('research', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const human = (x: Date) =>
+  x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+const verdictLabel = {
+  negative: 'Negative',
+  positive: 'Positive',
+  inconclusive: 'Inconclusive',
+} as const;
+
+// Regra 4: o carimbo é o produto. Aqui ele é a data da medição mais recente.
+const latest = articles.length
+  ? articles.map((a) => a.data.measured).sort((a, b) => b.getTime() - a.getTime())[0]
+  : null;
+---
+<BaseLayout
+  title="Research — mazetick"
+  description="Measurements on UK and Irish racing, published with their sample size and window. Including the ones that went against us."
+  density={articles.length > 0}
+  asOf={latest ? `measured to ${human(latest)}` : undefined}
+>
+  <header class="head">
+    <h1 class="display title">Is the thing everyone repeats actually true?</h1>
+    <p class="lead">
+      Each piece below is one measurement, with its sample size and its window on
+      the page rather than in a footnote. Most of them are negative results: we
+      tested something, it did not work, and the number is large enough to say so.
+      That is the part of this trade nobody publishes, and it is the reason to
+      believe the rest of the site.
+    </p>
+  </header>
+
+  {articles.length === 0 ? (
+    <p class="lead">No articles published yet.</p>
+  ) : (
+    <>
+      <h2 class="section-rule">Published</h2>
+      <table class="dense">
+        <thead>
+          <tr>
+            <th scope="col">Question</th>
+            <th scope="col" class="num">Sample</th>
+            <th scope="col" class="num">Result</th>
+            <th scope="col" class="num">Measured</th>
+          </tr>
+        </thead>
+        <tbody>
+          {articles.map((a) => (
+            <tr>
+              <td data-label="Question">
+                <a href={`/research/${a.id}`}>{a.data.title}</a>
+              </td>
+              <td data-label="Sample" class="num muted">{a.data.sample.split('·')[0].trim()}</td>
+              <td data-label="Result" class="num faint">{verdictLabel[a.data.verdict]}</td>
+              <td data-label="Measured" class="num faint">{human(a.data.measured)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p class="note more">
+        More to follow: the classic each-way terms table and how often it is wrong;
+        what the tote pays against the exchange; ten handicapping rules tested
+        against 180,000 runners; and what it costs to cross the spread.
+      </p>
+    </>
+  )}
+</BaseLayout>
+
+<style>
+  .head { margin-bottom: var(--sp-11); }
+  .title {
+    font-size: var(--fs-display-l);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    max-width: 20ch;
+    margin-bottom: var(--sp-4);
+  }
+  .more { margin-top: var(--sp-6); }
+</style>

@@ -1,0 +1,225 @@
+/* ============================================================================
+   mazetick — base
+   Reset mínimo, tipografia, e os primitivos que os componentes reusam.
+   Nenhum valor literal: tudo sai de tokens.css.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--ground);
+  color-scheme: light;            /* §5 dos tokens: tema escuro ainda não existe */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  font-synthesis-weight: none;
+}
+
+h1, h2, h3, p, ul, ol, dl, dd, figure, table { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img { max-width: 100%; height: auto; }
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover { color: var(--accent-hover); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* -- REGRA SEM EXCEÇÃO (design_tokens.md §2) --------------------------------
+   Todo número que aparece em coluna usa tabular-nums. Sem isso a tabela treme. */
+.n,
+table,
+.mono { font-variant-numeric: tabular-nums; }
+
+/* -- Primitivos de tipografia --------------------------------------------- */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.stamp {                      /* carimbo de hora: mono, mas sem caixa alta */
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.display { font-family: var(--font-display); font-weight: 400; }
+
+.lead {
+  font-size: var(--fs-lead);
+  line-height: 1.6;
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+.note {
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  color: var(--ink-faint);
+  max-width: var(--measure-note);
+}
+
+/* Régua pesada de seção: o rótulo mono sobre linha --ink. Vem da maquete. */
+.section-rule {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: var(--rule-pad);
+  margin-bottom: var(--sp-4);
+}
+
+/* -- Layout --------------------------------------------------------------- */
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--sp-11) var(--page-x);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  position: static;
+  display: inline-block;
+  padding: var(--sp-2);
+}
+
+/* -- Tabela densa ---------------------------------------------------------
+   A altura de linha e o corpo saem da alavanca de densidade, não de literais. */
+.dense {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--density-fs);
+}
+.dense th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 400;
+  text-align: left;
+  border-bottom: 1px solid var(--ink);
+  padding: 0 var(--sp-4) var(--rule-pad) 0;
+}
+.dense td {
+  padding: var(--density-row-y) var(--sp-4) var(--density-row-y) 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+}
+.dense td:last-child, .dense th:last-child { padding-right: 0; }
+.dense .num { text-align: right; font-variant-numeric: tabular-nums; }
+.dense .muted { color: var(--ink-muted); }
+.dense .faint { color: var(--ink-faint); }
+
+/* Móvel: a tabela densa vira lista, não tabela rolando (design_tokens.md §5).
+   Cada célula carrega o seu rótulo em data-label. */
+@media (max-width: 720px) {
+  .dense thead { position: absolute; left: -9999px; }
+  .dense tr {
+    display: block;
+    border-bottom: 1px solid var(--rule);
+    padding: var(--sp-3) 0;
+  }
+  .dense td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    border: 0;
+    padding: var(--sp-1) 0;
+    text-align: left;
+  }
+  .dense td.num { text-align: left; }
+  .dense td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    flex: none;
+  }
+  .dense td:empty { display: none; }
+}
+
+/* -- Prosa do artigo ------------------------------------------------------ */
+.prose { max-width: var(--measure); }
+.prose > * + * { margin-top: var(--sp-5); }
+.prose p { font-size: var(--fs-lead); line-height: 1.65; color: var(--ink-muted); }
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.prose h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-numeral);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-top: var(--sp-11);
+}
+
+.prose h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-lead);
+  color: var(--ink);
+  margin-top: var(--sp-8);
+}
+
+.prose ul { margin-left: 0; }
+.prose li {
+  font-size: var(--fs-lead);
+  line-height: 1.65;
+  color: var(--ink-muted);
+  padding-left: var(--sp-5);
+  position: relative;
+}
+.prose li + li { margin-top: var(--sp-2); }
+.prose li::before {
+  content: "";
+  position: absolute;
+  left: var(--sp-2);
+  top: .7em;
+  width: var(--tick);
+  height: 1px;
+  background: var(--ink-faint);
+}
+
+/* A prosa pode conter tabela; ela usa os mesmos primitivos e rola dentro de si,
+   nunca empurrando a página. */
+.prose .table-scroll { overflow-x: auto; }
+
+.prose blockquote {
+  border-left: 1px solid var(--rule-med);
+  padding-left: var(--sp-5);
+  color: var(--ink-faint);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink);
+}

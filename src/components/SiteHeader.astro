@@ -1,0 +1,44 @@
+---
+import DensityToggle from './DensityToggle.astro';
+
+interface Props { density?: boolean; asOf?: string }
+const { density = false, asOf } = Astro.props;
+---
+<header class="head">
+  <a class="brand" href="/">mazetick</a>
+  <nav class="nav">
+    <a href="/research">Research</a>
+    <span class="spacer"></span>
+    {asOf && <span class="stamp">{asOf}</span>}
+    {density && <DensityToggle />}
+  </nav>
+</header>
+
+<style>
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-5);
+    margin-bottom: var(--sp-8);
+    flex-wrap: wrap;
+  }
+  /* A marca: caixa baixa, em Newsreader. site_handoff.md §6.2. */
+  .brand {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-s);
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1;
+  }
+  .brand:hover { color: var(--ink); }
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    font-size: var(--fs-caption);
+  }
+  .nav a { color: var(--ink-muted); text-decoration: none; }
+  .nav a:hover { color: var(--accent); }
+</style>

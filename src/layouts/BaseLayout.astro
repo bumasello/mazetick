@@ -1,0 +1,124 @@
+---
+import '@fontsource-variable/newsreader';
+import '@fontsource-variable/archivo';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** O toggle de densidade só renderiza onde morde. Prosa não tem o que apertar. */
+  density?: boolean;
+  /** Carimbo no cabeçalho. Regra 4: todo número na tela carrega o instante. */
+  asOf?: string;
+  /** JSON-LD extra da página (Article), somado ao WebSite/Organization do site. */
+  jsonLd?: Record<string, unknown>;
+  /** 404 e afins: fora do índice, e sem canônica que a legitime. */
+  noindex?: boolean;
+}
+
+const { title, description, density = false, asOf, jsonLd, noindex = false } = Astro.props;
+
+// Canônica absoluta a partir de `site`, nunca da URL de request — senão cada
+// deploy de preview publica a sua própria canônica e compete com a produção.
+//
+// `build.format: 'file'` faz o pathname sair como "/about.html" no build, mas a
+// URL que o Cloudflare Pages serve e que o sitemap lista é "/about". Sem esta
+// normalização a canônica e o sitemap discordam, e a página compete consigo
+// mesma no índice — que é exatamente o que a canônica existe para evitar.
+const canonicalPath = Astro.url.pathname
+  .replace(/\.html$/, '')
+  .replace(/\/index$/, '/')
+  .replace(/^$/, '/');
+const canonical = new URL(canonicalPath, Astro.site).href;
+
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://mazetick.com/#website',
+      url: 'https://mazetick.com/',
+      name: 'mazetick',
+      description:
+        'Time-stamped market data for UK and Irish horse racing. What was known, and when.',
+      inLanguage: 'en-GB',
+      publisher: { '@id': 'https://mazetick.com/#org' },
+    },
+    {
+      '@type': 'Organization',
+      '@id': 'https://mazetick.com/#org',
+      name: 'mazetick',
+      url: 'https://mazetick.com/',
+    },
+  ],
+};
+
+// Beacon do Cloudflare Web Analytics: cookieless, sem fingerprint, sem
+// identificador persistente. Explícito aqui em vez de injetado pelo painel,
+// para que seja greppável e para que a política de privacidade descreva algo
+// que dá para conferir no fonte. Sem a variável (dev), não renderiza nada.
+const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
+---
+<!doctype html>
+<html lang="en-GB" data-density="full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="mazetick" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary" />
+
+    <set:html value={`<script type="application/ld+json">${JSON.stringify(siteJsonLd)}</script>`} />
+    {jsonLd && (
+      <set:html value={`<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`} />
+    )}
+
+    {/*
+      A alavanca de densidade. O HTML servido sai sempre em "full" — é o estado
+      que o Google indexa e o que o visitante novo vê. Este script roda antes da
+      pintura e só troca para quem já escolheu, uma vez, no próprio navegador.
+      A preferência nunca chega ao servidor: é preferência, não dado.
+    */}
+    <script is:inline>
+      try {
+        var d = localStorage.getItem('mazetick:density');
+        if (d === 'compact') document.documentElement.dataset.density = 'compact';
+      } catch (e) {
+        /* localStorage bloqueado: fica em full, que é o padrão correto. */
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="page">
+      <SiteHeader density={density} asOf={asOf} />
+      <main id="main">
+        <slot />
+      </main>
+      <SiteFooter />
+    </div>
+    {beaconToken && (
+      <script
+        is:inline
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={`{"token": "${beaconToken}"}`}
+      />
+    )}
+  </body>
+</html>

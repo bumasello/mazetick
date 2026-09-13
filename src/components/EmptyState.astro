@@ -1,0 +1,22 @@
+---
+// Regra 5: nada de dado inventado, nem de exemplo apresentado como real. Se a
+// página precisa de dado que ainda não temos, ela mostra estado vazio honesto —
+// dizendo a hora da última coleta e quando volta.
+interface Props { title: string; lastCollected?: string; nextExpected?: string }
+const { title, lastCollected, nextExpected } = Astro.props;
+---
+<div class="empty">
+  <p class="what">{title}</p>
+  {lastCollected && <p class="stamp">Last collected {lastCollected}</p>}
+  {nextExpected && <p class="stamp">Next update {nextExpected}</p>}
+</div>
+
+<style>
+  .empty {
+    border-top: 1px solid var(--rule-med);
+    border-bottom: 1px solid var(--rule-med);
+    padding: var(--sp-8) 0;
+  }
+  .what { font-size: var(--fs-lead); color: var(--ink-muted); margin-bottom: var(--sp-2); }
+  .stamp { display: block; }
+</style>

@@ -1,0 +1,107 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import MethodBox from '../components/MethodBox.astro';
+
+interface Props { entry: CollectionEntry<'research'> }
+const { entry } = Astro.props;
+const d = entry.data;
+
+const iso = (x: Date) => x.toISOString().slice(0, 10);
+const human = (x: Date) =>
+  x.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+// O JSON-LD sai do MESMO frontmatter que alimenta o MethodBox na tela. Uma
+// fonte só: a marcação e a página não têm como discordar.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.description,
+  datePublished: iso(d.published),
+  dateModified: iso(d.updated ?? d.published),
+  inLanguage: 'en-GB',
+  isAccessibleForFree: true,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  publisher: { '@id': 'https://mazetick.com/#org' },
+  author: { '@id': 'https://mazetick.com/#org' },
+};
+
+const verdictLabel: Record<typeof d.verdict, string> = {
+  negative: 'Negative result',
+  positive: 'Positive result',
+  inconclusive: 'Inconclusive',
+};
+---
+<BaseLayout title={`${d.title} — mazetick`} description={d.description} jsonLd={jsonLd}>
+  <article>
+    <p class="mono kicker">
+      Research &middot; {verdictLabel[d.verdict]}
+    </p>
+
+    <h1 class="display title">{d.title}</h1>
+    <p class="lead dek">{d.dek}</p>
+
+    <MethodBox
+      sample={d.sample}
+      window={d.window}
+      method={d.method}
+      measured={human(d.measured)}
+    />
+
+    <div class="prose body">
+      <slot />
+    </div>
+
+    <section class="limits">
+      <h2 class="section-rule">What this does not say</h2>
+      <ul class="limit-list">
+        {d.limits.map((l) => <li>{l}</li>)}
+      </ul>
+    </section>
+
+    <p class="note foot-note">
+      Published {human(d.published)}
+      {d.updated && <> &middot; updated {human(d.updated)}</>}.
+      mazetick publishes measurements, not tips. Figures describe what happened in
+      the window stated above and are not a forecast.
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .kicker { display: block; margin-bottom: var(--sp-4); }
+  .title {
+    font-size: var(--fs-display-l);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    max-width: 22ch;
+    margin-bottom: var(--sp-4);
+  }
+  .dek { margin-bottom: var(--sp-8); }
+  .body { margin-top: var(--sp-11); }
+  .limits { margin-top: var(--sp-11); }
+  .limit-list li {
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    color: var(--ink-muted);
+    padding-left: var(--sp-5);
+    position: relative;
+  }
+  .limit-list li + li { margin-top: var(--sp-2); }
+  .limit-list li::before {
+    content: '';
+    position: absolute;
+    left: var(--sp-2);
+    top: .75em;
+    width: var(--tick);
+    height: 1px;
+    background: var(--ink-faint);
+  }
+  .foot-note {
+    margin-top: var(--sp-11);
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--rule-med);
+  }
+</style>

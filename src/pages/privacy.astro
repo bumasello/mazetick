@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const reviewed = '13 September 2026';
+---
+<BaseLayout
+  title="Privacy — mazetick"
+  description="What mazetick collects, stated item by item: no cookies, no advertising, cookieless analytics, self-hosted fonts."
+>
+  <h1 class="display title">Privacy</h1>
+  <p class="stamp">Last reviewed {reviewed}</p>
+
+  <div class="prose body">
+    <p>
+      This page describes what this site does <strong>today</strong>. It is written
+      from the site's own source rather than from a template, and it names the
+      conditions that would make it out of date at the bottom.
+    </p>
+
+    <h2>What we collect</h2>
+
+    <h3>Analytics</h3>
+    <p>
+      We use <strong>Cloudflare Web Analytics</strong>. It does not use cookies, does
+      not fingerprint your browser or device, and does not create a persistent
+      identifier for you. It cannot follow you to any other site. It reports pages
+      viewed and referring sites in aggregate. Serving it requires a small script
+      from <code>static.cloudflareinsights.com</code>.
+    </p>
+    <p>
+      We use it for one reason, stated plainly: we set ourselves written targets for
+      whether this site is worth continuing, and those targets are expressed in
+      monthly visits. A target you cannot check is decoration.
+    </p>
+
+    <h3>Server logs</h3>
+    <p>
+      The site is hosted on Cloudflare Pages. Like any web server, Cloudflare
+      processes your IP address and request in order to deliver the page. We do not
+      receive that data as a per-visitor record and we do not combine it with
+      anything else.
+    </p>
+
+    <h3>Fonts</h3>
+    <p>
+      Typefaces are served from this site's own domain. There is no request to Google
+      Fonts or any other font host, so viewing a page here does not disclose your IP
+      address to a third party for typography.
+    </p>
+
+    <h2>What we do not collect</h2>
+    <ul>
+      <li><strong>No cookies</strong> — neither our own nor anyone else's. See <a href="/cookies">Cookies</a>.</li>
+      <li><strong>No accounts.</strong> There is nothing to sign up for and no password to store.</li>
+      <li><strong>No advertising</strong> and no advertising network.</li>
+      <li><strong>No affiliate links</strong> and no click tracking.</li>
+      <li><strong>No forms.</strong> Contact is by email, which reaches us directly and is not processed by this site.</li>
+      <li><strong>No selling or sharing</strong> of anything about you, because there is nothing held to sell or share.</li>
+    </ul>
+
+    <h2>What is stored in your browser</h2>
+    <p>
+      One key, <code>mazetick:density</code>, holding the word <code>full</code> or
+      <code>compact</code>. It remembers whether you prefer tables spaced out or
+      tightened up. It is stored by your browser in local storage, it never leaves
+      your device, and it never reaches our server. Clearing your browser's site data
+      removes it, and the site works normally without it.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+      Under UK and EU data protection law you have rights of access, correction and
+      erasure over personal data held about you. We hold none, so there is nothing
+      for us to return or delete. If you email us, we hold that email; ask and we
+      will delete it.
+    </p>
+
+    <h2>What would change this page</h2>
+    <p>
+      Any of the following, and this page must be revised <em>before</em> the change
+      goes live rather than after:
+    </p>
+    <ul>
+      <li>Introducing advertising of any kind, including Google AdSense.</li>
+      <li>Adding affiliate or referral links, or any tracking of clicks out.</li>
+      <li>Adding a contact form, a newsletter or an email alert.</li>
+      <li>Replacing or supplementing the analytics described above.</li>
+      <li>Embedding anything served from another domain, including video or social widgets.</li>
+    </ul>
+    <p>
+      Several of those are on the roadmap. This notice exists so that the page cannot
+      quietly stop being true when they arrive.
+    </p>
+
+    <h2>Contact</h2>
+    <p>Questions about this page: <a href="/contact">get in touch</a>.</p>
+  </div>
+</BaseLayout>
+
+<style>
+  .title { font-size: var(--fs-display-l); line-height: 1.1; letter-spacing: -0.015em; margin-bottom: var(--sp-2); }
+  .body { margin-top: var(--sp-8); }
+</style>
