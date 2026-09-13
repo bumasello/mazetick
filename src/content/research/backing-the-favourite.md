@@ -1,6 +1,6 @@
 ---
 title: "Backing the favourite wins one race in three and loses money"
-dek: "Across 33,508 races, the morning favourite won 32.8% of the time and returned −3.90% after commission. The place favourite, where it started at 1.5 or shorter, won 78.8% of its bets and still lost. Strike rate and profit are different quantities."
+dek: "Across 33,508 races, the morning favourite won 32.8% of the time and returned −3.90% after commission. The place favourite, where it started at 1.5 or shorter, won 78.8% of its bets and still returned −1.22%. Strike rate and profit are different quantities."
 description: "33,508 UK and Irish races measured: the favourite wins 32.8% of the time and loses 3.90% per bet after commission. Why strike rate is not profit."
 sample: "33,508 races · UK & Ireland · 6.5% commission applied"
 window: "1 January 2024 – 5 September 2026"
@@ -61,7 +61,7 @@ No filters. No staking plan. Every race in the window, flat stakes.
       <td data-label="95% interval" class="num faint">−2.20% to −0.18%</td>
     </tr>
     <tr>
-      <td data-label="Bet">Two shortest, to win</td>
+      <td data-label="Bet">First and second favourite, to win</td>
       <td data-label="Strike rate" class="num">26.5%</td>
       <td data-label="Before commission" class="num">—</td>
       <td data-label="After commission" class="num">−4.79%</td>
@@ -71,7 +71,7 @@ No filters. No staking plan. Every race in the window, flat stakes.
 </table>
 </div>
 
-All four intervals sit entirely below zero. This is not the familiar "the result is indistinguishable from zero" finding. It is a loss, demonstrated on a large sample.
+The three intervals shown sit entirely below zero. This is not the familiar "the result is indistinguishable from zero" finding: it is a loss, demonstrated on a large sample. The fourth row is reported without an interval because none was computed for it, and it is left in the table as a comparison rather than as a result.
 
 ## Being right 78.8% of the time
 
@@ -93,6 +93,6 @@ The result holds across the window rather than resting on one stretch of it: the
 
 ## What follows
 
-Nothing about this is a claim that favourites are bad bets and outsiders are good ones. Backing the two shortest prices in a race returned −4.79%, which is worse, not better. The point is narrower and duller: **within the range this measurement covers, the exchange price is close enough to correct that the fee decides the outcome.**
+Nothing about this is a claim that favourites are bad bets and outsiders are good ones. Backing both the first and second favourite returned −4.79%, which is worse, not better. The point is narrower and duller: **within the range this measurement covers, the exchange price is close enough to correct that the fee decides the outcome.**
 
 We publish this because it is the strongest form of evidence we have about our own limits. mazetick does not sell selections and does not promise a return. When a page here says a horse has placed in 27% of its runs on soft ground, that number is a count, and the reason to trust the count is that we also publish the measurements that went against us.
