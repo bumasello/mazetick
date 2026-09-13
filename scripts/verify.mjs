@@ -150,6 +150,19 @@ check(
   })(),
 );
 
+// 10. Cor hardcoded no HTML GERADO. Distinta da checagem 9: aquela olha o
+//     fonte, e esta existe porque o realce de sintaxe do Astro injetava um tema
+//     com background-color:#24292e direto no HTML — um bloco escuro fora do
+//     sistema, que a checagem sobre src/ não tinha como ver. Mesma classe de
+//     erro das outras duas: a verificação olhava a região errada.
+check(
+  'Sem cor hardcoded no HTML gerado',
+  pages.flatMap((f) => {
+    const m = read(f).match(/style="[^"]*(?:background-)?color\s*:\s*#[0-9A-Fa-f]{3,8}[^"]*"/g);
+    return m ? [...new Set(m)].map((x) => `${rel(f)}: ${x.slice(0, 70)}`) : [];
+  }),
+);
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

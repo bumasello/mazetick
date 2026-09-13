@@ -14,4 +14,11 @@ export default defineConfig({
   integrations: [
     sitemap({ changefreq: 'daily', lastmod: new Date() }),
   ],
+  markdown: {
+    // O realce de sintaxe do Astro injeta um tema com background-color
+    // hardcoded no próprio HTML — um bloco escuro fora do sistema de tokens.
+    // Desligado: os blocos de código aqui são caminhos e comandos, sem sintaxe
+    // a realçar, e `.prose pre` os estiliza com os tokens.
+    syntaxHighlight: false,
+  },
 });

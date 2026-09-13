@@ -1,78 +1,79 @@
 ---
-title: "What it costs to cross the spread, and the strategy it killed"
-dek: "We had a signal that predicted which way a price would move. Then we measured the book it would have to be traded through: 16,569 quotes across 148 races. Crossing the spread once consumed 81% of the signal, and we stopped."
-description: "16,569 order-book quotes across 148 races: crossing the spread once costs 4.35%, against a 5.39% signal. The measurement that ended our trading idea."
-sample: "16,569 quotes · 148 races · 54 hourly collection rounds · one day"
-window: "One full collection day, 08:00–21:00 UTC, 20 August 2026"
-windowShort: "One day, Aug 2026"
-method: "Best available prices on both sides of the exchange book, sampled every 15 minutes, expressed as a percentage of mid price and in exchange ticks."
-measured: 2026-08-20
+title: "Crossing the spread costs 7.1%, and our first measurement was wrong"
+dek: "We measured the cost of trading a race market, published the figure internally, and abandoned a strategy partly because of it. Then we found the bug: one line of our filter read the year out of a URL instead of the course, so a third of the quotes were not British or Irish racing at all."
+description: "212,373 order-book quotes over 26 days: crossing the spread costs 3.53%. Our first figure was inflated by a filter that never filtered."
+sample: "212,373 quotes · 1,089 races · 26 consecutive days · UK & Ireland"
+window: "20 August – 13 September 2026"
+windowShort: "26 days, Aug–Sep 2026"
+method: "Best available prices on both sides of the exchange book, sampled every 15 minutes, expressed as a percentage of the mid price and in exchange ticks."
+measured: 2026-09-13
 published: 2026-09-13
 verdict: negative
 order: 5
-
-# ⛔ SEGURADO — não publicar até a remedição (decidido em 2026-09-13)
-#
-# Este artigo está medido em UM DIA (20/08/2026, 16.569 cotações, 148 corridas)
-# — exatamente o defeito que fez o artigo do each-way ser segurado e remedido
-# no mesmo dia. O coletor do Smarkets roda desde 20/08: já são 26 dias e
-# 402.233 cotações, 24× a amostra, sem custo nenhum.
-#
-# E aqui a aposta é maior que o artigo. O dia medido foi a quinta-feira da
-# semana do Ebor em York, quando a liquidez é alta demais — se enviesa, enviesa
-# para livro APERTADO, ou seja, para um custo MENOR que o normal. O custo de
-# atravessar o spread é o número que matou a nossa estratégia de trading; se ele
-# mudar, muda a decisão, não só o texto.
-#
-# A remedição é trabalho de laboratório e roda na sessão de orquestração.
-# Quando o número novo chegar: atualizar sample/window/windowShort/measured e
-# a seção "A célula que decidiu", e só então remover `draft`.
-draft: true
 limits:
-  - "This is one day — a Thursday of a major festival week. If a busy day biases the result, it biases it towards tighter books and a more favourable answer than normal, not a worse one."
-  - "It is one exchange, and a smaller one. Its books are wider than the largest exchange's, so this is an upper bound on cost, not a measurement of the cheapest venue available. It cannot show that trading is expensive everywhere; it shows that cheap execution cannot be assumed without measuring it."
-  - "Quoted spread is not realised cost. A patient order that waits rather than crossing can do better, at the price of not always being filled — and an unfilled leg on a two-legged trade is its own loss."
-  - "The signal it is compared against was measured on a different venue and a different period. The comparison is order-of-magnitude, and it is only decisive because the gap is large."
+  - "This is one exchange, and a smaller one. Its books are wider than the largest exchange's, so this remains an upper bound on cost rather than a measurement of the cheapest venue available."
+  - "Quoted spread is not realised cost. An order that waits rather than crossing can do better, at the price of not always being filled — and an unfilled leg on a two-legged trade is its own loss."
+  - "There is no profit figure here, and that is deliberate. The net-return scenarios we previously computed were derived from this same curve and inherited the same contamination. They have been withdrawn rather than corrected, and will not be quoted again until they are recomputed."
+  - "The signal these costs are compared against was measured on a window already used for other tests. Nothing in this correction changes that, and nothing here should be read as reviving the strategy."
+  - "26 consecutive days of one late-summer period, on one exchange. The daily medians were stable across all of them, which is evidence against a day effect, not proof of a year-round figure."
 ---
 
-For a while we thought we had something. Not a way to predict which horse would win — we had already established, twice, that we could not do that — but something narrower and, in principle, more tradeable: a signal that predicted **which way a price would move** between morning and the off.
+For about three weeks we believed that crossing the spread in a race market cost **4.35%** of the price, against a signal worth 5.39% — that trading away 81% of your edge before the position was even open. We had written down in advance that we would abandon the idea if execution cost exceeded 80% of the gross. It did, and we did.
 
-That is a different business. You are not exposed to the result of the race. You take a position, the price moves, you close it and keep the difference. The horse can finish last.
+The figure was wrong. Not by a little, and not because of the sample size we had been worrying about.
 
-The signal was real. On the residual — after removing the fact that prices drift predictably by odds level, which is not tradeable because everyone can see it — the direction was right **64% of the time** with a model that had seen closing prices, and **57%** with one that had not. The second number is the honest one, and its quintile spread was clean and monotonic.
+## The bug
 
-Then we measured what it would cost to trade.
+Our collector sampled every race market on the exchange and then filtered to British and Irish racing. The filter read the venue out of the market's URL path, which looks like this:
 
-## What was measured
+```
+/sport/horse-racing/<course>/<year>/<month>/<day>/<time>
+```
 
-A collector sampled the exchange order book every fifteen minutes, from 08:00 to 21:00 UTC, recording the best available price on each side for every runner in every UK and Irish race. One complete day: **54 collection rounds with no gaps, 16,569 quotes across 148 races**, and one failed market read.
+It took element 4 of the path, split on the slash. But a string with a leading slash puts an empty string at element 0, which makes element 3 the course and element **4 the year**. The filter was checking `"2026"` against a list of foreign course suffixes, never matching, and returning true for everything.
 
-The gap between the two sides — the spread — is what you pay to trade immediately rather than wait. It is reported below as a percentage of the mid price, and in **ticks**, the fixed increments an exchange price moves in.
+**It never filtered anything.** On the day we had measured, **6,104 of 16,902 quotes — 36% — were Australian, American and French racing**: different books, wider spreads, and trading in a different part of the clock. The number we acted on was an average of two unrelated things.
+
+The fix is one line. There is now a regression test for it, and the test was confirmed failing against the old implementation before the fix went in — an assertion that has never failed is not an assertion.
+
+## The symptom was in the draft, and we wrote it up as a finding
+
+This is the part worth dwelling on.
+
+The contaminated data said the spread was **8.7% in the morning and 10.8% in the afternoon** — that the book got *wider* as the race approached. Order books do not do that. Liquidity concentrates towards the off; spreads tighten. It is one of the few things about market microstructure that is not in dispute.
+
+An earlier draft of this very article contained the sentence: *"Note that the book does not tighten through the day in the way you might expect."* The anomaly was observed, written down, and presented as an interesting feature of racing markets. It was an artefact of mixing in meetings from three other continents, each trading on its own clock, and it was sitting in plain sight in our own table.
+
+**Finding something surprising in your data is not the same as discovering something.** The first question has to be whether the instrument is broken, and here the instrument was broken in a way the data itself was announcing.
+
+## What the clean measurement says
+
+26 consecutive days, 20 August to 13 September 2026: **212,373 quotes across 1,089 UK and Irish races**, the book sampled every fifteen minutes.
 
 <div class="table-scroll">
 <table class="dense">
   <thead>
     <tr>
       <th scope="col">Odds band</th>
-      <th scope="col" class="num">Morning spread</th>
-      <th scope="col" class="num">In ticks</th>
+      <th scope="col" class="num">Morning</th>
+      <th scope="col" class="num">Ticks</th>
       <th scope="col" class="num">Afternoon</th>
       <th scope="col" class="num">Near the off</th>
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Band">4 – 8</td><td data-label="Morning" class="num">8.7%</td><td data-label="Ticks" class="num">4.0</td><td data-label="Afternoon" class="num">10.8%</td><td data-label="Near off" class="num">8.9%</td></tr>
-    <tr><td data-label="Band">8 – 13</td><td data-label="Morning" class="num">15.5%</td><td data-label="Ticks" class="num">5.5</td><td data-label="Afternoon" class="num">24.8%</td><td data-label="Near off" class="num">16.8%</td></tr>
-    <tr><td data-label="Band">13 – 20</td><td data-label="Morning" class="num">19.5%</td><td data-label="Ticks" class="num">6.0</td><td data-label="Afternoon" class="num">22.5%</td><td data-label="Near off" class="num">22.4%</td></tr>
+    <tr><td data-label="Band">4 – 8</td><td data-label="Morning" class="num">7.1%</td><td data-label="Ticks" class="num">3.0</td><td data-label="Afternoon" class="num">5.6%</td><td data-label="Near off" class="num">3.8%</td></tr>
+    <tr><td data-label="Band">8 – 13</td><td data-label="Morning" class="num">11.7%</td><td data-label="Ticks" class="num">3.2</td><td data-label="Afternoon" class="num">9.0%</td><td data-label="Near off" class="num">6.4%</td></tr>
+    <tr><td data-label="Band">13 – 20</td><td data-label="Morning" class="num">14.9%</td><td data-label="Ticks" class="num">5.0</td><td data-label="Afternoon" class="num">11.7%</td><td data-label="Near off" class="num">8.3%</td></tr>
   </tbody>
 </table>
 </div>
 
-Note that the book does **not** tighten through the day in the way you might expect. In the middle bands it is widest in the afternoon, and near the off it is no better than it was in the morning.
+The book tightens through the day in every band, by roughly half between morning and the off. That is what an order book is supposed to do, and it is the first sign that the instrument is now reading something real.
 
-## The cell that decided it
+## The decisive cell
 
-Our signal entered at a median price of about 5.85, which puts it in the first row: **odds 4 to 8, in the morning**, 903 quotes.
+The signal we were evaluating entered at a median price of about 5.85 — the first row, in the morning. That cell holds **14,187 quotes**.
 
 <div class="table-scroll">
 <table class="dense">
@@ -87,34 +88,36 @@ Our signal entered at a median price of about 5.85, which puts it in the first r
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Measure">As % of price</td><td data-label="p10" class="num">4.0</td><td data-label="p25" class="num">6.0</td><td data-label="median" class="num"><strong>8.7</strong></td><td data-label="p75" class="num">15.0</td><td data-label="p90" class="num">80.8</td></tr>
-    <tr><td data-label="Measure">In ticks</td><td data-label="p10" class="num">2.0</td><td data-label="p25" class="num">—</td><td data-label="median" class="num"><strong>4.0</strong></td><td data-label="p75" class="num">6.0</td><td data-label="p90" class="num">40.5</td></tr>
+    <tr><td data-label="Measure">As % of price</td><td data-label="p10" class="num">3.4</td><td data-label="p25" class="num">5.2</td><td data-label="median" class="num"><strong>7.1</strong></td><td data-label="p75" class="num">10.1</td><td data-label="p90" class="num">14.1</td></tr>
+    <tr><td data-label="Measure">In ticks</td><td data-label="p10" class="num">—</td><td data-label="p25" class="num">2.0</td><td data-label="median" class="num"><strong>3.0</strong></td><td data-label="p75" class="num">4.0</td><td data-label="p90" class="num">6.0</td></tr>
   </tbody>
 </table>
 </div>
 
-Crossing a spread costs you **half of it** against the mid price. Half of 8.7% is **4.35%**.
+Crossing a spread costs half of it against the mid price: **3.53%**, against a gross signal of 5.39%. **65% of the edge, consumed on entry.**
 
-The signal, measured as excess movement over the baseline drift for its odds level, was worth **5.39%**.
+Twenty-two per cent of quotes show a two-tick book, 72% fit within four ticks, and 91% within six. Liquidity was never the constraint — the amount available at the best price had a median of about £45, with £12 at the tenth percentile, which is ample for any stake under discussion.
 
-**The cost of entering the position consumed 81% of the gross signal, before any cost of getting out.** We had written down in advance that we would abandon the idea if execution cost exceeded 80% of the gross, precisely so that the decision would not be made after seeing the number we wanted. It exceeded it.
+The daily median for this cell sat between **6.0% and 8.4% on every one of the 25 days with a usable sample**, with no outlier. We had suspected that our single measured day — a Thursday of a major festival — was unrepresentatively liquid, and had held this article back on those grounds. It was not: at 7.6% it is the **widest** day in the set, not the tightest. The bias we feared ran the other way, and the thing that was actually wrong was not the sample at all.
 
-## The assumption that had been carrying the plan
+## What this changes, and what it does not
 
-Before this, execution cost had been modelled under three scenarios: optimistic, one tick per side; base, a tick each way; pessimistic, two ticks per side. They gave answers from **+2.82%** to **−4.31%**. The range was wider than the signal, which should have been the warning.
+**It changes one thing: a discard criterion no longer fires.** At 65%, the threshold we had written down — abandon if cost exceeds 80% of gross — is not met. The specific reason we recorded for stopping was based on a number that was wrong.
 
-The measurement resolves which scenario was real. The median book is **4 ticks** — the pessimistic assumption. Only **15%** of quotes showed the 2-tick book the optimistic case assumed; 56% fit within 4 ticks.
+**It does not revive the strategy, and should not be read as an argument to.** What removed a reason for closing is not the same as a reason for opening. Three things are unchanged and each is sufficient on its own:
 
-So the profitable version of this strategy existed only under the most generous assumption available, and that assumption is false in 85% of the book.
+- The directional signal these costs are weighed against was measured on a window already spent on other tests. A result from a re-used window is a hypothesis, not a finding, and this correction touches the cost side only.
+- This exchange is smaller than the largest one and its books are wider, so the figure remains an upper bound on cost rather than an estimate of the cheapest available execution.
+- **There is no net figure.** The profit-and-loss scenarios we had were computed from this same curve, inherited the same contamination, and have been withdrawn. Publishing a cost that has been corrected alongside a profit that has not would be worse than publishing nothing.
 
-Liquidity, for what it is worth, was never the constraint. The amount available at the best price had a median of about £57, with £13 at the tenth percentile. For any stake we were contemplating, the money was there. **What was not there was room between the two sides of the book.**
+What remains true, in the weaker and more accurate form: crossing the spread once consumes about two-thirds of the gross signal, and whether anything survives depends on an execution assumption whose plausible range is wider than the signal itself. A strategy that is profitable under one defensible assumption and unprofitable under another is not a strategy with an uncertainty attached to it. It is an open question wearing a decision's clothes.
 
-## Why we published a dead idea
+## Why publish this
 
-Because the interesting part is not the conclusion, it is the ordering.
+Because the correction is more useful than the measurement.
 
-The signal was genuine and it survived the checks we had been burned by before. Every part of the analysis that came before this measurement pointed at a real, modest, tradeable edge. The thing that killed it was not a flaw in the prediction — it was a cost that had been assumed rather than measured, in a model where one plausible assumption gave a profit and another gave a loss.
+The original figure was not a rounding error or a matter of interpretation. It was an off-by-one in a URL path, it inflated a cost by about a fifth, and it contributed to shutting down a line of work. We found it by re-running the measurement on more data and asking why a stable quantity had moved — not by anyone reviewing the line.
 
-We had three scenarios and no data to choose between them. That is not a strategy with an uncertainty attached; it is not a strategy at all. It became one only for as long as we did not look.
+Our reason for holding this article back was that one day is not a sample. That instinct was right and the diagnosis was wrong, which is its own lesson: **the flaw you can name is not automatically the flaw you have.** Had we published on the strength of the day-count alone, the number would still have been wrong, only with more days behind it.
 
-The collector that produced this table is still running.
+The figures on this site are published with their sample, their window and their method so that they can be checked. This one was checked, it failed, and the failure is on the page.

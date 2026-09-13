@@ -223,3 +223,15 @@ table,
   font-size: var(--fs-caption);
   color: var(--ink);
 }
+
+/* O único preenchimento do sistema é --panel; bloco de código não é exceção. */
+.prose pre {
+  background: var(--panel);
+  padding: var(--sp-4) var(--sp-5);
+  overflow-x: auto;
+  margin: 0;
+}
+.prose pre code {
+  color: var(--ink-muted);
+  white-space: pre;
+}
