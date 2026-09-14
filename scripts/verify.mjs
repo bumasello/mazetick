@@ -439,26 +439,54 @@ check(
   );
 }
 
-// 16 e 17. Os JSON de dados: nenhuma coluna proibida, e carimbo de geração.
+// 16 e 17. Os JSON de dados: nenhuma coluna proibida, e os dois carimbos.
 //
-//     16 é a REDE EMBAIXO, não a defesa principal. O JSON é montado campo a
-//     campo na origem, com lista de permissão — mas a regra 2 do handoff (nada
-//     de preço derivado da Betfair na tela) é cara demais para depender de um
-//     só ponto de controle, e o arquivo vem de outro repositório.
+//     ⚠️ 16 é a REDE EMBAIXO, NÃO a política. A defesa real da regra 6 do
+//     handoff (nunca expor dado bruto de terceiro) é a LISTA DE PERMISSÃO do
+//     `build_site_data.py`, que monta o JSON campo a campo na origem: lá o
+//     critério é PROCEDÊNCIA — de onde o número veio —, e aqui é só a GRAFIA do
+//     nome da chave. Grafia é falível por construção; ninguém deve ler esta
+//     checagem como se fosse a política.
 //
-//     17 existe porque sem `generated_at` a página não tem como mostrar idade,
-//     e a regra 4 ("todo número carrega o instante em que era verdade") cairia
-//     em SILÊNCIO — a página ficaria bonita e mentindo.
+//     E era falível de um jeito específico: a versão anterior usava um `\b`
+//     único, e em JavaScript `_` É caractere de palavra, então `\bwin_odds\b`
+//     não fecha antes de `_dec`. Os cinco nomes que existem de verdade nos CSVs
+//     — `win_odds_dec`, `ew_odds_dec`, `ew_odds_num`, `betfair_market_id` e
+//     `win_market_id` — passavam todos. Daí as duas classes abaixo.
+//
+//     17 existe porque sem carimbo a página não tem como mostrar idade, e a
+//     regra 4 ("todo número carrega o instante em que era verdade") cairia em
+//     SILÊNCIO — a página ficaria bonita e mentindo. São DOIS carimbos, e o que
+//     importa para o leitor é `collected_through`: `generated_at` fresco sobre
+//     coleta parada é exatamente o disfarce que a regra 5 proíbe.
 {
-  const dataFiles = fs.existsSync('src/data')
+  const srcData = fs.existsSync('src/data')
     ? fs.readdirSync('src/data').filter((f) => f.endsWith('.json')).map((f) => path.join('src/data', f))
     : [];
 
-  const FORBIDDEN = /\b(win_odds|ew_odds|betfair|bsp|selection_id|market_id|price|odds)\b/i;
+  // Todo JSON que chega a dist/ é publicamente acessível, consumido pelo site
+  // ou não — e um `.json` público com payload de fornecedor é export acidental,
+  // que a regra 6 proíbe por escrito. Hoje nenhum chega, então esta metade
+  // passa trivialmente; é justamente o caso de "olhar o lugar errado" que este
+  // projeto já pagou três vezes, e o custo de varrer é zero.
+  const distData = all.filter((f) => f.endsWith('.json'));
+  const dataFiles = [...srcData, ...distData];
+
+  // Classe A — nomes de coluna de fornecedor. Casam com `_` de qualquer lado,
+  // porque é assim que eles aparecem: `win_odds_dec`, `betfair_market_id`.
+  const SUPPLIER = /(?:^|[^A-Za-z0-9])(win_odds|ew_odds|betfair|bsp|selection_id|market_id)(?:[^A-Za-z0-9]|$)/i;
+  // Classe B — palavras genéricas, só com fronteira real. É HEURÍSTICA, e
+  // assumidamente falível nos dois sentidos: preço do Smarkets É publicável
+  // (regra 3 do handoff), então se um dia o produtor renomear `mid` para
+  // `price` o build quebra por um campo legítimo. Aceitável — o conserto é
+  // renomear uma chave, e o erro oposto é revenda.
+  const GENERIC = /\b(price|odds)\b/i;
+  const forbidden = (k) => SUPPLIER.test(k) || GENERIC.test(k);
+
   const banned = [];
   const undated = [];
 
-  if (!dataFiles.length) {
+  if (!srcData.length) {
     banned.push('src/data/ sem nenhum JSON — o prebuild rodou?');
   }
 
@@ -478,7 +506,7 @@ check(
       if (Array.isArray(o)) return o.flatMap((v, i) => walkKeys(v, `${at}[${i}]`));
       if (o && typeof o === 'object') {
         return Object.entries(o).flatMap(([k, v]) =>
-          (FORBIDDEN.test(k) ? [`${f}: campo proibido "${k}" em ${at || 'raiz'}`] : []).concat(
+          (forbidden(k) ? [`${f}: campo proibido "${k}" em ${at || 'raiz'}`] : []).concat(
             walkKeys(v, at ? `${at}.${k}` : k),
           ),
         );
