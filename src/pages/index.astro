@@ -36,14 +36,14 @@ import StatFigure from '../components/StatFigure.astro';
         wrong. Published with sample size and window on the page.
       </span>
     </a>
-    <div class="card card--soon">
-      <span class="mono">Coming</span>
-      <span class="card-title">Extra places, hour by hour</span>
+    <a class="card" href="/extra-places">
+      <span class="mono">Extra places</span>
+      <span class="card-title">Which races pay above the bookmaker&rsquo;s own ladder</span>
       <span class="card-note">
-        Which races pay an extra place right now, at what fraction, and when the
-        terms changed — against the standard table, not instead of it.
+        With the hour every change was made &mdash; and whether the extra place
+        cost you a worse fraction, which is the part nobody publishes.
       </span>
-    </div>
+    </a>
   </div>
 
   <p class="note stance">
@@ -94,7 +94,6 @@ import StatFigure from '../components/StatFigure.astro';
     line-height: 1.35;
   }
   .card-note { font-size: var(--fs-caption); color: var(--ink-muted); line-height: 1.55; }
-  .card--soon .card-title { color: var(--ink-faint); }
   .stance { margin-top: var(--sp-8); }
 
   @media (max-width: 720px) {

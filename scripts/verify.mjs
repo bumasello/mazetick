@@ -52,9 +52,15 @@ check(
 // 2. Espaço comido em volta de tag inline. O compilador apara a quebra de linha
 //    em vez de virar espaço, e o texto gruda: "fromBeGambleAwareandGamCare".
 check(
-  'Espaçamento em volta de <a> inline',
+  'Espaçamento em volta de tag inline',
   pages.flatMap((f) => {
-    const m = read(f).match(/.{20}(\w<(?:a|span|strong|em|code|b|i)[ >]|<\/(?:a|span|strong|em|code|b|i)>\w).{20}/g);
+    // Olha o TEXTO resultante, não a adjacência das tags. A versão anterior
+    // marcava `Punchestown<span class="faint"> (IE)</span>`, que renderiza
+    // "Punchestown (IE)" — o espaço está DENTRO do span. O que denuncia o bug
+    // é palavra, tag, e logo em seguida um caractere não-branco.
+    const T = '(?:a|span|strong|em|code|b|i)';
+    const rx = new RegExp(`.{20}(?:\\w<${T}[^>]*>\\S|\\S</${T}>\\w).{20}`, 'g');
+    const m = read(f).match(rx);
     return m ? m.map((s) => `${rel(f)}: …${s.replace(/\s+/g, ' ')}…`) : [];
   }),
 );
@@ -431,6 +437,63 @@ check(
       ? `    (${links.length} derivações resolvidas contra ${LAB})`
       : `    (${LAB} ausente: shape conferido, commit NÃO resolvido — normal em build de CI)`,
   );
+}
+
+// 16 e 17. Os JSON de dados: nenhuma coluna proibida, e carimbo de geração.
+//
+//     16 é a REDE EMBAIXO, não a defesa principal. O JSON é montado campo a
+//     campo na origem, com lista de permissão — mas a regra 2 do handoff (nada
+//     de preço derivado da Betfair na tela) é cara demais para depender de um
+//     só ponto de controle, e o arquivo vem de outro repositório.
+//
+//     17 existe porque sem `generated_at` a página não tem como mostrar idade,
+//     e a regra 4 ("todo número carrega o instante em que era verdade") cairia
+//     em SILÊNCIO — a página ficaria bonita e mentindo.
+{
+  const dataFiles = fs.existsSync('src/data')
+    ? fs.readdirSync('src/data').filter((f) => f.endsWith('.json')).map((f) => path.join('src/data', f))
+    : [];
+
+  const FORBIDDEN = /\b(win_odds|ew_odds|betfair|bsp|selection_id|market_id|price|odds)\b/i;
+  const banned = [];
+  const undated = [];
+
+  if (!dataFiles.length) {
+    banned.push('src/data/ sem nenhum JSON — o prebuild rodou?');
+  }
+
+  for (const f of dataFiles) {
+    const raw = read(f);
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      banned.push(`${f}: não parseia — ${e.message.slice(0, 50)}`);
+      continue;
+    }
+
+    // Varre as CHAVES em profundidade, não o texto: "price" dentro de uma nota
+    // em prosa é legítimo, uma chave chamada price não é.
+    const walkKeys = (o, at = '') => {
+      if (Array.isArray(o)) return o.flatMap((v, i) => walkKeys(v, `${at}[${i}]`));
+      if (o && typeof o === 'object') {
+        return Object.entries(o).flatMap(([k, v]) =>
+          (FORBIDDEN.test(k) ? [`${f}: campo proibido "${k}" em ${at || 'raiz'}`] : []).concat(
+            walkKeys(v, at ? `${at}.${k}` : k),
+          ),
+        );
+      }
+      return [];
+    };
+    banned.push(...new Set(walkKeys(json)));
+
+    if (!json.generated_at || Number.isNaN(Date.parse(json.generated_at))) {
+      undated.push(`${f}: generated_at ausente ou não parseável`);
+    }
+  }
+
+  check('Sem campo proibido nos JSON de dados', banned);
+  check('Todo JSON de dados tem generated_at parseável', undated);
 }
 
 console.log();

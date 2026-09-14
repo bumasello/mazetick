@@ -1,0 +1,238 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatFigure from '../components/StatFigure.astro';
+import DataAge from '../components/DataAge.astro';
+import data from '../data/extra-places.json';
+
+type Term = { places: number; fraction: [number, number]; bog?: boolean };
+type Point = { at: string; field_size: number; places: number; fraction: [number, number] };
+type Race = {
+  slug: string; venue: string; country: 'GB' | 'IE'; off_utc: string; name: string;
+  handicap: boolean; each_way: boolean; field_size: number;
+  terms: Term; house_standard: Term; extra_place: boolean; history: Point[];
+};
+
+const races: Race[] = data.races as Race[];
+const frac = (f: [number, number]) => (f[0] === 1 && f[1] === 1 ? 'win only' : `${f[0]}/${f[1]}`);
+const hhmm = (iso: string) => iso.slice(11, 16);
+
+// Uma mudança é um par consecutivo do histórico. `history` só registra
+// MUDANÇAS, então uma corrida com um ponto só não mexeu o dia inteiro — e isso
+// também é informação.
+type Change = { race: Race; from: Point; to: Point };
+const changes: Change[] = races.flatMap((r) =>
+  r.history.slice(1).map((to, i) => ({ race: r, from: r.history[i], to })),
+);
+
+const placeAdds = changes.filter((c) => c.to.places > c.from.places);
+const worseFraction = placeAdds.filter(
+  (c) => c.to.fraction[0] / c.to.fraction[1] < c.from.fraction[0] / c.from.fraction[1],
+);
+const aboveLadder = races.filter((r) => r.extra_place);
+
+// Ordena por vagas desc, depois hora — "most places first", como na prancheta.
+const sorted = [...races].sort(
+  (a, b) => b.terms.places - a.terms.places || a.off_utc.localeCompare(b.off_utc),
+);
+
+const allTraded = placeAdds.length > 0 && worseFraction.length === placeAdds.length;
+const cards = placeAdds.slice(0, 3);
+---
+<BaseLayout
+  title="Extra places — mazetick"
+  description="Which UK and Irish races are paying above the bookmaker's own each-way ladder right now, with the hour every change was made."
+  density={races.length > 0}
+>
+  <header class="head">
+    <div>
+      {/*
+        Três manchetes, porque três estados. Confundir "nenhuma corrida mudou"
+        com "não temos corrida nenhuma" é o erro fácil aqui: o primeiro é um
+        fato sobre o mercado, o segundo é um fato sobre a NOSSA coleta, e
+        apresentar o segundo como o primeiro mente.
+      */}
+      <h1 class="display title">
+        {races.length === 0
+          ? 'Nothing collected for today yet'
+          : placeAdds.length > 0
+            ? `${placeAdds.length} races added a place today`
+            : 'No race changed its each-way terms today'}
+      </h1>
+      {placeAdds.length > 0 && (
+        <p class="lead">
+          {allTraded ? (
+            <>
+              Every one of them <strong>cut the fraction at the same time</strong>. An extra
+              place is not a gift, it is a trade — and the swap is not announced anywhere.
+            </>
+          ) : (
+            <>
+              {worseFraction.length} of those {placeAdds.length} cut the fraction at the same
+              time. An extra place is not always a gift; sometimes it is a trade.
+            </>
+          )}
+        </p>
+      )}
+      <DataAge generatedAt={data.generated_at} />
+    </div>
+
+    {races.length > 0 && (
+      <aside class="figures">
+        <StatFigure value={String(races.length)} label="races covered" />
+        <StatFigure value={String(aboveLadder.length)} label="paying above the house ladder" accent />
+      </aside>
+    )}
+  </header>
+
+  {races.length === 0 ? (
+    <section>
+      <h2 class="section-rule">Nothing to show</h2>
+      <div class="empty">
+        <p class="lead">
+          The latest collection found no UK or Irish each-way market. That is either a day
+          without racing, or a collection that has not run yet — the timestamp above says
+          which, and it is the only thing we know for certain.
+        </p>
+        <p class="note">
+          Terms are read hourly between 06:00 and 21:00 UTC. We do not fill this page with a
+          guess when the collector has nothing to report.
+        </p>
+      </div>
+    </section>
+  ) : (
+    <>
+      {cards.length > 0 && (
+        <section>
+          <h2 class="section-rule">Changed today</h2>
+          <div class="cards">
+            {cards.map((c) => (
+              <article class="card">
+                <div class="stamp">{c.race.venue} &middot; {hhmm(c.race.off_utc)}</div>
+                <div class="card-race">{c.race.name}</div>
+                <div class="swap n">
+                  <span class="old">{c.from.places}</span>
+                  <span class="arrow">&rarr;</span>
+                  <span class="new">{c.to.places}</span>
+                  <span class="unit">&nbsp;places</span>
+                </div>
+                <div class="frac n">
+                  fraction&nbsp;<span class="old-f">{frac(c.from.fraction)}</span>
+                  <span class="arrow">&rarr;</span>
+                  <span class="new-f">{frac(c.to.fraction)}</span>
+                </div>
+                <div class="stamp">changed at {hhmm(c.to.at)} UTC</div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 class="section-rule">All races &middot; most places first</h2>
+        <table class="dense">
+          <thead>
+            <tr>
+              <th scope="col">Off</th>
+              <th scope="col">Course</th>
+              <th scope="col">Race</th>
+              <th scope="col" class="num">Runners</th>
+              <th scope="col">Terms</th>
+              <th scope="col">vs house ladder</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((r) => (
+              <tr>
+                <td data-label="Off" class="n">{hhmm(r.off_utc)}</td>
+                <td data-label="Course">{r.venue}{r.country === 'IE' && <span class="faint"> (IE)</span>}</td>
+                <td data-label="Race" class="muted">{r.name}</td>
+                <td data-label="Runners" class="num faint">{r.field_size}</td>
+                <td data-label="Terms" class="n">
+                  <strong>{r.terms.places}</strong>{' '}
+                  <span class="faint">at {frac(r.terms.fraction)}</span>
+                  {r.terms.bog && <span class="bog"> BOG</span>}
+                </td>
+                <td data-label="vs house ladder" class={r.extra_place ? 'above' : 'faint'}>
+                  {r.extra_place
+                    ? `${r.terms.places - r.house_standard.places} more than ${r.house_standard.places} at ${frac(r.house_standard.fraction)}`
+                    : 'as the ladder'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </>
+  )}
+
+  <p class="note foot">
+    Terms are what the bookmaker advertised at the time shown and can change again before the
+    off. <strong>&ldquo;House ladder&rdquo; is the bookmaker&rsquo;s own standard</strong>,
+    derived from {data.ladder_days} days of our own hourly collection — not the classic
+    each-way table, which it does not follow. Source: {data.source}. We publish the terms, not
+    the prices, and nothing here is a recommendation to bet.
+  </p>
+</BaseLayout>
+
+<style>
+  .head {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--sp-11);
+    align-items: start;
+    margin-bottom: var(--sp-11);
+  }
+  .title {
+    font-size: var(--fs-display-l);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin-bottom: var(--sp-4);
+  }
+  .lead { margin-bottom: var(--sp-5); }
+  .figures { border-left: 1px solid var(--rule-med); padding-left: var(--sp-6); }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-11);
+  }
+  .card { background: var(--panel); padding: var(--sp-5); }
+  .card-race { font-size: var(--fs-lead); font-weight: 500; margin: var(--sp-2) 0 var(--sp-3); }
+  .swap { display: flex; align-items: baseline; gap: var(--sp-2); }
+  .swap .old {
+    font-family: var(--font-display);
+    font-size: var(--fs-numeral-old);
+    color: var(--ink-ghost);
+    text-decoration: line-through;
+  }
+  .swap .new { font-family: var(--font-display); font-size: var(--fs-numeral); color: var(--accent); }
+  .swap .unit, .arrow { color: var(--ink-faint); font-size: var(--fs-caption); }
+  /* A fração piora: NÃO é --accent. O verde diz "difere do padrão para cima". */
+  .frac {
+    font-size: var(--fs-caption);
+    color: var(--ink-muted);
+    margin: var(--sp-2) 0 var(--sp-3);
+    display: flex;
+    gap: var(--sp-2);
+    align-items: baseline;
+  }
+  .frac .old-f { color: var(--ink-ghost); text-decoration: line-through; }
+  .frac .new-f { color: var(--ink); font-weight: 600; }
+
+  .dense .above { color: var(--accent); }
+  .bog {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    color: var(--ink-faint);
+  }
+  .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
+  .foot { margin-top: var(--sp-6); }
+
+  @media (max-width: 720px) {
+    .head { grid-template-columns: 1fr; gap: var(--sp-8); }
+    .figures { border-left: 0; padding-left: 0; }
+  }
+</style>

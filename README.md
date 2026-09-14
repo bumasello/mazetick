@@ -176,6 +176,8 @@ quebrar. Nove checagens:
 | beacon de analytics no build de produção | variável de build esquecida some sem avisar |
 | sem sintaxe de template; JSON-LD parseável | olhar o arquivo não é interpretá-lo |
 | derivação versionada e resolvível | número sem script commitado não vai ao ar |
+| sem campo proibido nos JSON de dados | rede embaixo da regra 2, o dado vem de outro repo |
+| todo JSON tem `generated_at` parseável | sem ele a página não mostra idade, e a regra 4 cai calada |
 
 Duas regras governam este arquivo:
 
@@ -200,6 +202,36 @@ restaure, confirme que passa. E confira o código de saída: um script que impri
 ```bash
 npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
 ```
+
+## Dados: instantâneo, e falhar alto
+
+`npm run build` começa por `scripts/fetch-data.mjs`, que baixa os JSON de
+`bumasello/mazetick-data`. **Se o download falhar, o build falha** — sem deploy
+novo, a versão anterior continua no ar. É o comportamento certo: degradar para
+"sem corridas hoje" MENTE, e num portal cuja tese é "todo número carrega o
+instante em que era verdade" essa é a pior mentira disponível.
+
+Por isso `src/data/*.json` é **gitignored**: uma cópia velha commitada poderia
+ser usada em silêncio num build sem rede, que é exatamente a falha que o script
+existe para impedir. Ele também valida schema, `generated_at` e forma na porta
+de entrada.
+
+### Os três estados vazios
+
+Confundi-los é o erro fácil, e o terceiro é o perigoso:
+
+1. **Sem corrida UK/IRE na coleta** — a página diz isso, com o carimbo.
+2. **Ainda não coletamos hoje** — parece o caso 1; só o carimbo distingue, e a
+   página não afirma qual é, porque não sabe.
+3. **Dado velho porque a coleta quebrou** — parece o caso 1 e *mentiria*. A
+   idade sai de `generated_at`, está **sempre visível**, e degrada em dois
+   passos: acima de 8h vira aviso, acima de 24h vira faixa invertida dizendo
+   que o dado está desatualizado.
+
+⚠️ A idade relativa é calculada **no navegador**, de propósito. A página é
+estática: calculada no build, "há 2 horas" congelaria e estaria mentindo seis
+horas depois. O carimbo **absoluto** vai no HTML e está sempre correto — é ele
+que o leitor sem JavaScript vê e o que o Google indexa.
 
 ## A regra da derivação
 

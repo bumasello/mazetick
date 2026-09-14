@@ -7,38 +7,52 @@ window: "6–13 September 2026, eight consecutive days"
 windowShort: "8 days, Sep 2026"
 method: "Terms read hourly from one bookmaker's own public race pages, 06:00–21:00 UTC, and compared against the classic terms table."
 measured: 2026-09-13
-derivation: "scripts/ew_terms_audit.py@dae81d6"
+derivation: "scripts/ew_terms_audit.py@318b8bc"
 published: 2026-09-13
 verdict: negative
 order: 2
 
-# ⛔ SEGURADO — não publicar até a reescrita (decidido em 2026-09-14)
+# ⛔ SEGURADO — reescrever, não remendar (atualizado em 2026-09-14)
 #
-# O número publicado aqui ("44,5% em 510 corridas, 227 divergências, zero
-# exceções") NÃO REPRODUZ. A remedição, sobre 9 dias e 324 corridas UK/IRE com
-# o código versionado em `horsing-maze:scripts/ew_terms_audit.py` (dae81d6),
-# diz outra coisa — e a afirmação sobrevive apenas COM ESCOPO:
+# TERCEIRA correção da mesma medição, e cada uma tornou o artigo melhor. O que
+# está escrito abaixo no corpo está MORTO e não deve ser reaproveitado.
 #
-#   em handicap de 12+ corredores a tabela clássica diz 1/4 e a Paddy Power
-#   paga 1/5, em 128 de 128 corridas — zero exceções
+# Mortos: "44,5% em 510 corridas" (1ª versão) e "a clássica diz 1/4 e a Paddy
+# Power paga 1/5 em 128 de 128" (2ª). A 2ª media o ÚLTIMO snapshot de cada
+# corrida — isto é, o estado JÁ PROMOVIDO. Separando abertura de fechamento:
 #
-# SEM escopo a frase é FALSA: em campos de 5 a 9 a tabela erra na direção
-# OPOSTA, em 64 corridas. Dentro de cada faixa a direção é 100% consistente, o
-# que torna o erro estrutural e não ruído — e essa é a manchete melhor.
+#   faixa          mudaram   abertura -> fechamento
+#   hcap 10-11      0/45     3@1/5 estável
+#   comum 10+       0/68     3@1/5 estável
+#   hcap 12-15     31/88     3@1/4 existe na abertura, SOME no fechamento
+#   hcap 16+       24/40     4@1/4 e 3@1/4 na abertura, ZERO 1/4 no fim
 #
-# A escada real derivada do dado:
-#   até 6 corredores -> só vitória | 7-9 -> 2 vagas @ 1/4 | 10-13 -> 3 @ 1/5
-#   handicap 14-19 -> 4 @ 1/5 (comum segue em 3 @ 1/5) | handicap 20+ -> 5-6 @ 1/5
+# ===> A TABELA CLÁSSICA NÃO ESTÁ ERRADA. ESTÁ SEM DATA. <===
 #
-# E o achado inesperado, provável abertura do artigo novo: handicap e
-# não-handicap recebem tratamento IDÊNTICO até 13 corredores. A tabela clássica
-# os separa a partir de 8.
+# Ela descreve a ABERTURA do mercado. Durante o dia a casa promove, e a
+# promoção é uma troca explícita: mais uma vaga, fração de 1/4 para 1/5. Vaga
+# extra não é de graça — é um trade, e ninguém publica isso. A tabela acerta
+# exatamente onde os termos são estáveis (113 corridas, 0 mudanças) e "erra"
+# exatamente onde há promoção.
 #
-# ⚠️ Descartada a ideia de "bimodalidade dentro da faixa": era artefato de
-# agrupar 8-11 num balde porque a tabela clássica agrupa. Mesma pista, mesmo
-# dia, mesmo campo dá termos idênticos em 55 de 55 casos.
+# Isto é a TESE DO SITE INTEIRO demonstrada na pergunta do each-way: um número
+# sem carimbo de tempo não é um número errado, é um número sem data. Artigo
+# muito melhor que "a tabela erra 44,5%".
 #
-# Não é remendo de campo: o título, a tese e a tabela mudam. Reescrever.
+# Sobra um erro de fronteira que NÃO é promoção, e vale um parágrafo: em campo
+# de 5 a 9 a clássica promete 2 vagas onde a casa paga só vitória (até 6
+# corredores) e 1/5 onde ela paga 1/4 (7 a 9).
+#
+# A /extra-places já publica a consequência disto: "vaga extra" é pagar acima
+# da escada DA PRÓPRIA CASA, e a página mostra a troca de fração junto — hoje,
+# 19 de 19 aumentos de vaga vieram com fração pior.
+#
+# ⚠️ Descartada também a "bimodalidade dentro da faixa" da 2ª versão: era
+# artefato de agrupar 8-11 num balde porque a tabela clássica agrupa.
+#
+# Derivação: scripts/ew_terms_audit.py@318b8bc no horsing-maze. A terceira
+# correção só foi possível porque a segunda ficou versionada e deu para
+# reexecutar — é o argumento inteiro da regra da derivação.
 draft: true
 limits:
   - "This is one bookmaker. Terms are set per firm and the classic table is not wrong in the same way everywhere; a second firm has to be measured before the rate generalises."
