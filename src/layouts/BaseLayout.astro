@@ -7,6 +7,7 @@ import '../styles/tokens.css';
 import '../styles/base.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import { canonicalUrl } from '../lib/canonical';
 
 interface Props {
   title: string;
@@ -26,15 +27,11 @@ const { title, description, density = false, asOf, jsonLd, noindex = false } = A
 // Canônica absoluta a partir de `site`, nunca da URL de request — senão cada
 // deploy de preview publica a sua própria canônica e compete com a produção.
 //
-// `build.format: 'file'` faz o pathname sair como "/about.html" no build, mas a
-// URL que o Cloudflare Pages serve e que o sitemap lista é "/about". Sem esta
-// normalização a canônica e o sitemap discordam, e a página compete consigo
-// mesma no índice — que é exatamente o que a canônica existe para evitar.
-const canonicalPath = Astro.url.pathname
-  .replace(/\.html$/, '')
-  .replace(/\/index$/, '/')
-  .replace(/^$/, '/');
-const canonical = new URL(canonicalPath, Astro.site).href;
+// A normalização mora em lib/canonical.ts porque o JSON-LD do artigo precisa da
+// MESMA string: quando o ArticleLayout normalizava por conta própria (e não
+// normalizava), a marcação dizia ".../artigo.html" e a canônica dizia
+// ".../artigo" — a página se contradizia no que ela mesma declara ser.
+const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
 
 const siteJsonLd = {
   '@context': 'https://schema.org',

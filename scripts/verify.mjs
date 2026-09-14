@@ -39,6 +39,14 @@ console.log(`Verificando ${pages.length} páginas.\n`);
 
 const read = (f) => fs.readFileSync(f, 'utf8');
 
+// O conjunto de URLs do sitemap, lido uma vez. A checagem 14 o usa para
+// confrontar a URL declarada no JSON-LD; a 6 e a 18 fazem as suas próprias
+// perguntas sobre o mesmo arquivo.
+const sitemapFile = all.find((f) => /sitemap-\d+\.xml$/.test(f));
+const sitemapLocs = sitemapFile
+  ? new Set([...read(sitemapFile).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].replace(/\/$/, '')))
+  : null;
+
 // 1. Regra 2 do handoff: nenhum preço derivado da Betfair na tela. O nome da
 //    casa e a sigla não podem aparecer em lugar nenhum do HTML servido.
 check(
@@ -353,6 +361,13 @@ check(
 //     estruturado e ele é legível —, e é (b) que teria pego isto sem saber de
 //     nada. `{"` NÃO entra como marcador: é como todo JSON-LD começa, e aparece
 //     67 vezes de forma legítima.
+//
+//     (c) foi acrescentado depois, e fecha o degrau seguinte: parsear não é
+//     CONFERIR. As cinco páginas de artigo tinham JSON-LD válido declarando
+//     `"url": ".../artigo.html"` enquanto a <link rel="canonical"> dizia
+//     ".../artigo" e o sitemap listava ".../artigo" — três declarações da mesma
+//     página sobre si mesma, uma delas discordando. Ser JSON válido não é dizer
+//     a verdade.
 {
   const problems = [];
 
@@ -390,9 +405,26 @@ check(
       const types = parsed.flatMap((o) => [o['@type'], ...(o['@graph'] || []).map((g) => g['@type'])]);
       if (!types.includes('Article')) problems.push(`${rel(f)}: artigo sem @type Article`);
     }
+
+    // (c) A URL que o dado estruturado declara tem de ser a MESMA que a
+    //     canônica e a mesma que o sitemap lista. Só objetos de página entram
+    //     na comparação: o WebSite/Organization declara a raiz do site em toda
+    //     página, e isso está certo.
+    const canon = read(f).match(/rel="canonical" href="([^"]+)"/)?.[1];
+    const PAGE_TYPES = new Set(['Article', 'NewsArticle', 'BlogPosting', 'WebPage']);
+    const flat = parsed.flatMap((o) => [o, ...(o['@graph'] || [])]);
+    for (const o of flat) {
+      if (!PAGE_TYPES.has(o['@type']) || !o.url) continue;
+      if (canon && o.url !== canon) {
+        problems.push(`${rel(f)}: JSON-LD url ${o.url} ≠ canônica ${canon}`);
+      }
+      if (sitemapLocs && !sitemapLocs.has(o.url.replace(/\/$/, ''))) {
+        problems.push(`${rel(f)}: JSON-LD url ${o.url} não está no sitemap`);
+      }
+    }
   }
 
-  check('Sem sintaxe de template; JSON-LD presente e parseável', problems);
+  check('Sem sintaxe de template; JSON-LD parseável e coerente com a canônica', problems);
 }
 
 // 15. A derivação existe, é linkável, e o commit resolve de verdade.

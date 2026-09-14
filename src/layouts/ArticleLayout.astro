@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
 import MethodBox from '../components/MethodBox.astro';
+import { canonicalUrl } from '../lib/canonical';
 
 interface Props { entry: CollectionEntry<'research'> }
 const { entry } = Astro.props;
@@ -22,7 +23,11 @@ const jsonLd = {
   dateModified: iso(d.updated ?? d.published),
   inLanguage: 'en-GB',
   isAccessibleForFree: true,
-  url: new URL(Astro.url.pathname, Astro.site).href,
+  // A mesma função da <link rel="canonical">. Antes era `new URL(pathname)`
+  // cru, e com `build.format: 'file'` o pathname é "/research/x.html": as cinco
+  // páginas de artigo declaravam no JSON-LD uma URL que a própria canônica
+  // desautorizava. A checagem 14 agora compara as duas.
+  url: canonicalUrl(Astro.url.pathname, Astro.site),
   publisher: { '@id': 'https://mazetick.com/#org' },
   author: { '@id': 'https://mazetick.com/#org' },
 };
