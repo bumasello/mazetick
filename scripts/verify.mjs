@@ -11,6 +11,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { inlineScripts, sha256 } from './headers.mjs';
 
 const DIST = 'dist';
@@ -53,7 +54,7 @@ check(
 check(
   'Espaçamento em volta de <a> inline',
   pages.flatMap((f) => {
-    const m = read(f).match(/.{20}(\w<a |<\/a>\w).{20}/g);
+    const m = read(f).match(/.{20}(\w<(?:a|span|strong|em|code|b|i)[ >]|<\/(?:a|span|strong|em|code|b|i)>\w).{20}/g);
     return m ? m.map((s) => `${rel(f)}: …${s.replace(/\s+/g, ' ')}…`) : [];
   }),
 );
@@ -386,6 +387,50 @@ check(
   }
 
   check('Sem sintaxe de template; JSON-LD presente e parseável', problems);
+}
+
+// 15. A derivação existe, é linkável, e o commit resolve de verdade.
+//
+//     A regra: nenhum número vai para o site sem que o script que o produziu
+//     esteja commitado. Ela nasceu de dois números publicados em dois dias sem
+//     derivação versionada — e os dois não reproduziram. O schema já torna o
+//     campo obrigatório; aqui se confere que ele não é decoração.
+//
+//     A metade local resolve `git cat-file -e <commit>:<caminho>` no repositório
+//     do laboratório, que prova que AQUELE arquivo existia NAQUELE commit. Na
+//     Cloudflare o repositório não está presente, então essa metade é pulada e
+//     o motivo é impresso — pular calado seria o mesmo erro de sempre.
+{
+  const problems = [];
+  const LAB = '../horsing-maze';
+  const hasLab = fs.existsSync(path.join(LAB, '.git'));
+
+  const links = [];
+  for (const f of pages.filter((x) => rel(x).startsWith('research/'))) {
+    const m = read(f).match(/href="https:\/\/github\.com\/bumasello\/horsing-maze\/blob\/([0-9a-f]{7,40})\/([^"]+)"/);
+    if (!m) {
+      problems.push(`${rel(f)}: artigo sem link de derivação`);
+      continue;
+    }
+    links.push({ page: rel(f), commit: m[1], file: m[2] });
+  }
+
+  if (hasLab) {
+    for (const { page, commit, file } of links) {
+      try {
+        execFileSync('git', ['-C', LAB, 'cat-file', '-e', `${commit}:${file}`], { stdio: 'pipe' });
+      } catch {
+        problems.push(`${page}: ${file} não existe no commit ${commit} do horsing-maze`);
+      }
+    }
+  }
+
+  check('Derivação versionada e resolvível', problems);
+  console.log(
+    hasLab
+      ? `    (${links.length} derivações resolvidas contra ${LAB})`
+      : `    (${LAB} ausente: shape conferido, commit NÃO resolvido — normal em build de CI)`,
+  );
 }
 
 console.log();

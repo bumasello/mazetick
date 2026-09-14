@@ -7,6 +7,7 @@ window: "1 January 2024 – 5 September 2026"
 windowShort: "Jan 2024 – Sep 2026"
 method: "Selection at the morning price; every bet settled at the exchange starting price. No filters, no staking plan."
 measured: 2026-09-06
+derivation: "src/oneTimeScript/back_favourite_probe.py@a606064"
 published: 2026-09-13
 verdict: negative
 order: 1

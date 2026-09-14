@@ -7,14 +7,28 @@ interface Props {
   window: string;
   method: string;
   measured: string;
+  /** `caminho/script.py@commit` no repositório horsing-maze. */
+  derivation: string;
 }
-const { sample, window, method, measured } = Astro.props;
+const { sample, window, method, measured, derivation } = Astro.props;
+
+const [dPath, dCommit] = derivation.split('@');
+const dHref = `https://github.com/bumasello/horsing-maze/blob/${dCommit}/${dPath}`;
+const dName = dPath.split('/').pop();
 ---
 <dl class="method">
   <div><dt class="mono">Sample</dt><dd class="n">{sample}</dd></div>
   <div><dt class="mono">Window</dt><dd class="n">{window}</dd></div>
   <div><dt class="mono">Method</dt><dd>{method}</dd></div>
   <div><dt class="mono">Measured</dt><dd class="n">{measured}</dd></div>
+  <div class="wide">
+    <dt class="mono">Derivation</dt>
+    <dd class="n">
+      <a href={dHref} rel="noopener noreferrer external" target="_blank">{dName}</a>
+      <span class="commit">@{dCommit.slice(0, 7)}</span>{" "}
+      &mdash; the script that produced these figures, pinned to the commit that produced them.
+    </dd>
+  </div>
 </dl>
 
 <style>
@@ -27,6 +41,8 @@ const { sample, window, method, measured } = Astro.props;
     max-width: var(--measure-note);
   }
   .method dt { margin-bottom: var(--sp-1); }
+  .method .wide { grid-column: 1 / -1; }
+  .method .commit { color: var(--ink-faint); font-family: var(--font-mono); }
   .method dd {
     margin: 0;
     font-size: var(--fs-caption);

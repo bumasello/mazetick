@@ -7,6 +7,7 @@ window: "6–13 September 2026, eight consecutive days"
 windowShort: "8 days, Sep 2026"
 method: "Terms read hourly from one bookmaker's own public race pages, 06:00–21:00 UTC, and compared against the classic terms table."
 measured: 2026-09-13
+derivation: "scripts/ew_terms_audit.py@dae81d6"
 published: 2026-09-13
 verdict: negative
 order: 2

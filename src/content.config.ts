@@ -31,6 +31,24 @@ const research = defineCollection({
       /** Data da medição, ISO. Alimenta o MethodBox E o JSON-LD. */
       measured: z.coerce.date(),
 
+      /**
+       * O script que PRODUZIU estes números, fixado no commit que os produziu:
+       * `caminho/no/repo.py@abc1234`, no repositório `horsing-maze`.
+       *
+       * Obrigatório desde 2026-09-14, depois de dois números publicados em dois
+       * dias não terem derivação versionada — e os dois não reproduzirem. A
+       * regra: nenhum número vai para o site sem que o script que o produziu
+       * esteja commitado. Aqui ela deixa de ser combinado e vira condição de
+       * build, como `sample` e `window`.
+       *
+       * O commit é o que produziu o número PUBLICADO, não necessariamente o
+       * topo do arquivo hoje: se o script mudou depois, o pin continua
+       * apontando para o código que gerou o que está na tela.
+       */
+      derivation: z
+        .string()
+        .regex(/^[\w./-]+\.(py|ts|mjs|js)@[0-9a-f]{7,40}$/, 'formato: caminho/script.py@commit'),
+
       published: z.coerce.date(),
       updated: z.coerce.date().optional(),
 

@@ -7,6 +7,7 @@ window: "Backfill to 5 September 2026; matched subset of a 120-day collection"
 windowShort: "To Sep 2026, partial"
 method: "Declared tote dividends per £1 compared with the net exchange return on the same runner, after 6.5% commission. Medians by odds band."
 measured: 2026-09-06
+derivation: "src/oneTimeScript/tote_vs_bsp_probe.py@a606064"
 published: 2026-09-13
 verdict: negative
 order: 3

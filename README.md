@@ -175,6 +175,7 @@ quebrar. Nove checagens:
 | cabeçalhos presentes e CSP cobrindo os scripts | política fora de sincronia falha calada |
 | beacon de analytics no build de produção | variável de build esquecida some sem avisar |
 | sem sintaxe de template; JSON-LD parseável | olhar o arquivo não é interpretá-lo |
+| derivação versionada e resolvível | número sem script commitado não vai ao ar |
 
 Duas regras governam este arquivo:
 
@@ -199,6 +200,23 @@ restaure, confirme que passa. E confira o código de saída: um script que impri
 ```bash
 npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
 ```
+
+## A regra da derivação
+
+**Nenhum número vai para o site sem que o script que o produziu esteja
+commitado.** Cada artigo declara `derivation: "caminho/script.py@commit"` no
+frontmatter, apontando para o repositório
+[horsing-maze](https://github.com/bumasello/horsing-maze) — e o commit é o que
+produziu o número **publicado**, não o topo do arquivo hoje.
+
+A regra nasceu de dois números publicados em dois dias sem derivação
+versionada. **Os dois não reproduziram.** O campo é obrigatório no schema, o
+`MethodBox` o mostra como link para o arquivo fixado no commit (o repositório é
+público, então o leitor confere em vez de confiar), e a checagem 15 resolve
+`git cat-file -e <commit>:<caminho>` quando o repositório do laboratório está
+ao lado — provando que aquele arquivo existia naquele commit. Em build de CI o
+repositório não está presente; a checagem confere só o formato e **imprime que
+pulou**, porque pular calado seria o mesmo erro de sempre.
 
 ## Cabeçalhos e CSP
 

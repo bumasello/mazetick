@@ -7,6 +7,7 @@ window: "Results from 2019 to July 2026; runners matched to settled markets"
 windowShort: "2019 – Jul 2026"
 method: "Point-in-time features — each rule uses only races run before the day in question. Flagged runners' actual loss rate compared with the loss rate implied by their price. Random 30% flag as control."
 measured: 2026-09-07
+derivation: "src/oneTimeScript/human_rules_probe.py@54ee96a"
 published: 2026-09-13
 verdict: negative
 order: 4
