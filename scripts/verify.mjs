@@ -296,6 +296,43 @@ check(
   check('Cabeçalhos presentes e CSP cobrindo os scripts servidos', problems);
 }
 
+// 13. Em build da Cloudflare, o beacon TEM de estar no HTML.
+//
+//     PUBLIC_CF_BEACON_TOKEN é variável de BUILD, não de runtime: num site
+//     estático as de runtime não fazem nada, porque não há execução por
+//     requisição onde elas pudessem ser lidas. Se ela faltar nas variáveis de
+//     build, o trecho do beacon simplesmente não renderiza e o site fica sem
+//     analytics EM SILÊNCIO — e é o analytics que torna apuráveis os critérios
+//     de morte do projeto, que são expressos em sessões por mês.
+//
+//     Localmente a ausência é o comportamento correto e não é erro. A checagem
+//     só morde quando WORKERS_CI=1, que a Cloudflare injeta sozinha nos builds.
+{
+  const onWorkersCI = ['1', 'true'].includes(String(process.env.WORKERS_CI));
+  // Casa a TAG, não a menção. A página de privacidade cita
+  // static.cloudflareinsights.com em prosa, dentro de <code>, ao descrever o
+  // analytics — procurar o domínio solto dava 1/13 com o token ausente, quando
+  // o certo é 0/13.
+  const BEACON_TAG = /<script[^>]+src="https:\/\/static\.cloudflareinsights\.com\/beacon\.min\.js"/;
+  const withBeacon = pages.filter((f) => BEACON_TAG.test(read(f)));
+  const problems = [];
+
+  if (onWorkersCI && withBeacon.length !== pages.length) {
+    problems.push(
+      `beacon presente em ${withBeacon.length}/${pages.length} páginas — ` +
+        'PUBLIC_CF_BEACON_TOKEN faltou nas variáveis de BUILD do projeto',
+    );
+  }
+
+  check('Beacon de analytics no build de produção', problems);
+
+  if (!onWorkersCI) {
+    console.log(
+      `    (local, WORKERS_CI não setado: beacon em ${withBeacon.length}/${pages.length} páginas — ausência é o esperado)`,
+    );
+  }
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

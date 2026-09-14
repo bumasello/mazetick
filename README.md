@@ -108,9 +108,25 @@ Passos (exigem a conta do dono — **não foram executados**):
 2. Cloudflare Pages → *Create project* → *Connect to Git*.
 3. Build command `npm run build`, output `dist`, Node 22.
 4. Custom domain `mazetick.com` (+ `www`), e mover o DNS para a Cloudflare.
-5. **Settings → Variables**: `PUBLIC_CF_BEACON_TOKEN` com o token de
-   *Web Analytics*. Sem ela o beacon não renderiza — que é o comportamento
-   correto em dev.
+5. **`PUBLIC_CF_BEACON_TOKEN`** com o token de *Web Analytics*, nas variáveis
+   de **BUILD** (ao lado de `NODE_VERSION`) — **não** nas de runtime.
+
+   ⚠️ **A distinção não é óbvia e erra em silêncio.** Num site estático não há
+   execução por requisição, então variável de runtime não faz absolutamente
+   nada: o valor precisa entrar no HTML no momento em que ele é gerado. Posta
+   no lugar errado (ou esquecida), o trecho do beacon não renderiza, o site
+   sobe bonito e fica **sem analytics sem avisar ninguém** — e é o analytics
+   que torna apuráveis os critérios de morte do projeto, que estão escritos em
+   sessões por mês.
+
+   A **checagem 13** existe por isso: quando `WORKERS_CI=1` (que a Cloudflare
+   injeta sozinha nos builds dela) e o beacon não está em todas as páginas, o
+   build falha. Localmente a ausência é o esperado e não é erro.
+
+   Trocar o Web Analytics para **snippet manual**, não injeção automática: a
+   injeção reescreve o HTML na borda, então o que o leitor recebe deixa de ser
+   o que o verify conferiu — mesma classe do incidente do adaptador — e
+   colidiria com a CSP.
 6. **Deploy hook**: guardar a URL. É por ela que a arquitetura por instantâneo
    vai rebuildar o site quando a coleta terminar, sem o site nunca consultar o
    laboratório ao vivo.
