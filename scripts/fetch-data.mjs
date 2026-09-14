@@ -64,6 +64,16 @@ for (const src of SOURCES) {
   if (!data.generated_at || Number.isNaN(Date.parse(data.generated_at))) {
     problems.push(`generated_at ausente ou não parseável: ${JSON.stringify(data.generated_at)}`);
   }
+  // `collected_through` é o instante da última leitura do COLETOR, e é dele que
+  // sai a idade na tela. A chave tem de EXISTIR: null é uma resposta legítima
+  // ("não havia arquivo do coletor hoje"), ausente é o produtor regredindo para
+  // o contrato antigo — e aí a página voltaria a mostrar `generated_at` como se
+  // fosse frescor, que é a confusão que este campo existe para desfazer.
+  if (!('collected_through' in data)) {
+    problems.push('collected_through ausente — contrato antigo?');
+  } else if (data.collected_through !== null && Number.isNaN(Date.parse(data.collected_through))) {
+    problems.push(`collected_through não parseável: ${JSON.stringify(data.collected_through)}`);
+  }
   if (!Array.isArray(data[src.listKey])) problems.push(`${src.listKey} não é lista`);
 
   if (problems.length) {
@@ -74,8 +84,13 @@ for (const src of SOURCES) {
 
   fs.mkdirSync(path.dirname(src.out), { recursive: true });
   fs.writeFileSync(src.out, body);
-  const ageH = ((Date.now() - Date.parse(data.generated_at)) / 3.6e6).toFixed(1);
+  // A idade reportada aqui é a da COLETA, não a da derivação — o mesmo relógio
+  // que a página mostra ao leitor. Um build fresco sobre coleta parada não pode
+  // parecer saudável no log.
+  const ageH = data.collected_through
+    ? `${((Date.now() - Date.parse(data.collected_through)) / 3.6e6).toFixed(1)}h`
+    : 'IDADE DESCONHECIDA';
   console.log(
-    `✓ ${src.name}: ${data[src.listKey].length} ${src.listKey}, gerado ${data.generated_at} (${ageH}h atrás), ${(body.length / 1024).toFixed(0)}KB`,
+    `✓ ${src.name}: ${data[src.listKey].length} ${src.listKey}, coletado até ${data.collected_through} (${ageH}), derivado ${data.generated_at}, ${(body.length / 1024).toFixed(0)}KB`,
   );
 }

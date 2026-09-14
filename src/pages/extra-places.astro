@@ -100,7 +100,11 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
           )}
         </p>
       )}
-      <DataAge generatedAt={data.generated_at} />
+      <DataAge
+        collectedThrough={data.collected_through}
+        generatedAt={data.generated_at}
+        collectionWindow="hourly, 06:00–21:00 UTC"
+      />
     </div>
 
     {races.length > 0 && (

@@ -515,13 +515,31 @@ check(
     };
     banned.push(...new Set(walkKeys(json)));
 
+    // Só os JSON que ALIMENTAM a página carregam contrato de carimbo. Um .json
+    // qualquer em dist/ (manifest, etc.) tem de passar pela 16, não pela 17.
+    if (!srcData.includes(f)) continue;
+
     if (!json.generated_at || Number.isNaN(Date.parse(json.generated_at))) {
       undated.push(`${f}: generated_at ausente ou não parseável`);
+    }
+
+    // `collected_through` pode ser null de forma legítima — é o produtor
+    // dizendo "não havia arquivo do coletor hoje", e a página trata isso como o
+    // estado mais grave. O que não pode é a CHAVE sumir: aí a página voltaria a
+    // exibir `generated_at` como se fosse frescor, sem nada denunciar.
+    if (!('collected_through' in json)) {
+      undated.push(`${f}: collected_through ausente — a idade na tela viraria a da derivação`);
+    } else if (
+      json.collected_through !== null &&
+      Number.isNaN(Date.parse(json.collected_through))
+    ) {
+      undated.push(`${f}: collected_through não parseável (${JSON.stringify(json.collected_through)})`);
     }
   }
 
   check('Sem campo proibido nos JSON de dados', banned);
-  check('Todo JSON de dados tem generated_at parseável', undated);
+  check('Todo JSON de dados carimbado: generated_at e collected_through', undated);
+  console.log(`    (${srcData.length} em src/data + ${distData.length} em dist/ varridos)`);
 }
 
 // 18. Toda URL do sitemap resolve para um arquivo gerado, e nenhuma indexável

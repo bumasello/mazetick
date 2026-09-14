@@ -2,31 +2,66 @@
 /**
  * A idade do dado, sempre visível. Regra 4 do handoff.
  *
- * O carimbo ABSOLUTO é renderizado no HTML e está correto para sempre — é ele
- * que o leitor sem JavaScript vê, e é ele que o Google indexa. A idade
- * RELATIVA ("2 hours ago") não pode ser calculada no build: a página é
- * estática, o valor congelaria, e uma página que diz "há 2 horas" seis horas
- * depois é pior do que uma que não diz nada.
+ * ⚠️ A idade sai de `collected_through`, NÃO de `generated_at`. Os dois são
+ * relógios diferentes e confundi-los apaga justamente a distinção que esta
+ * página existe para fazer:
  *
- * Então a idade é calculada no navegador, e degrada de forma óbvia: o terceiro
- * estado vazio — dado velho porque a coleta quebrou — se parece com "não há
- * corrida hoje" e mentiria se passasse calado.
+ *   generated_at      — quando NÓS derivamos o arquivo
+ *   collected_through — quando o COLETOR leu pela última vez
+ *
+ * Um rebuild às 18:00 sobre uma coleta que parou às 09:00 tem `generated_at`
+ * fresco e dado velho. Mostrar `generated_at` como idade faria o terceiro
+ * estado vazio (a coleta quebrou) se disfarçar de primeiro (não há corrida
+ * hoje) — que é o erro mais barato de cometer e o mais caro de pagar. Por isso
+ * os dois aparecem, e o rotulado como "derived" é o secundário.
+ *
+ * Sem `collected_through` (o produtor não achou arquivo do coletor hoje) a
+ * página NÃO finge frescor: o estado é declarado desconhecido, no HTML, sem
+ * depender de JavaScript. É o caso mais grave, e o único em que não temos como
+ * dizer quão velho o dado é.
+ *
+ * O carimbo ABSOLUTO é renderizado no HTML e está correto para sempre — é ele
+ * que o leitor sem JavaScript vê e o que o Google indexa. A idade RELATIVA não
+ * pode ser calculada no build: a página é estática, o valor congelaria, e uma
+ * página que diz "há 2 horas" seis horas depois é pior que uma que não diz
+ * nada.
  */
-interface Props { generatedAt: string }
-const { generatedAt } = Astro.props;
-const abs = generatedAt.replace('T', ' ').replace('Z', ' UTC');
+interface Props {
+  /** Instante da última leitura do coletor. `null` = não sabemos. */
+  collectedThrough: string | null;
+  /** Instante em que derivamos o arquivo. Secundário, mas conferível. */
+  generatedAt: string;
+  /** Janela em que o coletor roda, para o leitor julgar um vão longo. */
+  collectionWindow?: string;
+}
+const { collectedThrough, generatedAt, collectionWindow } = Astro.props;
+const stamp = (t: string) => t.replace('T', ' ').replace('Z', ' UTC');
+const known = Boolean(collectedThrough && !Number.isNaN(Date.parse(collectedThrough)));
 ---
-<p class="age" data-generated={generatedAt}>
-  <span class="stamp">as of {abs}</span>
-  <span class="rel" hidden></span>
+<p
+  class="age"
+  data-collected={known ? collectedThrough : undefined}
+  data-state={known ? undefined : 'unknown'}
+  data-window={collectionWindow}
+>
+  {known ? (
+    <span class="stamp">collected through {stamp(collectedThrough as string)}</span>
+  ) : (
+    <span class="rel">
+      no collection timestamp in this file &mdash; we cannot say how fresh this is
+    </span>
+  )}
+  {known && <span class="rel" hidden></span>}
+  <span class="derived">derived {stamp(generatedAt)}</span>
 </p>
 
 <style>
   .age { margin: 0; display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: baseline; }
-  .rel { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .rel, .derived { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
   /* Envelhecer é visível, não uma nota de rodapé. */
   .age[data-state='ageing'] .rel { color: var(--ink); }
-  .age[data-state='stale'] .rel {
+  .age[data-state='stale'] .rel,
+  .age[data-state='unknown'] .rel {
     color: var(--ground);
     background: var(--ink);
     padding: 2px var(--sp-2);
@@ -35,34 +70,43 @@ const abs = generatedAt.replace('T', ' ').replace('Z', ' UTC');
 
 <script is:inline>
   (function () {
-    var el = document.querySelector('.age[data-generated]');
-    if (!el) return;
-    var t = Date.parse(el.dataset.generated);
-    if (isNaN(t)) return;
-    var rel = el.querySelector('.rel');
+    // querySelectorAll, não querySelector: uma checagem que olha só o primeiro
+    // elemento é a mesma classe de erro que verificar só uma região da página.
+    var els = document.querySelectorAll('.age[data-collected]');
+    for (var i = 0; i < els.length; i++) paint(els[i]);
 
-    function paint() {
-      var mins = Math.floor((Date.now() - t) / 60000);
-      var txt;
-      if (mins < 1) txt = 'collected just now';
-      else if (mins < 60) txt = 'collected ' + mins + ' min ago';
-      else {
-        var h = Math.floor(mins / 60);
-        if (h < 48) txt = 'collected ' + h + (h === 1 ? ' hour ago' : ' hours ago');
-        else txt = 'collected ' + Math.floor(h / 24) + ' days ago';
+    function paint(el) {
+      var t = Date.parse(el.dataset.collected);
+      if (isNaN(t)) return;
+      var rel = el.querySelector('.rel');
+      if (!rel) return;
+
+      function tick() {
+        var mins = Math.floor((Date.now() - t) / 60000);
+        var txt;
+        if (mins < 1) txt = 'collected just now';
+        else if (mins < 60) txt = 'collected ' + mins + ' min ago';
+        else {
+          var h = Math.floor(mins / 60);
+          if (h < 48) txt = 'collected ' + h + (h === 1 ? ' hour ago' : ' hours ago');
+          else txt = 'collected ' + Math.floor(h / 24) + ' days ago';
+        }
+        var state = mins > 1440 ? 'stale' : mins > 480 ? 'ageing' : 'fresh';
+        if (state === 'stale') txt += ' — this is out of date, the collection may have stopped';
+        else if (state === 'ageing') {
+          // O vão longo pode ser a noite, e dizer só "velho" alarmaria por um
+          // comportamento normal. A janela vem do próprio arquivo da página.
+          txt += el.dataset.window
+            ? ' — longer than the usual gap; the collector runs ' + el.dataset.window
+            : ' — longer than the usual gap';
+        }
+        el.dataset.state = state;
+        rel.textContent = txt;
+        rel.hidden = false;
       }
-      // A coleta roda de hora em hora entre 06 e 21 UTC e o arquivo é
-      // regenerado 4x/dia, então um vão de algumas horas é normal e um de mais
-      // de 8 não é.
-      var state = mins > 1440 ? 'stale' : mins > 480 ? 'ageing' : 'fresh';
-      if (state === 'stale') txt += ' — this is out of date, the collection may have stopped';
-      else if (state === 'ageing') txt += ' — older than a usual gap';
-      el.dataset.state = state;
-      rel.textContent = txt;
-      rel.hidden = false;
-    }
 
-    paint();
-    setInterval(paint, 60000);
+      tick();
+      setInterval(tick, 60000);
+    }
   })();
 </script>

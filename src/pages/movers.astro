@@ -61,7 +61,11 @@ const tightest = bands[0];
         drift on a {widest.from}&ndash;{widest.to} shot is a Tuesday; the same move on a{' '}
         {tightest.from}&ndash;{tightest.to} shot is not.
       </p>
-      <DataAge generatedAt={data.generated_at} />
+      <DataAge
+        collectedThrough={data.collected_through}
+        generatedAt={data.generated_at}
+        collectionWindow="every 15 min, 08:00–21:00 UTC"
+      />
     </div>
 
     {runners.length > 0 && (
