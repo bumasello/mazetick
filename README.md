@@ -93,6 +93,33 @@ já escolheu. A preferência nunca chega ao servidor.
 
 O toggle só renderiza onde morde. Numa página de prosa ele não aparece.
 
+## ⚠️ Com a Cloudflare, o que não está declarado no repositório ela decide
+
+Quatro vezes numa semana, e o padrão é sempre o mesmo: **o que o leitor recebe
+deixa de ser o que o `verify.mjs` conferiu.**
+
+| o que ela decidiu | efeito | onde se diz não |
+|---|---|---|
+| injetar `@astrojs/cloudflare` no build | virou SSR, saída em `dist/client/`, 137 links quebrados | `wrangler.jsonc` + checagem 11 |
+| reescrever o HTML na borda para o Web Analytics | HTML servido ≠ HTML verificado, e colide com a CSP | snippet manual + checagem 8 |
+| reativar `*.workers.dev` a cada deploy | dois hostnames servindo o mesmo site | `wrangler.jsonc`: `workers_dev: false` |
+| prefixar um `robots.txt` gerenciado | bloqueia 9 crawlers de IA e declara `ai-train=no` | ⛔ **não dá pelo repositório** |
+
+O `wrangler.jsonc` cobre os três primeiros. **O quarto não**: o `robots.txt`
+gerenciado é setting de ZONA, só pelo painel, e a Cloudflare o **prefixa** ao
+nosso (doc: *bots/additional-configurations/managed-robots-txt*). Caminho para
+desligar: **Security Settings → Bot traffic filter**, ou *Overview → Control AI
+Crawlers → Display Content Signals Policy*.
+
+⚠️ E ele contradiz a nossa própria licença: o conteúdo está sob **CC BY 4.0**,
+que permite adaptar inclusive comercialmente, enquanto o bloco gerenciado diz
+`ai-train=no` e barra ClaudeBot, GPTBot, CCBot, Google-Extended e outros. As
+duas coisas apontam em direções opostas, e ninguém decidiu a segunda. É decisão
+de produto, não de infraestrutura — mas tem de ser decisão, e não default.
+
+*(`search=yes` é preservado, então o rastreamento normal do Google e o sitemap
+não são afetados.)*
+
 ## Deploy — Cloudflare Pages
 
 **Por que não Vercel:** o plano Hobby proíbe uso comercial, e a lista de
