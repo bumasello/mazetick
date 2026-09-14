@@ -178,6 +178,7 @@ quebrar. Nove checagens:
 | derivação versionada e resolvível | número sem script commitado não vai ao ar |
 | sem campo proibido nos JSON de dados | rede embaixo da regra 2, o dado vem de outro repo |
 | todo JSON tem `generated_at` parseável | sem ele a página não mostra idade, e a regra 4 cai calada |
+| sitemap ↔ páginas em correspondência 1:1 | artigo segurado deixaria 404 no Search Console |
 
 Duas regras governam este arquivo:
 

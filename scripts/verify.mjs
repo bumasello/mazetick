@@ -496,6 +496,43 @@ check(
   check('Todo JSON de dados tem generated_at parseável', undated);
 }
 
+// 18. Toda URL do sitemap resolve para um arquivo gerado, e nenhuma indexável
+//     fica de fora.
+//
+//     A 6 já confere o sentido canônica -> sitemap. Esta confere o INVERSO, que
+//     é o que pega um artigo segurado: a rota some, e se o sitemap continuasse a
+//     listá-la o Search Console colheria 404. Desta vez o 404 durou um dia e se
+//     resolveu sozinho porque o artigo voltou; foi sorte, e sorte não é método.
+{
+  const problems = [];
+  const smFile = all.find((f) => /sitemap-\d+\.xml$/.test(f));
+
+  if (!smFile) {
+    problems.push('sitemap não gerado');
+  } else {
+    const have = new Set(all.map(rel));
+    const locs = [...read(smFile).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+
+    // sitemap -> arquivo
+    for (const loc of locs) {
+      const p0 = new URL(loc).pathname.replace(/\/$/, '');
+      const cands = p0 === '' ? ['index.html'] : [`${p0.slice(1)}.html`, `${p0.slice(1)}/index.html`];
+      if (!cands.some((c) => have.has(c))) problems.push(`sitemap lista ${loc}, sem arquivo correspondente`);
+    }
+
+    // arquivo indexável -> sitemap
+    const inSitemap = new Set(locs.map((l) => new URL(l).pathname.replace(/\/$/, '') || '/'));
+    for (const f of pages) {
+      if (/name="robots" content="noindex"/.test(read(f))) continue;
+      const p0 = '/' + rel(f).replace(/\.html$/, '').replace(/\/index$/, '');
+      const norm = p0 === '/index' ? '/' : p0;
+      if (!inSitemap.has(norm)) problems.push(`${rel(f)} é indexável e não está no sitemap`);
+    }
+  }
+
+  check('Sitemap e páginas geradas em correspondência 1:1', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

@@ -7,7 +7,7 @@ window: "6–14 September 2026, nine consecutive days"
 windowShort: "9 days, Sep 2026"
 method: "Each-way terms read hourly from one bookmaker's own public race pages, 06:00–21:00 UTC, with every change time-stamped. Opening and closing terms compared separately."
 measured: 2026-09-14
-derivation: "scripts/ew_terms_audit.py@318b8bc"
+derivation: "scripts/ew_terms_audit.py@3b94cc2"
 published: 2026-09-14
 verdict: negative
 order: 2
@@ -120,28 +120,58 @@ Separately from all of the above, the classic table gets the small fields wrong 
 - In fields of **five to six**, it promises two places. The bookmaker pays **win only**.
 - In fields of **eight to nine**, it promises a fifth. The bookmaker pays **a quarter** — in the bettor's favour, for once.
 
-This is a boundary disagreement, not a timing one, and it is the only part of this measurement where "the table is wrong" is a fair description.
+This is a boundary disagreement, not a timing one. Together with the very largest fields, it is the only place where the two ladders genuinely differ — and the only part of this measurement where "the table is wrong" is a fair description.
 
 ## The ladder the bookmaker actually uses
 
-Read from the 324 races rather than from any book:
+Read from the 324 races, across every reading rather than the last one — the
+last reading is the promoted state, which is how we got this wrong the first time:
 
 <div class="table-scroll">
 <table class="dense">
   <thead>
-    <tr><th scope="col">Field size</th><th scope="col">Handicap</th><th scope="col">Non-handicap</th></tr>
+    <tr>
+      <th scope="col">Field size</th>
+      <th scope="col">Handicap</th>
+      <th scope="col">Non-handicap</th>
+      <th scope="col">Classic table, handicap</th>
+      <th scope="col" class="num">Handicaps seen</th>
+    </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Field size">Up to 6</td><td data-label="Handicap">win only</td><td data-label="Non-handicap">win only</td></tr>
-    <tr><td data-label="Field size">7–9</td><td data-label="Handicap">2 at 1/4</td><td data-label="Non-handicap">2 at 1/4</td></tr>
-    <tr><td data-label="Field size">10–13</td><td data-label="Handicap">3 at 1/5</td><td data-label="Non-handicap">3 at 1/5</td></tr>
-    <tr><td data-label="Field size">14–19</td><td data-label="Handicap"><strong>4 at 1/5</strong></td><td data-label="Non-handicap">3 at 1/5</td></tr>
-    <tr><td data-label="Field size">20+</td><td data-label="Handicap"><strong>5–6 at 1/5</strong></td><td data-label="Non-handicap">3 at 1/5</td></tr>
+    <tr><td data-label="Field size">Up to 6</td><td data-label="Handicap">win only</td><td data-label="Non-handicap">win only</td><td data-label="Classic" class="faint">2 at 1/4</td><td data-label="Seen" class="num faint">—</td></tr>
+    <tr><td data-label="Field size">7–9</td><td data-label="Handicap">2 at 1/4</td><td data-label="Non-handicap">2 at 1/4</td><td data-label="Classic" class="faint">3 at 1/5</td><td data-label="Seen" class="num faint">—</td></tr>
+    <tr><td data-label="Field size">10–13</td><td data-label="Handicap">3 at 1/5</td><td data-label="Non-handicap">3 at 1/5</td><td data-label="Classic">3 at 1/5 &nbsp;<span class="agree">same</span></td><td data-label="Seen" class="num">93</td></tr>
+    <tr><td data-label="Field size">14–19</td><td data-label="Handicap"><strong>3 at 1/4</strong></td><td data-label="Non-handicap">3 at 1/5</td><td data-label="Classic">3 at 1/4 &nbsp;<span class="agree">same</span></td><td data-label="Seen" class="num">52</td></tr>
+    <tr><td data-label="Field size">20–23</td><td data-label="Handicap"><strong>4 at 1/4</strong></td><td data-label="Non-handicap">3 at 1/5</td><td data-label="Classic">4 at 1/4 &nbsp;<span class="agree">same</span></td><td data-label="Seen" class="num">8</td></tr>
+    <tr><td data-label="Field size">24+</td><td data-label="Handicap">5–6 at 1/5</td><td data-label="Non-handicap">3 at 1/5</td><td data-label="Classic" class="faint">4 at 1/4</td><td data-label="Seen" class="num">4</td></tr>
   </tbody>
 </table>
 </div>
 
-**Handicaps and non-handicaps are treated identically up to thirteen runners.** The classic table splits them from eight — and that split is where most of its trouble comes from.
+Look at the middle rows, and then at the column beside them.
+
+**Where the table has a rule and we have enough races to check it, the two agree
+exactly.** 3 at 1/5 for ten to thirteen. 3 at 1/4 for fourteen to nineteen. 4 at
+1/4 for twenty to twenty-three. These are not approximations of each other; they
+are the same terms.
+
+That changes what the earlier sections of this article mean. The classic table is
+not a rough guide that the bookmaker departs from. **It is the opening ladder, and
+it is correct.** Every divergence we measured in the categories that move is
+promotion — the 09:00 upgrade applied on top of a starting position the table
+describes precisely. "The table has no date" stops being a figure of speech and
+becomes a literal description: give the table a timestamp of 06:00 and it is right.
+
+Two rows carry a warning. **Twenty to twenty-three rests on 8 races and the row
+above 24 on 4** — too few to call settled, and the 24+ row is the one place in
+the upper field sizes where the two ladders genuinely differ. They are printed
+because leaving them out would be tidier and less honest, and they will firm up
+or move as the sample grows.
+
+**Handicaps and non-handicaps are treated identically up to thirteen runners.**
+The classic table splits them from eight, and that split is a real error rather
+than a missing clock.
 
 ## What this is not
 

@@ -212,6 +212,17 @@ table,
    nunca empurrando a página. */
 .prose .table-scroll { overflow-x: auto; }
 
+/* Selo de concordância numa tabela de comparação. --accent significa "difere do
+   padrão para cima"; aqui o sentido é "bate", que é o mesmo eixo: melhor do que
+   se esperava. Nunca "aposte aqui". */
+.prose .agree {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .prose blockquote {
   border-left: 1px solid var(--rule-med);
   padding-left: var(--sp-5);
