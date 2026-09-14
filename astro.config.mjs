@@ -10,7 +10,14 @@ export default defineConfig({
   site: 'https://mazetick.com',
   output: 'static',
   trailingSlash: 'never',
-  build: { format: 'file' },
+  build: {
+    format: 'file',
+    // Sem CSS inlineado no HTML. O padrão ('auto') inlineia folhas pequenas,
+    // o que obrigaria a CSP a aceitar `style-src 'unsafe-inline'` — e uma CSP
+    // que aceita inline protege bem menos. Com tudo externo, `style-src 'self'`
+    // basta e é honesta.
+    inlineStylesheets: 'never',
+  },
   integrations: [
     sitemap({ changefreq: 'daily', lastmod: new Date() }),
   ],

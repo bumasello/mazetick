@@ -6,10 +6,11 @@
   "description": "mazetick.com \u2014 time-stamped market data for UK & Irish horse racing",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/verify.mjs",
+    "build": "astro build && node scripts/headers.mjs && node scripts/verify.mjs",
     "preview": "astro preview",
     "check": "astro check",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "headers": "node scripts/headers.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",

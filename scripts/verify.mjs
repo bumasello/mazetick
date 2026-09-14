@@ -11,6 +11,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { inlineScripts, sha256 } from './headers.mjs';
 
 const DIST = 'dist';
 const fail = [];
@@ -220,6 +221,79 @@ check(
   }
 
   check('Sem adaptador de servidor; saída em dist/', problems);
+}
+
+// 12. Os cabeçalhos existem E cobrem o que é realmente servido.
+//
+//     Cabeçalho declarado e não servido é a mesma classe de coisa que
+//     verificador que nunca falha. Aqui a prova é estrutural: cada <script>
+//     inline do HTML construído tem de ter o seu hash na CSP, calculado pela
+//     MESMA função que gerou o arquivo (importada, não reimplementada — duas
+//     implementações divergiriam em silêncio).
+//
+//     Se alguém acrescentar um script inline e não regerar, o build para.
+{
+  const problems = [];
+  const hf = path.join(DIST, '_headers');
+
+  if (!fs.existsSync(hf)) {
+    problems.push('dist/_headers não existe — rodou scripts/headers.mjs?');
+  } else {
+    const h = read(hf);
+
+    for (const name of [
+      'Content-Security-Policy',
+      'Strict-Transport-Security',
+      'X-Content-Type-Options',
+      'Referrer-Policy',
+      'Permissions-Policy',
+    ]) {
+      if (!h.includes(`${name}:`)) problems.push(`_headers: falta ${name}`);
+    }
+
+    // Parseia por bloco em vez de casar regex no arquivo inteiro. A primeira
+    // versão usava /^\/\*[\s\S]*?Cache-Control:.../ e dava falso positivo: o
+    // `[\s\S]*?` atravessa a fronteira dos blocos e casava, a partir de `/*`,
+    // o Cache-Control que pertence a `/_astro/*`.
+    const blocks = {};
+    let current = null;
+    for (const raw of h.split('\n')) {
+      if (raw.trim().startsWith('#') || !raw.trim()) continue;
+      if (!/^\s/.test(raw)) {
+        current = raw.trim();
+        blocks[current] = {};
+      } else if (current) {
+        const i = raw.indexOf(':');
+        if (i > 0) blocks[current][raw.slice(0, i).trim()] = raw.slice(i + 1).trim();
+      }
+    }
+
+    const IMMUTABLE = 'public, max-age=31536000, immutable';
+    if (blocks['/_astro/*']?.['Cache-Control'] !== IMMUTABLE) {
+      problems.push('_headers: /_astro/* sem Cache-Control immutable');
+    }
+    // O HTML cai no bloco `/*` e NÃO pode ser imutável: uma correção publicada
+    // levaria um ano para chegar a quem já visitou.
+    if (/max-age=(?!0\b)\d+/.test(blocks['/*']?.['Cache-Control'] || '')) {
+      problems.push(`_headers: /* com cache longo (${blocks['/*']['Cache-Control']}) — pega o HTML`);
+    }
+
+    // Uma CSP que aceita inline não protege do que a CSP existe para impedir.
+    for (const bad of ["'unsafe-inline'", "'unsafe-eval'"]) {
+      if (h.includes(bad)) problems.push(`_headers: CSP contém ${bad}`);
+    }
+
+    for (const f of pages) {
+      for (const body of inlineScripts(read(f))) {
+        const hash = sha256(body);
+        if (!h.includes(hash)) {
+          problems.push(`${rel(f)}: script inline sem hash na CSP (${hash.slice(0, 24)}…)`);
+        }
+      }
+    }
+  }
+
+  check('Cabeçalhos presentes e CSP cobrindo os scripts servidos', problems);
 }
 
 console.log();

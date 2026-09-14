@@ -154,6 +154,9 @@ quebrar. Nove checagens:
 | links internos | nenhum 404 |
 | sem script externo além do beacon | e o beacon está declarado na política |
 | sem literal de cor no fonte | os tokens são a única fonte |
+| sem cor fora dos tokens no artefato servido | cor pode nascer no build, fora do fonte |
+| sem adaptador de servidor; saída em `dist/` | a Cloudflare já tentou instalar um sozinha |
+| cabeçalhos presentes e CSP cobrindo os scripts | política fora de sincronia falha calada |
 
 Duas regras governam este arquivo:
 
@@ -171,6 +174,31 @@ restaure, confirme que passa. E confira o código de saída: um script que impri
 ```bash
 npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
 ```
+
+## Cabeçalhos e CSP
+
+`dist/_headers` é **gerado** por `scripts/headers.mjs`, não escrito à mão, e
+`npm run build` o encadeia antes do verify. O motivo é a CSP: ela usa **hash de
+cada script inline**, e hash escrito à mão sai de sincronia no primeiro edit —
+quando sai, ou bloqueia o script que devia rodar, ou alguém "resolve" pondo
+`'unsafe-inline'`, que é a CSP deixando de proteger do que ela existe para
+impedir.
+
+A política é restritiva porque a superfície é mínima: um único script externo
+(o beacon do Cloudflare Web Analytics, que a checagem 8 sustenta), CSS e fontes
+na própria origem, nenhum formulário, nenhum iframe, nenhum handler `on*`.
+
+⚠️ **`inlineStylesheets: 'never'` no `astro.config.mjs` é o que mantém
+`style-src 'self'` possível.** O padrão (`'auto'`) inlineia folhas pequenas no
+HTML e obrigaria a CSP a aceitar estilo inline. Não mudar sem mudar a CSP junto.
+
+A checagem 12 confere que cada `<script>` inline servido tem o seu hash na
+política, usando a **mesma função** que gerou o arquivo — importada, não
+reimplementada, porque duas implementações divergiriam em silêncio.
+
+Cache: `/_astro/*` leva `immutable` (nome com hash de conteúdo, imutável por
+construção); o HTML **não**, senão uma correção publicada levaria um ano para
+chegar a quem já visitou.
 
 ## Artigos segurados
 
