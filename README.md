@@ -18,7 +18,7 @@ sample sizes. A site that tells you a bet winning 78.8% of the time still loses
 money has no reason to flatter the next number it shows you.
 
 This repository is the website: a static Astro site, deployed to Cloudflare
-Pages. The research that feeds it lives in
+Workers. The research that feeds it lives in
 [horsing-maze](https://github.com/bumasello/horsing-maze), kept **separate on
 purpose** — no key, no secret and no database access belongs here.
 
@@ -29,8 +29,8 @@ Two things, if you build anything that publishes numbers:
 - **`src/content.config.ts`** makes sample size, window, method and measurement
   date *required* fields. An article whose sample is not declared does not
   compile.
-- **`scripts/verify.mjs`** runs inside `npm run build` and fails the build. Ten
-  checks, governed by two rules learned the hard way — see
+- **`scripts/verify.mjs`** runs inside `npm run build` and fails the build.
+  Eighteen checks, governed by two rules learned the hard way — see
   [Verificação](#verificação).
 
 ---
@@ -57,8 +57,11 @@ Mais duas que moldam os componentes:
    pesquisa isso é o `MethodBox`, e o schema em `src/content.config.ts` torna
    `sample`, `window`, `method` e `measured` **obrigatórios**: sem eles o build
    falha. Um artigo sem amostra declarada não consegue ser publicado.
-4. **Nada de dado inventado.** Falta dado? `EmptyState`, dizendo a hora da
-   última coleta.
+4. **Nada de dado inventado.** Falta dado? A página diz que falta, com o
+   carimbo da última coleta — e distingue os três estados vazios (abaixo). Não
+   há componente genérico para isso de propósito: um `EmptyState` de catálogo
+   chegou a existir, sem nenhuma página o usar, e um componente que ninguém usa
+   mente sobre o que o site faz. Foi removido.
 
 ## Rodar
 
@@ -120,19 +123,24 @@ de produto, não de infraestrutura — mas tem de ser decisão, e não default.
 *(`search=yes` é preservado, então o rastreamento normal do Google e o sitemap
 não são afetados.)*
 
-## Deploy — Cloudflare Pages
+## Deploy — Cloudflare Workers
+
+⚠️ **Workers, não Pages.** A Cloudflare migrou o produto; o que temos é um
+Worker de assets, e é por isso que existe `wrangler.jsonc`, que a variável de CI
+se chama `WORKERS_CI` e que `workers_dev`/`preview_urls` precisam ser
+desligados. Quem procurar "Pages" no painel vai se confundir.
 
 **Por que não Vercel:** o plano Hobby proíbe uso comercial, e a lista de
 exemplos em `vercel.com/docs/limits/fair-use-guidelines` nomeia literalmente
 *"Affiliate linking is the primary purpose of the site"* e *"The inclusion of
 advertisements, including but not limited to online advertising platforms like
-Google AdSense"* — os dois planos de receita deste site. Cloudflare Pages não
-tem essa cláusula, e dá banda ilimitada, domínio e SSL de graça.
+Google AdSense"* — os dois planos de receita deste site. A Cloudflare não tem
+essa cláusula, e dá banda ilimitada, domínio e SSL de graça.
 
 Passos (exigem a conta do dono — **não foram executados**):
 
 1. Criar o repositório no GitHub e dar push.
-2. Cloudflare Pages → *Create project* → *Connect to Git*.
+2. Cloudflare → *Workers & Pages* → *Create* → *Import a repository*.
 3. Build command `npm run build`, output `dist`, Node 22.
 4. Custom domain `mazetick.com` (+ `www`), e mover o DNS para a Cloudflare.
 5. **`PUBLIC_CF_BEACON_TOKEN`** com o token de *Web Analytics*, nas variáveis
@@ -176,7 +184,8 @@ src/
 ├── content.config.ts     # schema Zod dos artigos — método obrigatório
 ├── content/research/     # os artigos, em Markdown
 ├── styles/tokens.css     # a única fonte de cor, tipo e espaçamento
-├── components/           # o catálogo: MethodBox, DenseTable, EmptyState…
+├── components/           # MethodBox, DataAge, StatFigure, DensityToggle…
+├── lib/                  # canonical.ts (a canônica, uma implementação só), time.ts
 ├── layouts/              # BaseLayout (canônica, JSON-LD, densidade), ArticleLayout
 └── pages/
 ```
@@ -184,7 +193,7 @@ src/
 ## Verificação
 
 `npm run build` roda `scripts/verify.mjs` no fim e **falha com exit 1** se algo
-quebrar. Nove checagens:
+quebrar. Dezoito checagens:
 
 | checagem | por quê |
 |---|---|
@@ -201,10 +210,10 @@ quebrar. Nove checagens:
 | sem adaptador de servidor; saída em `dist/` | a Cloudflare já tentou instalar um sozinha |
 | cabeçalhos presentes e CSP cobrindo os scripts | política fora de sincronia falha calada |
 | beacon de analytics no build de produção | variável de build esquecida some sem avisar |
-| sem sintaxe de template; JSON-LD parseável | olhar o arquivo não é interpretá-lo |
+| sem sintaxe de template; JSON-LD parseável **e coerente com a canônica** | olhar não é interpretar, e parsear não é conferir |
 | derivação versionada e resolvível | número sem script commitado não vai ao ar |
-| sem campo proibido nos JSON de dados | rede embaixo da regra 2, o dado vem de outro repo |
-| todo JSON tem `generated_at` parseável | sem ele a página não mostra idade, e a regra 4 cai calada |
+| sem campo proibido nos JSON de dados (em `src/data` **e em `dist/`**) | rede embaixo da regra 6, o dado vem de outro repo |
+| todo JSON carimbado: `generated_at` **e `collected_through`** | sem o segundo a idade na tela vira a da derivação, e a regra 4 cai calada |
 | sitemap ↔ páginas em correspondência 1:1 | artigo segurado deixaria 404 no Search Console |
 
 Duas regras governam este arquivo:
@@ -239,6 +248,12 @@ novo, a versão anterior continua no ar. É o comportamento certo: degradar para
 "sem corridas hoje" MENTE, e num portal cuja tese é "todo número carrega o
 instante em que era verdade" essa é a pior mentira disponível.
 
+**`bumasello/mazetick-data` é público por decisão, não por descuido:** a
+máquina de build da Cloudflare precisa buscá-lo sem credencial, e o conteúdo é
+derivado nosso — o recorte que remove as colunas do fornecedor acontece na
+origem, no `build_site_data.py`, e não aqui. A checagem 16 é a rede embaixo
+disso, não a política.
+
 Por isso `src/data/*.json` é **gitignored**: uma cópia velha commitada poderia
 ser usada em silêncio num build sem rede, que é exatamente a falha que o script
 existe para impedir. Ele também valida schema, `generated_at` e forma na porta
@@ -260,9 +275,24 @@ Confundi-los é o erro fácil, e o terceiro é o perigoso:
 2. **Ainda não coletamos hoje** — parece o caso 1; só o carimbo distingue, e a
    página não afirma qual é, porque não sabe.
 3. **Dado velho porque a coleta quebrou** — parece o caso 1 e *mentiria*. A
-   idade sai de `generated_at`, está **sempre visível**, e degrada em dois
-   passos: acima de 8h vira aviso, acima de 24h vira faixa invertida dizendo
-   que o dado está desatualizado.
+   idade sai de **`collected_through`**, está **sempre visível**, e degrada em
+   dois passos: acima de 8h vira aviso, acima de 24h vira faixa invertida
+   dizendo que o dado está desatualizado.
+
+⚠️ **`collected_through` e `generated_at` são relógios diferentes, e trocá-los
+apaga exatamente a distinção acima.** `generated_at` é quando NÓS derivamos;
+`collected_through` é quando o COLETOR leu pela última vez. Um rebuild às 18:00
+sobre uma coleta parada às 09:00 tem `generated_at` fresquíssimo e dado velho —
+mostrar `generated_at` como idade faria o caso 3 se disfarçar de caso 1. Os dois
+aparecem na tela; o rotulado `derived` é o secundário, e existe para o leitor
+poder conferir contra o repositório de dados.
+
+**Um quarto estado, o pior:** `collected_through` pode vir `null` de forma
+legítima — é o produtor dizendo que não achou arquivo do coletor hoje. A página
+então **não finge frescor**: declara, no HTML e sem depender de JavaScript, que
+não tem como dizer quão velho o dado é. A CHAVE, essa, não pode sumir: a
+checagem 17 e o `fetch-data.mjs` recusam um arquivo sem ela, porque aí a página
+voltaria calada a exibir a derivação como se fosse coleta.
 
 ⚠️ A idade relativa é calculada **no navegador**, de propósito. A página é
 estática: calculada no build, "há 2 horas" congelaria e estaria mentindo seis
@@ -317,8 +347,9 @@ chegar a quem já visitou.
 nada é publicado. O cabeçalho do arquivo tem de dizer por que está segurado e o
 que precisa acontecer para sair.
 
-Hoje: `cost-of-crossing-the-spread.md`, medido em um dia só, aguardando
-remedição contra os 26 dias já coletados.
+Hoje: **nenhum**. Os cinco artigos publicam. (`cost-of-crossing-the-spread.md`
+esteve segurado por estar medido em um dia só; foi remedido sobre 26 dias,
+reescrito e publicado.)
 
 Visual (precisa de `libasound2` no WSL):
 `npx playwright install chromium && sudo npx playwright install-deps`

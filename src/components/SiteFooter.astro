@@ -24,6 +24,20 @@ const year = new Date().getUTCFullYear();
     <a href="/contact">Contact</a>
   </nav>
 
+  {/*
+    Regra 7 do handoff: creditar as fontes mesmo sem obrigação. O theracingapi
+    NÃO exige atribuição; damos assim mesmo, e nomeando. Um site que se vende
+    como transparente e esconde de quem vêm os seus dados está incoerente antes
+    da primeira tabela. E a linha diz o que fazemos com eles: publicamos SOBRE o
+    dado, não O dado.
+  */}
+  <p class="note">
+    Terms and prices are read from public bookmaker and exchange pages
+    (<strong>Paddy Power</strong>, <strong>Smarkets</strong>); racecards and form
+    from <strong>The Racing API</strong>. We publish our own measurements over
+    those records, never the underlying feeds.
+  </p>
+
   <p class="note">
     mazetick publishes measurements, not tips. We do not sell selections and we
     do not promise a return. Nothing here is betting advice. &copy; {year} mazetick.
@@ -57,4 +71,5 @@ const year = new Date().getUTCFullYear();
   }
   .links a { color: var(--ink-muted); text-decoration: none; }
   .links a:hover { color: var(--accent); }
+  .note + .note { margin-top: var(--sp-3); }
 </style>
