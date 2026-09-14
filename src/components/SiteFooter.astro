@@ -28,14 +28,23 @@ const year = new Date().getUTCFullYear();
     Regra 7 do handoff: creditar as fontes mesmo sem obrigação. O theracingapi
     NÃO exige atribuição; damos assim mesmo, e nomeando. Um site que se vende
     como transparente e esconde de quem vêm os seus dados está incoerente antes
-    da primeira tabela. E a linha diz o que fazemos com eles: publicamos SOBRE o
-    dado, não O dado.
+    da primeira tabela.
+
+    ⚠️ E o crédito é DELIMITADO de propósito. Conferido em `build_site_data.py`
+    e nas cinco derivações: hoje nada nas páginas vem do theracingapi — o
+    produtor lê só os CSVs da Paddy Power e do Smarkets, e os artigos saem de
+    rpscrape e dos CSVs do exchange. Escrever "racecards and form from The
+    Racing API" no rodapé seria creditar uma fonte que não está na tela, que é a
+    mesma classe de erro que o site existe para não cometer, só na direção
+    oposta. Quando `/horse/[id]` publicar, a cláusula muda de tempo verbal.
   */}
   <p class="note">
-    Terms and prices are read from public bookmaker and exchange pages
-    (<strong>Paddy Power</strong>, <strong>Smarkets</strong>); racecards and form
-    from <strong>The Racing API</strong>. We publish our own measurements over
-    those records, never the underlying feeds.
+    What is on these pages is our own measurement over public records:
+    each-way terms from <strong>Paddy Power</strong>&rsquo;s own race pages, and
+    order-book prices from <strong>Smarkets</strong>&rsquo; public API. Racecard
+    and form data used elsewhere in this project comes from{' '}
+    <strong>The Racing API</strong>. We publish measurements over those records,
+    never the records themselves.
   </p>
 
   <p class="note">
