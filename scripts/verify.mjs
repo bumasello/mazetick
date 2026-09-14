@@ -185,6 +185,43 @@ check(
   check('Sem cor fora dos tokens no artefato servido', problems);
 }
 
+// 11. Nenhum adaptador de servidor, e a saída no lugar combinado.
+//
+//     Não é hipótese: em 2026-09-13 a Cloudflare detectou Astro na criação do
+//     projeto, decidiu que o site era renderizado no servidor, instalou
+//     @astrojs/cloudflare DURANTE o build e moveu a saída de dist/ para
+//     dist/client/. A checagem 7 pegou pelo sintoma — 137 links quebrados —,
+//     o que já era suficiente para recusar o deploy, mas ilegível como
+//     diagnóstico.
+//
+//     Esta olha as duas pontas: a causa (adaptador nas dependências ou no
+//     astro.config) e o sintoma (dist/index.html no lugar certo, sem
+//     dist/client/). O gatilho veio de FORA do repositório, então o repositório
+//     tem de saber recusá-lo — é o que wrangler.jsonc e esta checagem fazem.
+{
+  const problems = [];
+  const pkg = JSON.parse(read('package.json'));
+  const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+
+  const ADAPTERS = /^@astrojs\/(cloudflare|node|vercel|netlify|deno|aws)$/;
+  for (const name of Object.keys(deps)) {
+    if (ADAPTERS.test(name)) problems.push(`package.json: adaptador ${name}`);
+  }
+
+  const cfg = read('astro.config.mjs');
+  if (/\badapter\s*:/.test(cfg)) problems.push('astro.config.mjs: chave `adapter`');
+  if (!/output:\s*'static'/.test(cfg)) problems.push("astro.config.mjs: output deixou de ser 'static'");
+
+  if (!fs.existsSync(path.join(DIST, 'index.html'))) {
+    problems.push('dist/index.html não existe — a saída mudou de lugar');
+  }
+  if (fs.existsSync(path.join(DIST, 'client'))) {
+    problems.push('dist/client/ existe — sinal de build com adaptador de servidor');
+  }
+
+  check('Sem adaptador de servidor; saída em dist/', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

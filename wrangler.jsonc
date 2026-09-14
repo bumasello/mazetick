@@ -1,0 +1,44 @@
+{
+  // Este arquivo existe para IMPEDIR a auto-configuração da Cloudflare.
+  //
+  // Em 2026-09-13 a primeira construção falhou com 137 links quebrados.
+  // Causa: a Cloudflare detectou Astro, decidiu que o projeto era renderizado
+  // no servidor, instalou @astrojs/cloudflare durante o build e a saída passou
+  // de dist/ para dist/client/. O verify pegou e recusou publicar —
+  // corretamente: o artefato construído não era o testado.
+  //
+  // A auto-configuração só roda quando NÃO encontra configuração. Havendo este
+  // arquivo, ela se cala. Não apagar por parecer supérfluo: as linhas abaixo
+  // são o que mantém o site estático.
+  //
+  // O site é estático por decisão (astro.config.mjs: output 'static'). Nenhuma
+  // das doze páginas tem nada dinâmico. Adaptador de servidor aqui significaria
+  // execução por requisição, outro modelo de custo e um comportamento que
+  // ninguém testou. A checagem 11 do scripts/verify.mjs recusa o build se um
+  // adaptador reaparecer.
+
+  // Tem de bater com o nome do projeto no painel, senão a Cloudflare cria um
+  // Worker com outro nome.
+  "name": "mazetick",
+  "compatibility_date": "2026-09-13",
+
+  "assets": {
+    "directory": "./dist",
+
+    // Serve a nossa dist/404.html em caminho inexistente. O PADRÃO é "none",
+    // que devolveria 404 sem corpo — a página existiria em dist/ e nunca
+    // apareceria. Valores válidos: "single-page-application" | "404-page" |
+    // "none" (doc: wrangler/configuration, assets).
+    "not_found_handling": "404-page",
+
+    // Contraparte exata de `trailingSlash: 'never'` + `build.format: 'file'`
+    // do astro.config: os arquivos são /about.html e os links são /about.
+    //
+    // Conferido na doc: o padrão ("auto-trailing-slash") JÁ faz o certo aqui —
+    // serve /about.html em /about com 200, e redireciona /about/ com 307 para
+    // /about, igual a este valor. Está declarado mesmo assim porque o propósito
+    // deste arquivo é não depender de padrão da Cloudflare, e porque "drop" diz
+    // no nome o que o Astro decidiu. Não é correção de um padrão errado.
+    "html_handling": "drop-trailing-slash"
+  }
+}
