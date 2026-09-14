@@ -1,121 +1,154 @@
 ---
-title: "The standard each-way terms table is wrong in 44.5% of races"
-dek: "Over 510 races and eight days of hourly collection, the terms a bookmaker actually advertised differed from the classic table 227 times. Every single divergence ran the same way: the table promised a bigger place fraction than was on offer."
-description: "510 races, eight days: the classic each-way terms table was wrong 227 times, and always in the direction that overstates the return."
-sample: "510 races · 227 divergences · UK & Ireland · win-only races excluded"
-window: "6–13 September 2026, eight consecutive days"
-windowShort: "8 days, Sep 2026"
-method: "Terms read hourly from one bookmaker's own public race pages, 06:00–21:00 UTC, and compared against the classic terms table."
-measured: 2026-09-13
+title: "The classic each-way terms table is not wrong. It has no date."
+dek: "It describes the opening of the market, and it is right almost everywhere the terms never move. Where it looks wrong is where the bookmaker promotes during the day — one more place, a worse fraction. In 54 promotions across nine days, the fraction never once improved."
+description: "324 races, 81 term changes: the classic each-way table describes the market's opening. What nobody publishes is what happens after."
+sample: "324 races · 81 term changes · UK & Ireland"
+window: "6–14 September 2026, nine consecutive days"
+windowShort: "9 days, Sep 2026"
+method: "Each-way terms read hourly from one bookmaker's own public race pages, 06:00–21:00 UTC, with every change time-stamped. Opening and closing terms compared separately."
+measured: 2026-09-14
 derivation: "scripts/ew_terms_audit.py@318b8bc"
-published: 2026-09-13
+published: 2026-09-14
 verdict: negative
 order: 2
-
-# ⛔ SEGURADO — reescrever, não remendar (atualizado em 2026-09-14)
-#
-# TERCEIRA correção da mesma medição, e cada uma tornou o artigo melhor. O que
-# está escrito abaixo no corpo está MORTO e não deve ser reaproveitado.
-#
-# Mortos: "44,5% em 510 corridas" (1ª versão) e "a clássica diz 1/4 e a Paddy
-# Power paga 1/5 em 128 de 128" (2ª). A 2ª media o ÚLTIMO snapshot de cada
-# corrida — isto é, o estado JÁ PROMOVIDO. Separando abertura de fechamento:
-#
-#   faixa          mudaram   abertura -> fechamento
-#   hcap 10-11      0/45     3@1/5 estável
-#   comum 10+       0/68     3@1/5 estável
-#   hcap 12-15     31/88     3@1/4 existe na abertura, SOME no fechamento
-#   hcap 16+       24/40     4@1/4 e 3@1/4 na abertura, ZERO 1/4 no fim
-#
-# ===> A TABELA CLÁSSICA NÃO ESTÁ ERRADA. ESTÁ SEM DATA. <===
-#
-# Ela descreve a ABERTURA do mercado. Durante o dia a casa promove, e a
-# promoção é uma troca explícita: mais uma vaga, fração de 1/4 para 1/5. Vaga
-# extra não é de graça — é um trade, e ninguém publica isso. A tabela acerta
-# exatamente onde os termos são estáveis (113 corridas, 0 mudanças) e "erra"
-# exatamente onde há promoção.
-#
-# Isto é a TESE DO SITE INTEIRO demonstrada na pergunta do each-way: um número
-# sem carimbo de tempo não é um número errado, é um número sem data. Artigo
-# muito melhor que "a tabela erra 44,5%".
-#
-# Sobra um erro de fronteira que NÃO é promoção, e vale um parágrafo: em campo
-# de 5 a 9 a clássica promete 2 vagas onde a casa paga só vitória (até 6
-# corredores) e 1/5 onde ela paga 1/4 (7 a 9).
-#
-# A /extra-places já publica a consequência disto: "vaga extra" é pagar acima
-# da escada DA PRÓPRIA CASA, e a página mostra a troca de fração junto — hoje,
-# 19 de 19 aumentos de vaga vieram com fração pior.
-#
-# ⚠️ Descartada também a "bimodalidade dentro da faixa" da 2ª versão: era
-# artefato de agrupar 8-11 num balde porque a tabela clássica agrupa.
-#
-# Derivação: scripts/ew_terms_audit.py@318b8bc no horsing-maze. A terceira
-# correção só foi possível porque a segunda ficou versionada e deu para
-# reexecutar — é o argumento inteiro da regra da derivação.
-draft: true
 limits:
-  - "This is one bookmaker. Terms are set per firm and the classic table is not wrong in the same way everywhere; a second firm has to be measured before the rate generalises."
-  - "Eight days is eight days. The direction of the error is unambiguous — 227 divergences and not one running the other way — but the rate of 44.5% will move as more days are collected, and this page will be updated when it does."
-  - "It does not tell you what an each-way bet returns. The fraction is one input into that, and we have not published a return figure because our own each-way numbers were computed with the wrong fraction and are being redone."
-  - "Terms can change again between collection and the off. Each figure here is what was advertised at the hour it was read."
+  - "Nine days, and one bookmaker. Terms are set per firm, and the ladder below is this firm's, read from its own behaviour — not an industry standard. At thirty days we will re-run it; the derivation is versioned so that re-running is a command, not a project."
+  - "\"Opening\" means the first reading we hold, from 06:00 UTC. If a firm sets terms earlier than that and moves them before we look, we cannot see it, and this article would mistake that for a stable opening."
+  - "We read terms once an hour. A change made and reverted inside the same hour is invisible to us, and we would report the race as unchanged."
+  - "It measures what was advertised, not what anybody was paid. We do not track settled bets, and nothing here says whether an each-way bet at these terms wins or loses money."
+  - "The ladder boundaries are read from 324 races. The ones supported by few races will move as more are collected, and the article will change with them."
 ---
 
-Most each-way calculators, spreadsheets and strategy articles carry the same short table. Handicap with sixteen or more runners: four places at a quarter. Eight to fifteen runners: three places at a fifth. Non-handicap, five to seven runners: two places at a quarter. It has been reproduced for decades.
+There is a small table that everyone who bets each-way knows. Handicap with sixteen or more runners: four places at a quarter. Eight to fifteen: three places at a fifth. Non-handicap, five to seven: two places at a quarter. It is printed in strategy guides, wired into calculators, and hard-coded in spreadsheets — including, for a while, our own.
 
-We wrote it into our own code too, in a function that decided what an each-way bet was worth. It was never checked against anything. So we checked it.
+We measured it against what a bookmaker actually advertised, hour by hour, for nine days. Our first two attempts said the table was badly wrong. Both were mistakes of our own making, and the corrected answer is more interesting than either:
 
-## What was measured
+**The table is not wrong. It has no date.**
 
-Since 6 September 2026 a collector has read the each-way terms a bookmaker advertises on its own public race pages, once an hour, from 06:00 to 21:00 UTC, for every UK and Irish race. It records the number of places offered and the fraction of the odds paid on the place part, exactly as displayed, with the hour attached.
+## Where the table is exactly right
 
-Over the first eight days that is **510 races**. For each one, the advertised terms were compared with what the classic table says they should be.
+Take the races where the terms never moved at all. Over nine days, two whole categories sat completely still:
 
 <div class="table-scroll">
 <table class="dense">
   <thead>
     <tr>
-      <th scope="col">Races collected, 8 days</th>
-      <th scope="col" class="num">510</th>
+      <th scope="col">Category</th>
+      <th scope="col" class="num">Races</th>
+      <th scope="col" class="num">Changed</th>
+      <th scope="col">What happened</th>
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td data-label="Result">Table matched what was advertised</td>
-      <td data-label="Races" class="num">283 &nbsp;<span class="faint">55.5%</span></td>
-    </tr>
-    <tr>
-      <td data-label="Result">Table overstated the place fraction</td>
-      <td data-label="Races" class="num">227 &nbsp;<span class="faint">44.5%</span></td>
-    </tr>
-    <tr>
-      <td data-label="Result">Table understated the place fraction</td>
-      <td data-label="Races" class="num">0</td>
-    </tr>
+    <tr><td data-label="Category">Handicap, 10–11 runners</td><td data-label="Races" class="num">45</td><td data-label="Changed" class="num">0</td><td data-label="What happened">3 at 1/5, all day, every day</td></tr>
+    <tr><td data-label="Category">Non-handicap, 10+</td><td data-label="Races" class="num">68</td><td data-label="Changed" class="num">0</td><td data-label="What happened">3 at 1/5, all day, every day</td></tr>
+    <tr><td data-label="Category">Handicap, 12–15</td><td data-label="Races" class="num">88</td><td data-label="Changed" class="num">31</td><td data-label="What happened">3 at 1/4 exists at the open, gone by the close</td></tr>
+    <tr><td data-label="Category">Handicap, 16+</td><td data-label="Races" class="num">40</td><td data-label="Changed" class="num">24</td><td data-label="What happened">4 at 1/4 and 3 at 1/4 at the open, no 1/4 at all by the close</td></tr>
   </tbody>
 </table>
 </div>
 
-**Not one divergence in 510 races ran the other way.** That is the finding. A rate of 44.5% would be interesting on its own, but a rate with no exceptions in either direction is a different kind of claim: it says the table is not noisy, it is systematically wrong, in one direction, by a known mechanism.
+**113 races, zero changes.** The table describes those perfectly. Where it appears to fail is precisely the two categories that move — and they move in one direction, on a schedule.
 
-## The mechanism
+The same thing measured as a divergence rate makes the point sharply. Comparing the advertised fraction with the classic table:
 
-The divergences concentrate in one branch of the table: the rule that a large handicap pays **a quarter** the odds when it offers three places. Against the terms actually advertised, that is not what happens. Three places or more were paid at **a fifth**.
+- **At the opening:** the table overstates the fraction in **28.7%** of races.
+- **At the close:** **39.5%**.
 
-The difference is not decorative. A fifth returns **20% less** on the place part of the bet than a quarter does. Anyone sizing an each-way bet from the table has been valuing the place leg about a fifth higher than the bookmaker was offering to pay, in almost half of all races.
+Those are the same races and the same table. **The eleven-point difference between the two lines is the promotion.** Publish only the closing figure — which is what our own first attempt did — and you are calling the bookmaker's offer of the day an error in a reference table.
 
-The error runs in the direction that flatters the bet. That is worth sitting with, because a table that erred randomly would have been caught long ago by somebody losing money unexpectedly. A table that only ever overstates the return produces bets that look slightly better than they are, and a shortfall small enough to be blamed on variance.
+## What a promotion actually is
 
-## What we got wrong first
+Across nine days there were **81 changes to each-way terms**. Sorting them:
 
-Our first pass at this used 37 races from a single day and reported 43%. That number was wrong in a way worth describing, because the correction made the finding stronger rather than weaker.
+<div class="table-scroll">
+<table class="dense">
+  <thead>
+    <tr><th scope="col">What changed</th><th scope="col" class="num">Count</th></tr>
+  </thead>
+  <tbody>
+    <tr><td data-label="What changed">Gained a place, <strong>and the fraction was cut</strong></td><td data-label="Count" class="num">48</td></tr>
+    <tr><td data-label="What changed">Gained a place, fraction already at the worse level</td><td data-label="Count" class="num">6</td></tr>
+    <tr><td data-label="What changed">Gained a place <em>and</em> the fraction improved</td><td data-label="Count" class="num">0</td></tr>
+    <tr><td data-label="What changed">Lost a place</td><td data-label="Count" class="num">26</td></tr>
+    <tr><td data-label="What changed">Fraction changed on its own</td><td data-label="Count" class="num">1</td></tr>
+  </tbody>
+</table>
+</div>
 
-Twenty-five of the races in the collection were **win-only** — no place part offered at all. The first count treated those as divergences. They are not: where there is no place fraction, the table's claim about the place fraction is not being contradicted, it simply does not apply. Excluding them and extending to eight days moves the rate to 44.5% and, more importantly, leaves the direction with **no exceptions at all** rather than nearly none.
+**In 54 promotions, the fraction did not improve once.** Either it was cut in the same move, or it was already at the worse level with nothing left to cut.
 
-## Why this sits under everything else
+So the extra place is not a gift. It is a trade: one more place to finish in, each of them paying less. Whether that trade is good depends on the race and on the bet, and this article does not tell you which — but it is a trade, and it is not described anywhere the bettor can see.
 
-We are not publishing this because a fifth is worse than a quarter. We are publishing it because of what it implies about received wisdom in this sport.
+A typical one: a handicap that opened at **3 places at 1/4** and, at 09:00, became **4 at 1/5**. A fourth place appeared. The other three got 20% smaller.
 
-The terms table is the most reproduced, least examined artefact in each-way betting. It costs one HTTP request an hour to check, nobody had checked it, and it turns out to be wrong in nearly half of all races in one direction. Our own each-way analysis was built on top of it, which means **every each-way return this project has ever computed was computed with the place leg inflated**, and those numbers have been withdrawn rather than corrected in place.
+## Places also get taken away
 
-When this site later shows which races pay an extra place, it will show **what the bookmaker is advertising, with the hour it was read**, and use the classic table only as the comparison. That is the whole difference between reporting a fact and repeating a rule.
+Twenty-six of the 81 changes removed a place. Twenty-two of those came with the field shrinking — a non-runner, which is ordinary and expected; fewer horses, fewer places.
+
+**Four did not.** In these, the field was unchanged and the offer was simply withdrawn:
+
+<div class="table-scroll">
+<table class="dense">
+  <thead>
+    <tr>
+      <th scope="col">Course</th><th scope="col">When</th>
+      <th scope="col">Was</th><th scope="col">Became</th><th scope="col" class="num">Field</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td data-label="Course">Leicester</td><td data-label="When" class="n">8 Sep, 11:00</td><td data-label="Was" class="n">3 at 1/5</td><td data-label="Became" class="n">2 at 1/4</td><td data-label="Field" class="num">9, unchanged</td></tr>
+    <tr><td data-label="Course">Galway</td><td data-label="When" class="n">8 Sep, 11:00</td><td data-label="Was" class="n">5 at 1/5</td><td data-label="Became" class="n">4 at 1/5</td><td data-label="Field" class="num">16, unchanged</td></tr>
+    <tr><td data-label="Course">Goodwood</td><td data-label="When" class="n">8 Sep, 14:00</td><td data-label="Was" class="n">4 at 1/5</td><td data-label="Became" class="n">3 at 1/5</td><td data-label="Field" class="num">12, unchanged</td></tr>
+    <tr><td data-label="Course">Doncaster</td><td data-label="When" class="n">11 Sep, 09:00</td><td data-label="Was" class="n">5 at 1/5</td><td data-label="Became" class="n">4 at 1/5</td><td data-label="Field" class="num">17, unchanged</td></tr>
+  </tbody>
+</table>
+</div>
+
+This is the direction that costs the bettor, and it is the half that gets no coverage anywhere. Somebody who backed each-way that morning expecting the extra place did not have it by the afternoon. Four cases in nine days is not common. It is also not zero, and there is no way to find out except by writing down what the terms were, hour by hour.
+
+## The terms move at nine o'clock
+
+**52 of the 81 changes landed at exactly 09:00 UTC.** The remainder are scattered thinly between 07:00 and 20:00.
+
+That single fact is worth more, practically, than the divergence rates above. The terms you see before nine are not the terms you will get, in the categories that move; the terms you see after nine mostly are. A table cannot tell you this, because a table has no clock.
+
+## One real error, and it is not a promotion
+
+Separately from all of the above, the classic table gets the small fields wrong in a way that never corrects itself during the day:
+
+- In fields of **five to six**, it promises two places. The bookmaker pays **win only**.
+- In fields of **eight to nine**, it promises a fifth. The bookmaker pays **a quarter** — in the bettor's favour, for once.
+
+This is a boundary disagreement, not a timing one, and it is the only part of this measurement where "the table is wrong" is a fair description.
+
+## The ladder the bookmaker actually uses
+
+Read from the 324 races rather than from any book:
+
+<div class="table-scroll">
+<table class="dense">
+  <thead>
+    <tr><th scope="col">Field size</th><th scope="col">Handicap</th><th scope="col">Non-handicap</th></tr>
+  </thead>
+  <tbody>
+    <tr><td data-label="Field size">Up to 6</td><td data-label="Handicap">win only</td><td data-label="Non-handicap">win only</td></tr>
+    <tr><td data-label="Field size">7–9</td><td data-label="Handicap">2 at 1/4</td><td data-label="Non-handicap">2 at 1/4</td></tr>
+    <tr><td data-label="Field size">10–13</td><td data-label="Handicap">3 at 1/5</td><td data-label="Non-handicap">3 at 1/5</td></tr>
+    <tr><td data-label="Field size">14–19</td><td data-label="Handicap"><strong>4 at 1/5</strong></td><td data-label="Non-handicap">3 at 1/5</td></tr>
+    <tr><td data-label="Field size">20+</td><td data-label="Handicap"><strong>5–6 at 1/5</strong></td><td data-label="Non-handicap">3 at 1/5</td></tr>
+  </tbody>
+</table>
+</div>
+
+**Handicaps and non-handicaps are treated identically up to thirteen runners.** The classic table splits them from eight — and that split is where most of its trouble comes from.
+
+## What this is not
+
+It is not an accusation. The bookmaker hides nothing: the terms for every race are on its own pages, all day, for anyone to read. Nothing here was obtained from anywhere else.
+
+What is not published anywhere — by them or by anybody — is the **history**: what the terms were at ten and what they became at two. That absence is not concealment, it is simply nobody's job. It became ours because we were writing the numbers down every hour for a different reason, and discovered they moved.
+
+Nine days is nine days, and the figures above will shift as the sample grows. The direction of the trade, though, is 54 out of 54, with nothing pulling the other way.
+
+**What to take from it:** a terms table is a photograph of the opening. If you are betting each-way in a big handicap, the number that matters is not in any table — it is what the bookmaker is showing at the hour you actually place the bet.
