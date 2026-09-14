@@ -206,7 +206,7 @@ npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
 ## Dados: instantâneo, e falhar alto
 
 `npm run build` começa por `scripts/fetch-data.mjs`, que baixa os JSON de
-`bumasello/mazetick-data`. **Se o download falhar, o build falha** — sem deploy
+`bumasello/mazetick-data` (`extra-places.json` e `movers.json`). **Se o download falhar, o build falha** — sem deploy
 novo, a versão anterior continua no ar. É o comportamento certo: degradar para
 "sem corridas hoje" MENTE, e num portal cuja tese é "todo número carrega o
 instante em que era verdade" essa é a pior mentira disponível.
@@ -215,6 +215,14 @@ Por isso `src/data/*.json` é **gitignored**: uma cópia velha commitada poderia
 ser usada em silêncio num build sem rede, que é exatamente a falha que o script
 existe para impedir. Ele também valida schema, `generated_at` e forma na porta
 de entrada.
+
+### Hora local, não UTC
+
+Corrida em UK/IRE se cita em **hora local**. Os JSON trazem `off_utc` em UTC de
+verdade, e exibi-lo deixaria todo horário uma hora errado no verão britânico —
+errado de um jeito que parece certo, que é o pior tipo. `src/lib/time.ts`
+converte para `Europe/London`, que cobre os dois países. **Carimbo de coleta
+continua em UTC e vai rotulado**, porque é um fato sobre nós, não sobre a corrida.
 
 ### Os três estados vazios
 

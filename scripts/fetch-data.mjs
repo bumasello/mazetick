@@ -19,6 +19,14 @@ const SOURCES = [
     url: 'https://raw.githubusercontent.com/bumasello/mazetick-data/main/data/extra-places.json',
     schema: 'extra_places_v1',
     out: 'src/data/extra-places.json',
+    listKey: 'races',
+  },
+  {
+    name: 'movers',
+    url: 'https://raw.githubusercontent.com/bumasello/mazetick-data/main/data/movers.json',
+    schema: 'movers_v1',
+    out: 'src/data/movers.json',
+    listKey: 'runners',
   },
 ];
 
@@ -56,7 +64,7 @@ for (const src of SOURCES) {
   if (!data.generated_at || Number.isNaN(Date.parse(data.generated_at))) {
     problems.push(`generated_at ausente ou não parseável: ${JSON.stringify(data.generated_at)}`);
   }
-  if (!Array.isArray(data.races)) problems.push('races não é lista');
+  if (!Array.isArray(data[src.listKey])) problems.push(`${src.listKey} não é lista`);
 
   if (problems.length) {
     console.error(`\n✗ ${src.name}: contrato violado`);
@@ -68,6 +76,6 @@ for (const src of SOURCES) {
   fs.writeFileSync(src.out, body);
   const ageH = ((Date.now() - Date.parse(data.generated_at)) / 3.6e6).toFixed(1);
   console.log(
-    `✓ ${src.name}: ${data.races.length} corridas, gerado ${data.generated_at} (${ageH}h atrás), ${(body.length / 1024).toFixed(0)}KB`,
+    `✓ ${src.name}: ${data[src.listKey].length} ${src.listKey}, gerado ${data.generated_at} (${ageH}h atrás), ${(body.length / 1024).toFixed(0)}KB`,
   );
 }

@@ -1,0 +1,240 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatFigure from '../components/StatFigure.astro';
+import DataAge from '../components/DataAge.astro';
+import { raceTime, raceZone } from '../lib/time';
+import data from '../data/movers.json';
+
+type Band = { from: number; to: number; n: number; p5: number; p25: number; p50: number; p75: number; p95: number };
+type Runner = {
+  slug: string; venue: string; off_utc: string; runner: string;
+  first: { mins_to_off: number; mid: number };
+  // spread_pct vem NULO em ~21% dos corredores: é o livro sem as duas pontas
+  // naquele instante, não dado faltando. A página diz isso em vez de esconder.
+  latest: { mins_to_off: number; mid: number; spread_pct: number | null };
+  move_pct: number; band: [number, number]; percentile: number; notable: boolean;
+};
+
+const runners: Runner[] = data.runners as Runner[];
+const bands: Band[] = data.baseline.bands as Band[];
+const notable = runners.filter((r) => r.notable);
+const zone = runners.length ? raceZone(runners[0].off_utc) : 'UK time';
+
+const pc = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
+const odds = (n: number) => n.toFixed(2);
+
+/**
+ * O texto do percentil. É aqui que a página inteira mora, e é aqui que ela pode
+ * escorregar para previsão — o que a regra 1 proíbe e a nossa própria medição
+ * desautoriza. Tudo abaixo descreve o que o mercado FEZ e quão incomum foi
+ * PARA AQUELE PREÇO. Nada sugere o que vai acontecer.
+ */
+function rarity(r: Runner): string {
+  const dir = r.move_pct < 0 ? 'shortening' : 'drift';
+  if (r.percentile <= 0) return `a larger ${dir} than any we have measured at this price`;
+  if (r.percentile >= 100) return `a larger ${dir} than any we have measured at this price`;
+  if (r.percentile <= 5) return `bigger than ${100 - r.percentile}% of moves measured at this price`;
+  if (r.percentile >= 95) return `bigger than ${r.percentile}% of moves measured at this price`;
+  return `ordinary for this price`;
+}
+
+const widest = bands[bands.length - 1];
+const tightest = bands[0];
+---
+<BaseLayout
+  title="Movers — mazetick"
+  description="Which UK and Irish runners moved today, and whether the move was unusual for that price. Measured against 27 days of our own order-book collection."
+  density={runners.length > 0}
+>
+  <header class="head">
+    <div>
+      <h1 class="display title">
+        {runners.length === 0
+          ? 'Nothing collected for today yet'
+          : notable.length > 0
+            ? `${notable.length} runners moved further than usual for their price`
+            : 'Nothing moved unusually today'}
+      </h1>
+      <p class="lead">
+        Every portal lists drifters. The number that makes a list mean anything is the one
+        nobody publishes: <strong>how much a price of that size normally moves</strong>. A 30%
+        drift on a {widest.from}&ndash;{widest.to} shot is a Tuesday; the same move on a{' '}
+        {tightest.from}&ndash;{tightest.to} shot is not.
+      </p>
+      <DataAge generatedAt={data.generated_at} />
+    </div>
+
+    {runners.length > 0 && (
+      <aside class="figures">
+        <StatFigure value={String(runners.length)} label="runners tracked today" />
+        <StatFigure value={String(notable.length)} label="outside the usual range" accent />
+      </aside>
+    )}
+  </header>
+
+  {runners.length === 0 ? (
+    <section>
+      <h2 class="section-rule">Nothing to show</h2>
+      <div class="empty">
+        <p class="lead">
+          No runner has been priced in the latest collection. The order book is sampled
+          between 08:00 and 21:00 UTC, so outside that window there is nothing new to
+          report &mdash; the timestamp above says when we last looked.
+        </p>
+        <p class="note">
+          The baseline below is unaffected: it is built from {data.baseline.days} days of
+          earlier collection and does not depend on today.
+        </p>
+      </div>
+    </section>
+  ) : (
+    <>
+      {notable.length > 0 && (
+        <section>
+          <h2 class="section-rule">Outside the usual range</h2>
+          <table class="dense">
+            <thead>
+              <tr>
+                <th scope="col">Off</th>
+                <th scope="col">Course</th>
+                <th scope="col">Runner</th>
+                <th scope="col" class="num">Morning</th>
+                <th scope="col" class="num">Now</th>
+                <th scope="col" class="num">Move</th>
+                <th scope="col">How unusual for this price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notable.map((r) => (
+                <tr>
+                  <td data-label="Off" class="n">{raceTime(r.off_utc)}</td>
+                  <td data-label="Course">{r.venue}</td>
+                  <td data-label="Runner"><strong>{r.runner}</strong></td>
+                  <td data-label="Morning" class="num faint">{odds(r.first.mid)}</td>
+                  <td data-label="Now" class="num">{odds(r.latest.mid)}</td>
+                  <td data-label="Move" class="num"><strong>{pc(r.move_pct)}</strong></td>
+                  <td data-label="How unusual">{rarity(r)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="note">
+            &ldquo;Unusual&rdquo; is a statement about the size of the move, nothing else.
+            We have measured that price moves do not predict results beyond the price itself,
+            and this page makes no claim about what any of these runners will do.
+          </p>
+        </section>
+      )}
+
+      <section>
+        <h2 class="section-rule">All runners &middot; most unusual first</h2>
+        <table class="dense">
+          <thead>
+            <tr>
+              <th scope="col">Off</th>
+              <th scope="col">Course</th>
+              <th scope="col">Runner</th>
+              <th scope="col" class="num">Morning</th>
+              <th scope="col" class="num">Now</th>
+              <th scope="col" class="num">Move</th>
+              <th scope="col" class="num">Spread</th>
+            </tr>
+          </thead>
+          <tbody>
+            {runners.map((r) => (
+              <tr>
+                <td data-label="Off" class="n">{raceTime(r.off_utc)}</td>
+                <td data-label="Course">{r.venue}</td>
+                <td data-label="Runner" class={r.notable ? 'above' : ''}>{r.runner}</td>
+                <td data-label="Morning" class="num faint">{odds(r.first.mid)}</td>
+                <td data-label="Now" class="num">{odds(r.latest.mid)}</td>
+                <td data-label="Move" class="num">{pc(r.move_pct)}</td>
+                <td data-label="Spread" class="num faint">
+                  {r.latest.spread_pct == null ? (
+                    <span title="no two-sided book at the last sample">&mdash;</span>
+                  ) : (
+                    `${r.latest.spread_pct.toFixed(1)}%`
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </>
+  )}
+
+      <section>
+    <h2 class="section-rule">What a normal move looks like, by price</h2>
+    <p class="lead baseline-lead">
+      {data.baseline.days} days of our own order-book collection, excluding today so that
+      today&rsquo;s moves cannot influence the yardstick that judges them.{' '}
+      <strong>The median is near zero in every band</strong> &mdash; what changes with
+      price is not the typical move but how far the tails reach.
+    </p>
+    <table class="dense">
+      <thead>
+        <tr>
+          <th scope="col">Price</th>
+          <th scope="col" class="num">Moves measured</th>
+          <th scope="col" class="num">5th pct</th>
+          <th scope="col" class="num">25th</th>
+          <th scope="col" class="num">Median</th>
+          <th scope="col" class="num">75th</th>
+          <th scope="col" class="num">95th pct</th>
+        </tr>
+      </thead>
+      <tbody>
+        {bands.map((b) => (
+          <tr>
+            <td data-label="Price" class="n">{b.from} &ndash; {b.to}</td>
+            <td data-label="Moves measured" class="num faint">{b.n.toLocaleString('en-GB')}</td>
+            <td data-label="5th pct" class="num">{pc(b.p5)}</td>
+            <td data-label="25th" class="num faint">{pc(b.p25)}</td>
+            <td data-label="Median" class="num"><strong>{pc(b.p50)}</strong></td>
+            <td data-label="75th" class="num faint">{pc(b.p75)}</td>
+            <td data-label="95th pct" class="num">{pc(b.p95)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <p class="note foot">
+    Prices are the mid of the best available bid and offer on a public exchange order book,
+    sampled through the day; &ldquo;morning&rdquo; is the first sample we hold for that runner
+    and &ldquo;now&rdquo; the most recent. A dash under Spread means there was no two-sided
+    book at that sample &mdash; someone was quoting one side only. Race times are {zone}. Source: {data.source}. We
+    publish what the market did, not what it means, and nothing here is a recommendation to
+    bet.
+  </p>
+</BaseLayout>
+
+<style>
+  .head {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--sp-11);
+    align-items: start;
+    margin-bottom: var(--sp-11);
+  }
+  .title {
+    font-size: var(--fs-display-l);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin-bottom: var(--sp-4);
+  }
+  .lead { margin-bottom: var(--sp-5); }
+  .figures { border-left: 1px solid var(--rule-med); padding-left: var(--sp-6); }
+  .baseline-lead { margin-bottom: var(--sp-5); }
+  .dense .above { color: var(--accent); }
+  .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
+  .foot { margin-top: var(--sp-8); }
+  section + section { margin-top: var(--sp-11); }
+
+  @media (max-width: 720px) {
+    .head { grid-template-columns: 1fr; gap: var(--sp-8); }
+    .figures { border-left: 0; padding-left: 0; }
+  }
+</style>

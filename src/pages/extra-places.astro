@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
 import DataAge from '../components/DataAge.astro';
+import { raceTime, raceZone } from '../lib/time';
 import data from '../data/extra-places.json';
 
 type Term = { places: number; fraction: [number, number]; bog?: boolean };
@@ -14,7 +15,7 @@ type Race = {
 
 const races: Race[] = data.races as Race[];
 const frac = (f: [number, number]) => (f[0] === 1 && f[1] === 1 ? 'win only' : `${f[0]}/${f[1]}`);
-const hhmm = (iso: string) => iso.slice(11, 16);
+
 
 // Uma mudança é um par consecutivo do histórico. `history` só registra
 // MUDANÇAS, então uma corrida com um ponto só não mexeu o dia inteiro — e isso
@@ -24,10 +25,27 @@ const changes: Change[] = races.flatMap((r) =>
   r.history.slice(1).map((to, i) => ({ race: r, from: r.history[i], to })),
 );
 
+const ratio = (f: [number, number]) => f[0] / f[1];
+
 const placeAdds = changes.filter((c) => c.to.places > c.from.places);
-const worseFraction = placeAdds.filter(
-  (c) => c.to.fraction[0] / c.to.fraction[1] < c.from.fraction[0] / c.from.fraction[1],
-);
+// Três categorias, e confundi-las produz "zero exceções" — enunciado bom demais
+// por meio grau, que já nos pegou duas vezes. Ganhar vaga com a fração JÁ no
+// pior nível não é uma exceção à troca: é a troca sem nada a trocar.
+const cutFraction = placeAdds.filter((c) => ratio(c.to.fraction) < ratio(c.from.fraction));
+const sameFraction = placeAdds.filter((c) => ratio(c.to.fraction) === ratio(c.from.fraction));
+const betterFraction = placeAdds.filter((c) => ratio(c.to.fraction) > ratio(c.from.fraction));
+
+// As perdas são a metade que dói: quem apostou de manhã contando com a vaga
+// ficou sem ela. Campo encolhido é legítimo (não-corredor); campo PARADO é a
+// casa retirando a oferta, e isso não é anunciado em lugar nenhum.
+const placeDrops = changes.filter((c) => c.to.places < c.from.places);
+const dropsFieldStatic = placeDrops.filter((c) => c.to.field_size === c.from.field_size);
+const dropsFieldShrunk = placeDrops.filter((c) => c.to.field_size < c.from.field_size);
+
+// A hora em que a casa mexe. Medir isso é o produto.
+const byHour = new Map<string, number>();
+for (const c of changes) byHour.set(c.to.at.slice(11, 16), (byHour.get(c.to.at.slice(11, 16)) ?? 0) + 1);
+const peakHour = [...byHour.entries()].sort((a, b) => b[1] - a[1])[0];
 const aboveLadder = races.filter((r) => r.extra_place);
 
 // Ordena por vagas desc, depois hora — "most places first", como na prancheta.
@@ -35,8 +53,9 @@ const sorted = [...races].sort(
   (a, b) => b.terms.places - a.terms.places || a.off_utc.localeCompare(b.off_utc),
 );
 
-const allTraded = placeAdds.length > 0 && worseFraction.length === placeAdds.length;
+const neverBetter = placeAdds.length > 0 && betterFraction.length === 0;
 const cards = placeAdds.slice(0, 3);
+const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
 ---
 <BaseLayout
   title="Extra places — mazetick"
@@ -60,15 +79,23 @@ const cards = placeAdds.slice(0, 3);
       </h1>
       {placeAdds.length > 0 && (
         <p class="lead">
-          {allTraded ? (
+          {cutFraction.length > 0 && (
             <>
-              Every one of them <strong>cut the fraction at the same time</strong>. An extra
-              place is not a gift, it is a trade — and the swap is not announced anywhere.
+              <strong>{cutFraction.length} of them cut the fraction at the same time</strong>
+              {sameFraction.length > 0 && (
+                <>, and the other {sameFraction.length} were already on the worse fraction
+                with nothing left to cut</>
+              )}.{' '}
+            </>
+          )}
+          {neverBetter ? (
+            <>
+              Not once did the fraction improve. An extra place is not a gift, it is a
+              trade &mdash; and the swap is not announced anywhere.
             </>
           ) : (
             <>
-              {worseFraction.length} of those {placeAdds.length} cut the fraction at the same
-              time. An extra place is not always a gift; sometimes it is a trade.
+              {betterFraction.length} of them improved the fraction as well.
             </>
           )}
         </p>
@@ -107,7 +134,7 @@ const cards = placeAdds.slice(0, 3);
           <div class="cards">
             {cards.map((c) => (
               <article class="card">
-                <div class="stamp">{c.race.venue} &middot; {hhmm(c.race.off_utc)}</div>
+                <div class="stamp">{c.race.venue} &middot; {raceTime(c.race.off_utc)}</div>
                 <div class="card-race">{c.race.name}</div>
                 <div class="swap n">
                   <span class="old">{c.from.places}</span>
@@ -120,11 +147,78 @@ const cards = placeAdds.slice(0, 3);
                   <span class="arrow">&rarr;</span>
                   <span class="new-f">{frac(c.to.fraction)}</span>
                 </div>
-                <div class="stamp">changed at {hhmm(c.to.at)} UTC</div>
+                <div class="stamp">changed at {c.to.at.slice(11, 16)} UTC</div>
               </article>
             ))}
           </div>
         </section>
+      )}
+
+      {placeDrops.length > 0 && (
+        <section>
+          <h2 class="section-rule">Places taken away</h2>
+          <p class="lead drops-lead">
+            {dropsFieldShrunk.length > 0 && (
+              <>
+                {dropsFieldShrunk.length} race{dropsFieldShrunk.length === 1 ? '' : 's'} lost a
+                place as the field shrank &mdash; a non-runner, which is ordinary.{' '}
+              </>
+            )}
+            {dropsFieldStatic.length > 0 && (
+              <>
+                <strong>
+                  {dropsFieldStatic.length} lost a place with the field unchanged
+                </strong>
+                : the offer was simply withdrawn. Anyone who backed each-way earlier in the
+                day counting on that place no longer has it, and no announcement was made.
+              </>
+            )}
+          </p>
+          <table class="dense">
+            <thead>
+              <tr>
+                <th scope="col">Off</th>
+                <th scope="col">Course</th>
+                <th scope="col">Race</th>
+                <th scope="col">Was</th>
+                <th scope="col">Now</th>
+                <th scope="col">Field</th>
+              </tr>
+            </thead>
+            <tbody>
+              {placeDrops.map((c) => (
+                <tr>
+                  <td data-label="Off" class="n">{raceTime(c.race.off_utc)}</td>
+                  <td data-label="Course">{c.race.venue}</td>
+                  <td data-label="Race" class="muted">{c.race.name}</td>
+                  <td data-label="Was" class="n faint">
+                    {c.from.places} at {frac(c.from.fraction)}
+                  </td>
+                  <td data-label="Now" class="n">
+                    <strong>{c.to.places}</strong> at {frac(c.to.fraction)}
+                    <span class="stamp"> at {c.to.at.slice(11, 16)} UTC</span>
+                  </td>
+                  <td data-label="Field" class="n">
+                    {c.from.field_size === c.to.field_size ? (
+                      <strong>unchanged at {c.to.field_size}</strong>
+                    ) : (
+                      <span class="faint">{c.from.field_size} &rarr; {c.to.field_size}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {peakHour && peakHour[1] > 1 && (
+        <p class="note peak">
+          {peakHour[1]} of today&rsquo;s {changes.length} term changes landed at exactly{' '}
+          <strong>{peakHour[0]} UTC</strong>. The bookmaker moves its each-way terms on a
+          schedule, and knowing the hour is the whole reason to read a page like this one
+          rather than a racecard.
+        </p>
       )}
 
       <section>
@@ -143,7 +237,7 @@ const cards = placeAdds.slice(0, 3);
           <tbody>
             {sorted.map((r) => (
               <tr>
-                <td data-label="Off" class="n">{hhmm(r.off_utc)}</td>
+                <td data-label="Off" class="n">{raceTime(r.off_utc)}</td>
                 <td data-label="Course">{r.venue}{r.country === 'IE' && <span class="faint"> (IE)</span>}</td>
                 <td data-label="Race" class="muted">{r.name}</td>
                 <td data-label="Runners" class="num faint">{r.field_size}</td>
@@ -169,7 +263,7 @@ const cards = placeAdds.slice(0, 3);
     Terms are what the bookmaker advertised at the time shown and can change again before the
     off. <strong>&ldquo;House ladder&rdquo; is the bookmaker&rsquo;s own standard</strong>,
     derived from {data.ladder_days} days of our own hourly collection — not the classic
-    each-way table, which it does not follow. Source: {data.source}. We publish the terms, not
+    each-way table, which it does not follow. Race times are {zone}; collection stamps are UTC. Source: {data.source}. We publish the terms, not
     the prices, and nothing here is a recommendation to bet.
   </p>
 </BaseLayout>
@@ -230,6 +324,8 @@ const cards = placeAdds.slice(0, 3);
   }
   .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
   .foot { margin-top: var(--sp-6); }
+  .drops-lead { margin-bottom: var(--sp-5); }
+  .peak { margin: var(--sp-6) 0 var(--sp-8); }
 
   @media (max-width: 720px) {
     .head { grid-template-columns: 1fr; gap: var(--sp-8); }
