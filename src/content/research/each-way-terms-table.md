@@ -10,6 +10,35 @@ measured: 2026-09-13
 published: 2026-09-13
 verdict: negative
 order: 2
+
+# ⛔ SEGURADO — não publicar até a reescrita (decidido em 2026-09-14)
+#
+# O número publicado aqui ("44,5% em 510 corridas, 227 divergências, zero
+# exceções") NÃO REPRODUZ. A remedição, sobre 9 dias e 324 corridas UK/IRE com
+# o código versionado em `horsing-maze:scripts/ew_terms_audit.py` (dae81d6),
+# diz outra coisa — e a afirmação sobrevive apenas COM ESCOPO:
+#
+#   em handicap de 12+ corredores a tabela clássica diz 1/4 e a Paddy Power
+#   paga 1/5, em 128 de 128 corridas — zero exceções
+#
+# SEM escopo a frase é FALSA: em campos de 5 a 9 a tabela erra na direção
+# OPOSTA, em 64 corridas. Dentro de cada faixa a direção é 100% consistente, o
+# que torna o erro estrutural e não ruído — e essa é a manchete melhor.
+#
+# A escada real derivada do dado:
+#   até 6 corredores -> só vitória | 7-9 -> 2 vagas @ 1/4 | 10-13 -> 3 @ 1/5
+#   handicap 14-19 -> 4 @ 1/5 (comum segue em 3 @ 1/5) | handicap 20+ -> 5-6 @ 1/5
+#
+# E o achado inesperado, provável abertura do artigo novo: handicap e
+# não-handicap recebem tratamento IDÊNTICO até 13 corredores. A tabela clássica
+# os separa a partir de 8.
+#
+# ⚠️ Descartada a ideia de "bimodalidade dentro da faixa": era artefato de
+# agrupar 8-11 num balde porque a tabela clássica agrupa. Mesma pista, mesmo
+# dia, mesmo campo dá termos idênticos em 55 de 55 casos.
+#
+# Não é remendo de campo: o título, a tese e a tabela mudam. Reescrever.
+draft: true
 limits:
   - "This is one bookmaker. Terms are set per firm and the classic table is not wrong in the same way everywhere; a second firm has to be measured before the rate generalises."
   - "Eight days is eight days. The direction of the error is unambiguous — 227 divergences and not one running the other way — but the rate of 44.5% will move as more days are collected, and this page will be updated when it does."
