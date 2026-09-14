@@ -173,6 +173,8 @@ quebrar. Nove checagens:
 | sem cor fora dos tokens no artefato servido | cor pode nascer no build, fora do fonte |
 | sem adaptador de servidor; saída em `dist/` | a Cloudflare já tentou instalar um sozinha |
 | cabeçalhos presentes e CSP cobrindo os scripts | política fora de sincronia falha calada |
+| beacon de analytics no build de produção | variável de build esquecida some sem avisar |
+| sem sintaxe de template; JSON-LD parseável | olhar o arquivo não é interpretá-lo |
 
 Duas regras governam este arquivo:
 
@@ -181,6 +183,13 @@ uma região.** A lista manual anterior checava "links do rodapé: nenhum 404" e
 passava — os `href` estavam certos, e o que quebrou foi o texto ao redor deles.
 E a inspeção do artigo varreu só o `<main>`, deixando de fora o rodapé, que está
 em toda página. Escopo de verificação é onde este projeto mais escorrega.
+
+**1b. Ler o arquivo não é interpretá-lo.** Uma checagem que confirma que um
+trecho *existe* não diz que ele é válido. O JSON-LD do site esteve quebrado nas
+12 páginas com o bloco presente no HTML — dentro de um atributo, escapado, e
+invisível na tela. Checagem sobre conteúdo estruturado tem de **parsear**, e tem
+de verificar a intenção ("existe dado estruturado e ele é legível"), não a
+ausência de um erro específico já conhecido.
 
 **2. Um verificador que nunca falhou não foi verificado.** Ao acrescentar uma
 checagem, quebre de propósito o que ela deve pegar, confirme que o build falha,

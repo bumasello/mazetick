@@ -333,6 +333,61 @@ check(
   }
 }
 
+// 14. Sintaxe de template vazando, e dado estruturado que realmente parseia.
+//
+//     Quarto episódio da mesma família, com a variação mais instrutiva: desta
+//     vez a REGIÃO estava certa — o verify já lia dist/ — mas nenhuma checagem
+//     PARSEAVA o que encontrava. `<set:html value={...} />` não é a diretiva do
+//     Astro (ela se aplica a um elemento), então as 12 páginas saíram com um
+//     elemento <set> literal e o JSON-LD escapado dentro de um atributo: zero
+//     blocos válidos, e nada disso aparece na tela. Olhar não é interpretar.
+//
+//     (a) olha o erro que já conhecemos; (b) verifica a INTENÇÃO — existe dado
+//     estruturado e ele é legível —, e é (b) que teria pego isto sem saber de
+//     nada. `{"` NÃO entra como marcador: é como todo JSON-LD começa, e aparece
+//     67 vezes de forma legítima.
+{
+  const problems = [];
+
+  const LEAKS = [/<\/?set\b/i, /\bset:(html|text)\s*=/i, /\bclient:(load|idle|visible|media|only)\b/i,
+                 /<\/?Fragment\b/i, /\bis:inline\b/i, /\$\{/, /\{JSON\./];
+  for (const f of pages) {
+    const html = read(f);
+    for (const rx of LEAKS) {
+      const m = html.match(rx);
+      if (m) problems.push(`${rel(f)}: sintaxe de template no artefato — ${m[0]}`);
+    }
+  }
+
+  const LD = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+  for (const f of pages) {
+    const blocks = [...read(f).matchAll(LD)].map((m) => m[1]);
+    if (!blocks.length) {
+      problems.push(`${rel(f)}: nenhum bloco application/ld+json`);
+      continue;
+    }
+
+    const parsed = [];
+    for (const b of blocks) {
+      try {
+        parsed.push(JSON.parse(b));
+      } catch (e) {
+        problems.push(`${rel(f)}: JSON-LD não parseia — ${e.message.slice(0, 60)}`);
+      }
+    }
+
+    // Artigo tem de carregar o seu próprio Article, além do WebSite/Organization.
+    const isArticle = rel(f).startsWith('research/');
+    if (isArticle) {
+      if (parsed.length < 2) problems.push(`${rel(f)}: artigo com ${parsed.length} bloco(s) de JSON-LD, esperado 2`);
+      const types = parsed.flatMap((o) => [o['@type'], ...(o['@graph'] || []).map((g) => g['@type'])]);
+      if (!types.includes('Article')) problems.push(`${rel(f)}: artigo sem @type Article`);
+    }
+  }
+
+  check('Sem sintaxe de template; JSON-LD presente e parseável', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

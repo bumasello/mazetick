@@ -83,9 +83,16 @@ const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary" />
 
-    <set:html value={`<script type="application/ld+json">${JSON.stringify(siteJsonLd)}</script>`} />
+    {/*
+      `set:html` é uma DIRETIVA aplicada a um elemento, não uma tag. A versão
+      anterior escrevia <set:html value={...} />, o que fazia o Astro emitir um
+      elemento <set> literal com o JSON-LD escapado dentro de um atributo: as 12
+      páginas saíram sem nenhum bloco application/ld+json válido. Como nada
+      disso aparece na tela, nenhuma revisão no navegador teria como pegar.
+    */}
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(siteJsonLd)} />
     {jsonLd && (
-      <set:html value={`<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`} />
+      <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
     )}
 
     {/*
