@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
 import DataAge from '../components/DataAge.astro';
-import { raceTime, raceZone } from '../lib/time';
+import { raceTime, raceZone, raceDate, raceDay } from '../lib/time';
 import data from '../data/extra-places.json';
 
 type Term = { places: number; fraction: [number, number]; bog?: boolean };
@@ -16,6 +16,13 @@ type Race = {
 const races: Race[] = data.races as Race[];
 const frac = (f: [number, number]) => (f[0] === 1 && f[1] === 1 ? 'win only' : `${f[0]}/${f[1]}`);
 
+// Carimbo de coleta: "14 Sep 06:00". Estes instantes são UTC de verdade e a
+// página diz isso — não são hora de corrida, que é local.
+const UTC_STAMP = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'UTC', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+});
+const utcStamp = (iso: string) => UTC_STAMP.format(new Date(iso)).replace(',', '');
+
 
 // Uma mudança é um par consecutivo do histórico. `history` só registra
 // MUDANÇAS, então uma corrida com um ponto só não mexeu o dia inteiro — e isso
@@ -28,6 +35,11 @@ const changes: Change[] = races.flatMap((r) =>
 const ratio = (f: [number, number]) => f[0] / f[1];
 
 const placeAdds = changes.filter((c) => c.to.places > c.from.places);
+// Corridas, não mudanças: uma corrida pode ganhar vaga duas vezes no mesmo dia,
+// e "21 races added a place" contando 21 MUDANÇAS seria falso no dia em que
+// isso acontecer. Hoje os dois números coincidem; a frase não pode depender
+// disso.
+const racesThatAdded = new Set(placeAdds.map((c) => c.race.slug)).size;
 // Três categorias, e confundi-las produz "zero exceções" — enunciado bom demais
 // por meio grau, que já nos pegou duas vezes. Ganhar vaga com a fração JÁ no
 // pior nível não é uma exceção à troca: é a troca sem nada a trocar.
@@ -48,18 +60,69 @@ for (const c of changes) byHour.set(c.to.at.slice(11, 16), (byHour.get(c.to.at.s
 const peakHour = [...byHour.entries()].sort((a, b) => b[1] - a[1])[0];
 const aboveLadder = races.filter((r) => r.extra_place);
 
-// Ordena por vagas desc, depois hora — "most places first", como na prancheta.
-const sorted = [...races].sort(
-  (a, b) => b.terms.places - a.terms.places || a.off_utc.localeCompare(b.off_utc),
-);
+/**
+ * ⚠️ "TODAY" ERA FALSO PARA UM TERÇO DAS MUDANÇAS.
+ *
+ * O arquivo traz as corridas de hoje E as de amanhã — amanhã já tem termos
+ * publicados —, e o histórico de uma corrida de amanhã começa ontem. Medido em
+ * 15/09: 19 das 56 mudanças carimbadas no arquivo aconteceram no dia anterior.
+ * Dizer "today's 56 term changes" nomeava um dia que não era o dos dados.
+ *
+ * A janela observada sai do próprio histórico e vai para a tela. É a mesma
+ * família do "now" da /movers: o número estava certo, o rótulo é que nomeava
+ * um instante errado.
+ */
+const stamps = races.flatMap((r) => r.history.map((h) => h.at)).sort();
+const watchedFrom = stamps[0];
+const watchedTo = stamps[stamps.length - 1];
+
+/**
+ * O corte "já correu" é ancorado em `collected_through`, a última vez que
+ * OLHAMOS — nunca no relógio de quem lê nem no do build. Numa página estática
+ * "ainda vai correr" apodrece em horas; "ainda não tinha corrido quando
+ * olhamos pela última vez" é verdade para sempre.
+ *
+ * E aqui dói mais que na /movers: a pergunta da página é qual corrida paga vaga
+ * extra AGORA, e vaga extra em corrida que já correu não serve a ninguém.
+ */
+const collected = data.collected_through ? Date.parse(data.collected_through) : Number.NaN;
+const splitKnown = !Number.isNaN(collected);
+const lastLookStamp = splitKnown ? `${(data.collected_through as string).slice(11, 16)} UTC` : null;
+const ranByLastLook = (r: Race) => splitKnown && Date.parse(r.off_utc) <= collected;
+
+const upcoming = splitKnown ? races.filter((r) => !ranByLastLook(r)) : races;
+const finished = splitKnown ? races.filter(ranByLastLook) : [];
+
+/** Agrupa por DIA de corrida: o arquivo cobre mais de um, e a tabela não dizia. */
+const byDay = (list: Race[]) => {
+  const m = new Map<string, Race[]>();
+  for (const r of list) {
+    const k = raceDay(r.off_utc);
+    if (!m.has(k)) m.set(k, []);
+    (m.get(k) as Race[]).push(r);
+  }
+  return [...m.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, rs]) => ({
+      key,
+      label: raceDate(rs[0].off_utc),
+      races: rs.sort((a, b) => a.off_utc.localeCompare(b.off_utc)),
+      above: rs.filter((r) => r.extra_place).length,
+    }));
+};
+
+const upcomingDays = byDay(upcoming);
+const finishedDays = byDay(finished);
 
 const neverBetter = placeAdds.length > 0 && betterFraction.length === 0;
-const cards = placeAdds.slice(0, 3);
+// Os três cartões mostram as mudanças MAIS RECENTES, não as três primeiras da
+// ordem do arquivo — que era ordem de corrida e não queria dizer nada.
+const cards = [...placeAdds].sort((a, b) => b.to.at.localeCompare(a.to.at)).slice(0, 3);
 const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
 ---
 <BaseLayout
   title="Extra places — mazetick"
-  description="Which UK and Irish races are paying above the bookmaker's own each-way ladder right now, with the hour every change was made."
+  description="Which UK and Irish races are paying above the bookmaker's own each-way ladder, with the hour every change was made and whether the race has run."
   density={races.length > 0}
 >
   <header class="head">
@@ -73,9 +136,9 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
       <h1 class="display title">
         {races.length === 0
           ? 'Nothing collected for today yet'
-          : placeAdds.length > 0
-            ? `${placeAdds.length} races added a place today`
-            : 'No race changed its each-way terms today'}
+          : racesThatAdded > 0
+            ? `${racesThatAdded} races added a place while we watched`
+            : 'No race changed its each-way terms while we watched'}
       </h1>
       {placeAdds.length > 0 && (
         <p class="lead">
@@ -100,6 +163,16 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
           )}
         </p>
       )}
+      {races.length > 0 && (
+        <p class="note window">
+          {races.length} races held here, covering {upcomingDays.length + finishedDays.length === 1
+            ? 'one race day'
+            : `${upcomingDays.length + finishedDays.length} race days`}.
+          Terms watched from <strong>{utcStamp(watchedFrom)}</strong> to{' '}
+          <strong>{utcStamp(watchedTo)} UTC</strong> &mdash; tomorrow&rsquo;s markets are
+          already open, so some changes below were recorded yesterday, not today.
+        </p>
+      )}
       <DataAge
         collectedThrough={data.collected_through}
         generatedAt={data.generated_at}
@@ -109,7 +182,14 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
 
     {races.length > 0 && (
       <aside class="figures">
-        <StatFigure value={String(races.length)} label="races covered" />
+        {/*
+          Sem âncora de coleta não dá para afirmar que nenhuma correu — o número
+          seria o total, com um rótulo que promete mais do que sabemos.
+        */}
+        <StatFigure
+          value={String(splitKnown ? upcoming.length : races.length)}
+          label={splitKnown ? 'races not yet run at our last look' : 'races held here'}
+        />
         <StatFigure value={String(aboveLadder.length)} label="paying above the house ladder" accent />
       </aside>
     )}
@@ -134,11 +214,13 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
     <>
       {cards.length > 0 && (
         <section>
-          <h2 class="section-rule">Changed today</h2>
+          <h2 class="section-rule">Latest places added</h2>
           <div class="cards">
             {cards.map((c) => (
               <article class="card">
-                <div class="stamp">{c.race.venue} &middot; {raceTime(c.race.off_utc)}</div>
+                <div class="stamp">
+                  {c.race.venue} &middot; {raceDate(c.race.off_utc)} {raceTime(c.race.off_utc)}
+                </div>
                 <div class="card-race">{c.race.name}</div>
                 <div class="swap n">
                   <span class="old">{c.from.places}</span>
@@ -151,7 +233,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
                   <span class="arrow">&rarr;</span>
                   <span class="new-f">{frac(c.to.fraction)}</span>
                 </div>
-                <div class="stamp">changed at {c.to.at.slice(11, 16)} UTC</div>
+                <div class="stamp">changed {utcStamp(c.to.at)} UTC</div>
               </article>
             ))}
           </div>
@@ -181,26 +263,28 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
           <table class="dense">
             <thead>
               <tr>
+                <th scope="col">Race day</th>
                 <th scope="col">Off</th>
                 <th scope="col">Course</th>
                 <th scope="col">Race</th>
-                <th scope="col">Was</th>
-                <th scope="col">Now</th>
+                <th scope="col">Before</th>
+                <th scope="col">After</th>
                 <th scope="col">Field</th>
               </tr>
             </thead>
             <tbody>
               {placeDrops.map((c) => (
                 <tr>
+                  <td data-label="Race day" class="n faint">{raceDate(c.race.off_utc)}</td>
                   <td data-label="Off" class="n">{raceTime(c.race.off_utc)}</td>
                   <td data-label="Course">{c.race.venue}</td>
                   <td data-label="Race" class="muted">{c.race.name}</td>
-                  <td data-label="Was" class="n faint">
+                  <td data-label="Before" class="n faint">
                     {c.from.places} at {frac(c.from.fraction)}
                   </td>
-                  <td data-label="Now" class="n">
+                  <td data-label="After" class="n">
                     <strong>{c.to.places}</strong> at {frac(c.to.fraction)}
-                    <span class="stamp"> at {c.to.at.slice(11, 16)} UTC</span>
+                    <span class="stamp"> {utcStamp(c.to.at)} UTC</span>
                   </td>
                   <td data-label="Field" class="n">
                     {c.from.field_size === c.to.field_size ? (
@@ -218,54 +302,114 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
 
       {peakHour && peakHour[1] > 1 && (
         <p class="note peak">
-          {peakHour[1]} of today&rsquo;s {changes.length} term changes landed at exactly{' '}
-          <strong>{peakHour[0]} UTC</strong>. The bookmaker moves its each-way terms on a
-          schedule, and knowing the hour is the whole reason to read a page like this one
-          rather than a racecard.
+          {peakHour[1]} of the {changes.length} term changes in the window above landed at
+          exactly <strong>{peakHour[0]} UTC</strong>, whichever day they fell on. The
+          bookmaker moves its each-way terms on a schedule, and knowing the hour is the whole
+          reason to read a page like this one rather than a racecard.
         </p>
       )}
 
-      <section>
-        <h2 class="section-rule">All races &middot; most places first</h2>
-        <table class="dense">
-          <thead>
-            <tr>
-              <th scope="col">Off</th>
-              <th scope="col">Course</th>
-              <th scope="col">Race</th>
-              <th scope="col" class="num">Runners</th>
-              <th scope="col">Terms</th>
-              <th scope="col">vs house ladder</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((r) => (
+      {upcomingDays.map((d) => (
+        <section>
+          <h2 class="section-rule">
+            {splitKnown
+              ? `Not yet run at our last look, ${lastLookStamp} · ${d.label}`
+              : `Race day · ${d.label}`}
+          </h2>
+          <p class="note section-note">
+            {d.races.length} races, {d.above} of them paying above the house ladder. Terms are
+            the last we saw and can still change before the off.
+          </p>
+          <table class="dense">
+            <thead>
               <tr>
-                <td data-label="Off" class="n">{raceTime(r.off_utc)}</td>
-                <td data-label="Course">{r.venue}{r.country === 'IE' && <span class="faint"> (IE)</span>}</td>
-                <td data-label="Race" class="muted">{r.name}</td>
-                <td data-label="Runners" class="num faint">{r.field_size}</td>
-                <td data-label="Terms" class="n">
-                  <strong>{r.terms.places}</strong>{' '}
-                  <span class="faint">at {frac(r.terms.fraction)}</span>
-                  {r.terms.bog && <span class="bog"> BOG</span>}
-                </td>
-                <td data-label="vs house ladder" class={r.extra_place ? 'above' : 'faint'}>
-                  {r.extra_place
-                    ? `${r.terms.places - r.house_standard.places} more than ${r.house_standard.places} at ${frac(r.house_standard.fraction)}`
-                    : 'as the ladder'}
-                </td>
+                <th scope="col">Off</th>
+                <th scope="col">Course</th>
+                <th scope="col">Race</th>
+                <th scope="col" class="num">Runners</th>
+                <th scope="col">Terms</th>
+                <th scope="col">vs house ladder</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {d.races.map((r) => (
+                <tr>
+                  <td data-label="Off" class="n">{raceTime(r.off_utc)}</td>
+                  <td data-label="Course">{r.venue}{r.country === 'IE' && <span class="faint"> (IE)</span>}</td>
+                  <td data-label="Race" class="muted">{r.name}</td>
+                  <td data-label="Runners" class="num faint">{r.field_size}</td>
+                  <td data-label="Terms" class="n">
+                    <strong>{r.terms.places}</strong>{' '}
+                    <span class="faint">at {frac(r.terms.fraction)}</span>
+                    {r.terms.bog && <span class="bog"> BOG</span>}
+                  </td>
+                  <td data-label="vs house ladder" class={r.extra_place ? 'above' : 'faint'}>
+                    {r.extra_place
+                      ? `${r.terms.places - r.house_standard.places} more than ${r.house_standard.places} at ${frac(r.house_standard.fraction)}`
+                      : 'as the ladder'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+
+      {finishedDays.length > 0 && (
+        <section>
+          <h2 class="section-rule">Already run by our last look &middot; the finished record</h2>
+          <p class="note section-note">
+            These races had started before our final collection at {lastLookStamp}, so the
+            terms are final and no place can be taken now. They stay on the page because a
+            finished day is the only version of it that is complete &mdash; and because the
+            promotions below are what the ladder above is measured against.
+          </p>
+          {finishedDays.map((d) => (
+            <>
+              <h3 class="day">{d.label} &middot; {d.races.length} races, {d.above} above the ladder</h3>
+              <table class="dense">
+                <thead>
+                  <tr>
+                    <th scope="col">Off</th>
+                    <th scope="col">Course</th>
+                    <th scope="col">Race</th>
+                    <th scope="col" class="num">Runners</th>
+                    <th scope="col">Final terms</th>
+                    <th scope="col">vs house ladder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {d.races.map((r) => (
+                    <tr>
+                      <td data-label="Off" class="n">{raceTime(r.off_utc)}</td>
+                      <td data-label="Course">{r.venue}{r.country === 'IE' && <span class="faint"> (IE)</span>}</td>
+                      <td data-label="Race" class="muted">{r.name}</td>
+                      <td data-label="Runners" class="num faint">{r.field_size}</td>
+                      <td data-label="Final terms" class="n">
+                        <strong>{r.terms.places}</strong>{' '}
+                        <span class="faint">at {frac(r.terms.fraction)}</span>
+                        {r.terms.bog && <span class="bog"> BOG</span>}
+                      </td>
+                      <td data-label="vs house ladder" class={r.extra_place ? 'above' : 'faint'}>
+                        {r.extra_place
+                          ? `${r.terms.places - r.house_standard.places} more than ${r.house_standard.places} at ${frac(r.house_standard.fraction)}`
+                          : 'as the ladder'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ))}
+        </section>
+      )}
     </>
   )}
 
   <p class="note foot">
-    Terms are what the bookmaker advertised at the time shown and can change again before the
-    off. <strong>&ldquo;House ladder&rdquo; is the bookmaker&rsquo;s own standard</strong>,
+    Terms are the last the bookmaker advertised before our final collection; for a race that
+    has not run they can change again before the off.{' '}
+    <strong>&ldquo;House ladder&rdquo; is the bookmaker&rsquo;s own standard</strong>,
     derived from {data.ladder_days} days of our own hourly collection — not the classic
     each-way table, which it does not follow. Race times are {zone}; collection stamps are UTC. Source: {data.source}. We publish the terms, not
     the prices, and nothing here is a recommendation to bet.
@@ -288,6 +432,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
     margin-bottom: var(--sp-4);
   }
   .lead { margin-bottom: var(--sp-5); }
+  .window { margin-bottom: var(--sp-5); }
   .figures { border-left: 1px solid var(--rule-med); padding-left: var(--sp-6); }
 
   .cards {
@@ -329,7 +474,18 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
   .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
   .foot { margin-top: var(--sp-6); }
   .drops-lead { margin-bottom: var(--sp-5); }
+  .section-note { margin-bottom: var(--sp-5); }
   .peak { margin: var(--sp-6) 0 var(--sp-8); }
+  .day {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    margin: var(--sp-8) 0 var(--sp-3);
+  }
+  section + section { margin-top: var(--sp-11); }
 
   @media (max-width: 720px) {
     .head { grid-template-columns: 1fr; gap: var(--sp-8); }

@@ -611,6 +611,39 @@ check(
   check('Sitemap e páginas geradas em correspondência 1:1', problems);
 }
 
+// 19. Nenhuma coluna nomeia o relógio de QUEM LÊ.
+//
+//     A /movers servia uma coluna "Now" contendo a última cotação vista ANTES
+//     da largada. Às 15:51 ela mostrava "now" sobre uma corrida das 14:30: 93%
+//     das linhas já tinham corrido, e o leitor não tinha como saber. O dado
+//     estava certo; o rótulo nomeava um instante que muda conforme quem olha, e
+//     numa página estática isso é sempre falso em algum momento do dia.
+//
+//     A regra 4 do handoff — todo número carrega o instante em que era verdade —
+//     não é satisfeita por um carimbo no topo da página: cada COLUNA tem de se
+//     ancorar num instante fixo ("last seen", "before the off"), nunca num
+//     relativo ao relógio do leitor. Vale para o <th> e para o data-label, que
+//     é o cabeçalho que o leitor de celular recebe no lugar dele.
+{
+  const CLOCKWORD = /\b(now|current|currently|live|today|tomorrow|yesterday)\b/i;
+  const problems = [];
+
+  for (const f of pages) {
+    const html = read(f);
+    for (const m of html.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)) {
+      const text = m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      const hit = text.match(CLOCKWORD);
+      if (hit) problems.push(`${rel(f)}: <th> "${text}" — "${hit[0]}" depende do relógio de quem lê`);
+    }
+    for (const m of html.matchAll(/data-label="([^"]*)"/g)) {
+      const hit = m[1].match(CLOCKWORD);
+      if (hit) problems.push(`${rel(f)}: data-label "${m[1]}" — "${hit[0]}" depende do relógio de quem lê`);
+    }
+  }
+
+  check('Nenhuma coluna rotulada pelo relógio do leitor', [...new Set(problems)]);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);
