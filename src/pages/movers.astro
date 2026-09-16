@@ -19,6 +19,7 @@ const runners: Runner[] = data.runners as Runner[];
 const bands: Band[] = data.baseline.bands as Band[];
 const notable = runners.filter((r) => r.notable);
 const zone = runners.length ? raceZone(runners[0].off_utc) : 'UK time';
+const courses = [...new Set(runners.map((r) => r.venue))].sort();
 
 const pc = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
 const odds = (n: number) => n.toFixed(2);
@@ -42,29 +43,66 @@ const splitKnown = !Number.isNaN(collected);
 const lastLookStamp = splitKnown ? `${(data.collected_through as string).slice(11, 16)} UTC` : null;
 const ranByLastLook = (r: Runner) => splitKnown && Date.parse(r.off_utc) <= collected;
 
+/**
+ * A lista completa é agrupada POR CORRIDA, não achatada por percentil.
+ *
+ * Numa lista plana, Sedgefield 13:30 aparecia com o maior encurtamento e o maior
+ * alongamento do dia a dezenas de linhas de distância — quando o que aconteceu
+ * foi dinheiro saindo de um cavalo para outro na MESMA prova. Agrupado, e
+ * ordenado por movimento dentro da corrida, os dois extremos ficam nas pontas do
+ * mesmo bloco e a leitura aparece sozinha.
+ */
+type Group = {
+  slug: string; venue: string; off_utc: string;
+  runners: Runner[]; lastLook: number; notable: number;
+};
+const groupsOf = (list: Runner[]): Group[] => {
+  const m = new Map<string, Group>();
+  for (const r of list) {
+    let g = m.get(r.slug);
+    if (!g) {
+      g = { slug: r.slug, venue: r.venue, off_utc: r.off_utc, runners: [], lastLook: r.latest.mins_to_off, notable: 0 };
+      m.set(r.slug, g);
+    }
+    g.runners.push(r);
+    // A corrida é observada até o último corredor com livro; o bloco carrega o
+    // olhar mais próximo da largada, e a coluna diz o de cada corredor.
+    g.lastLook = Math.min(g.lastLook, r.latest.mins_to_off);
+    if (r.notable) g.notable += 1;
+  }
+  for (const g of m.values()) g.runners.sort((a, b) => a.move_pct - b.move_pct);
+  return [...m.values()].sort((a, b) => a.off_utc.localeCompare(b.off_utc));
+};
+
 // Sem `collected_through` não há âncora, e inventar uma seria exatamente o erro
 // que esta página está corrigindo: a lista sai inteira, sem afirmar corte.
 const sections = splitKnown
   ? [
       {
+        id: 'to-come',
         heading: `Had not run when we last looked · ${lastLookStamp}`,
         note:
           'These races were still ahead of us at the final sample, so the market went on moving after the price shown. The record here is incomplete by construction.',
         rows: runners.filter((r) => !ranByLastLook(r)),
       },
       {
+        id: 'ran',
         heading: 'Already run by then · complete record',
         note:
           'We watched these to the off. None of it is actionable any more, and that is the point: it is the finished record of what the market did, which is the only version that is ever complete.',
         rows: runners.filter(ranByLastLook),
       },
-    ].filter((s) => s.rows.length > 0)
+    ]
+      .filter((s) => s.rows.length > 0)
+      .map((s) => ({ ...s, groups: groupsOf(s.rows) }))
   : [
       {
-        heading: 'All runners · most unusual first',
+        id: 'unsplit',
+        heading: 'All runners, by race',
         note:
           'This file carries no collection timestamp, so we cannot say which of these races had already run when we last looked. Every price below is still the last one we saw before the off.',
         rows: runners,
+        groups: groupsOf(runners),
       },
     ];
 
@@ -138,10 +176,57 @@ const tightest = bands[0];
     </section>
   ) : (
     <>
+      {/*
+        A barra de filtro sai do HTML OCULTA e é revelada pelo script. Sem
+        JavaScript ela não existe — controle morto é pior que controle nenhum —,
+        e a página continua servindo as tabelas inteiras, que é o que o Google
+        indexa. Nada aqui busca dado: o filtro esconde linhas que já estão na
+        página.
+      */}
+      <form class="filters" data-mv-filter data-js-only hidden>
+        <div class="f">
+          <label for="mv-q">Search</label>
+          <input id="mv-q" type="search" autocomplete="off" placeholder="Runner or course" />
+        </div>
+        <div class="f">
+          <label for="mv-course">Course</label>
+          <select id="mv-course">
+            <option value="">All courses</option>
+            {courses.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div class="f">
+          <label for="mv-window">Off time</label>
+          <select id="mv-window">
+            <option value="">Any</option>
+            <option value="60">Off within the hour</option>
+            <option value="180">Off within 3 hours</option>
+            <option value="upcoming">Not yet off</option>
+            <option value="past">Already off</option>
+          </select>
+        </div>
+        <div class="f">
+          <label for="mv-limit">Rows</label>
+          <select id="mv-limit">
+            <option value="0">All</option>
+            <option value="25">First 25</option>
+            <option value="50">First 50</option>
+            <option value="100">First 100</option>
+          </select>
+        </div>
+        <button type="reset" class="reset">Clear</button>
+        <p class="note filters-note">
+          Filtering changes the tables only. The counts at the top of the page describe all{' '}
+          {runners.length} runners collected today, filtered or not. The off-time options read
+          your own clock; every other number on this page is anchored to the race, not to you.
+        </p>
+      </form>
+
       {notable.length > 0 && (
         <section>
           <h2 class="section-rule">Outside the usual range</h2>
-          <table class="dense">
+          <p class="note showing" data-mv-count="notable" aria-live="polite" hidden></p>
+          <table class="dense" data-mv-table="notable">
             <thead>
               <tr>
                 <th scope="col">Race</th>
@@ -155,7 +240,7 @@ const tightest = bands[0];
             </thead>
             <tbody>
               {notable.map((r) => (
-                <tr>
+                <tr data-mv-row data-off={r.off_utc} data-course={r.venue} data-runner={r.runner}>
                   <td data-label="Race" class="n">
                     {raceTime(r.off_utc)} <span class="muted">{r.venue}</span>
                   </td>
@@ -167,6 +252,9 @@ const tightest = bands[0];
                   <td data-label="How unusual">{rarity(r)}</td>
                 </tr>
               ))}
+              <tr class="nomatch" data-mv-empty hidden>
+                <td colspan="7">No runner here matches the filter.</td>
+              </tr>
             </tbody>
           </table>
           <p class="note">
@@ -177,46 +265,81 @@ const tightest = bands[0];
         </section>
       )}
 
-      {sections.map((s) => (
-        <section>
-          <h2 class="section-rule">{s.heading}</h2>
-          <p class="note section-note">{s.note}</p>
-          <table class="dense">
-            <thead>
-              <tr>
-                <th scope="col">Race</th>
-                <th scope="col">Runner</th>
-                <th scope="col" class="num">First seen</th>
-                <th scope="col" class="num">Last seen</th>
-                <th scope="col" class="num">Move</th>
-                <th scope="col" class="num">Last look</th>
-                <th scope="col" class="num">Spread</th>
-              </tr>
-            </thead>
-            <tbody>
-              {s.rows.map((r) => (
+      {/*
+        A lista inteira vem FECHADA, e por <details> em vez de JavaScript: o
+        leitor sem script abre igual, e o conteúdo continua no HTML que o Google
+        recebe. O corte não é um limite arbitrário — a tabela de cima já mostra
+        o que a nossa própria medição chama de fora do comum, e o resto é o
+        arquivo do dia.
+      */}
+      <details class="all" open={notable.length === 0}>
+        <summary>
+          <span class="sum-main">All {runners.length} runners, grouped by race</span>{' '}
+          <span class="sum-sub">
+            {sections.reduce((n, s) => n + s.groups.length, 0)} races &middot; {courses.length} courses
+          </span>
+        </summary>
+
+        {sections.map((s) => (
+          <section class="grouped">
+            <h2 class="section-rule">{s.heading}</h2>
+            <p class="note section-note">{s.note}</p>
+            <p class="note showing" data-mv-count={s.id} aria-live="polite" hidden></p>
+            <table class="dense" data-mv-table={s.id}>
+              <thead>
                 <tr>
-                  <td data-label="Race" class="n">
-                    {raceTime(r.off_utc)} <span class="muted">{r.venue}</span>
-                  </td>
-                  <td data-label="Runner" class={r.notable ? 'above' : ''}>{r.runner}</td>
-                  <td data-label="First seen" class="num faint">{odds(r.first.mid)}</td>
-                  <td data-label="Last seen" class="num">{odds(r.latest.mid)}</td>
-                  <td data-label="Move" class="num">{pc(r.move_pct)}</td>
-                  <td data-label="Last look" class="num faint">{beforeOff(r.latest.mins_to_off)}</td>
-                  <td data-label="Spread" class="num faint">
-                    {r.latest.spread_pct == null ? (
-                      <span title="no two-sided book at the last sample">&mdash;</span>
-                    ) : (
-                      `${r.latest.spread_pct.toFixed(1)}%`
-                    )}
-                  </td>
+                  <th scope="col">Runner</th>
+                  <th scope="col" class="num">First seen</th>
+                  <th scope="col" class="num">Last seen</th>
+                  <th scope="col" class="num">Move</th>
+                  <th scope="col" class="num">Last look</th>
+                  <th scope="col" class="num">Spread</th>
                 </tr>
+              </thead>
+              {s.groups.map((g) => (
+                <tbody data-mv-group data-off={g.off_utc} data-course={g.venue}>
+                  <tr class="race-head">
+                    <th colspan="6" scope="colgroup">
+                      <span class="rh-time n">{raceTime(g.off_utc)}</span>{' '}
+                      <span class="rh-venue">{g.venue}</span>{' '}
+                      <span class="rh-meta">
+                        {g.runners.length} runners &middot; last look {beforeOff(g.lastLook)} before the off
+                        {g.notable > 0 && <span class="rh-flag"> &middot; {g.notable} outside the usual range</span>}
+                      </span>
+                    </th>
+                  </tr>
+                  {g.runners.map((r) => (
+                    <tr data-mv-row data-off={r.off_utc} data-course={r.venue} data-runner={r.runner}>
+                      <td data-label="Runner" class={r.notable ? 'above' : ''}>{r.runner}</td>
+                      <td data-label="First seen" class="num faint">{odds(r.first.mid)}</td>
+                      <td data-label="Last seen" class="num">{odds(r.latest.mid)}</td>
+                      <td data-label="Move" class="num">{pc(r.move_pct)}</td>
+                      <td data-label="Last look" class="num faint">{beforeOff(r.latest.mins_to_off)}</td>
+                      <td data-label="Spread" class="num faint">
+                        {r.latest.spread_pct == null ? (
+                          <span title="no two-sided book at the last sample">&mdash;</span>
+                        ) : (
+                          `${r.latest.spread_pct.toFixed(1)}%`
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               ))}
-            </tbody>
-          </table>
-        </section>
-      ))}
+              <tbody>
+                <tr class="nomatch" data-mv-empty hidden>
+                  <td colspan="6">No runner here matches the filter.</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="note">
+              Within a race the order is by move, shortest to longest: when money leaves one
+              runner for another in the same race, the two ends of the block are the two sides
+              of it.
+            </p>
+          </section>
+        ))}
+      </details>
     </>
   )}
 
@@ -292,8 +415,200 @@ const tightest = bands[0];
   .foot { margin-top: var(--sp-8); }
   section + section { margin-top: var(--sp-11); }
 
+  /* -- Barra de filtro ---------------------------------------------------- */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--sp-4);
+    border-top: 1px solid var(--rule-med);
+    border-bottom: 1px solid var(--rule-med);
+    padding: var(--sp-4) 0;
+    margin-bottom: var(--sp-8);
+  }
+  .f { display: flex; flex-direction: column; gap: var(--sp-1); }
+  .f label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .f input, .f select {
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-2);
+  }
+  .reset {
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    color: var(--ink-faint);
+    background: transparent;
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-3);
+    cursor: pointer;
+  }
+  .filters-note { flex-basis: 100%; margin: 0; }
+  .showing { margin-bottom: var(--sp-3); color: var(--ink); }
+
+  /* -- Lista completa, fechada por padrão --------------------------------- */
+  .all { margin-top: var(--sp-11); }
+  .all > summary {
+    cursor: pointer;
+    list-style: none;
+    border-top: 1px solid var(--ink);
+    padding-top: var(--rule-pad);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-3);
+  }
+  .all > summary::-webkit-details-marker { display: none; }
+  .sum-main { font-size: var(--fs-lead); color: var(--accent); }
+  .all[open] > summary .sum-main { color: var(--ink); }
+  .sum-sub {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .grouped { margin-top: var(--sp-8); }
+
+  /* Cabeçalho de corrida dentro da tabela: é linha de grupo, não de dado. */
+  .dense .race-head th {
+    border-bottom: 1px solid var(--rule-med);
+    border-top: 1px solid var(--rule-med);
+    padding: var(--sp-3) 0 var(--rule-pad);
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+  }
+  .rh-time { font-family: var(--font-mono); }
+  .rh-venue { font-weight: 600; }
+  .rh-meta { color: var(--ink-faint); }
+  .rh-flag { color: var(--accent); }
+  .nomatch td { color: var(--ink-faint); }
+
   @media (max-width: 720px) {
     .head { grid-template-columns: 1fr; gap: var(--sp-8); }
     .figures { border-left: 0; padding-left: 0; }
+    .f, .f input, .f select { width: 100%; }
+    .dense .race-head th { display: block; text-align: left; }
   }
 </style>
+
+<script is:inline>
+  /*
+    Filtro da lista de corredores. Esconde linhas que já estão no HTML; não
+    busca nada, não reordena e não inventa número.
+
+    Duas regras que o handoff impõe e que o código respeita:
+
+    1. Sem JavaScript a página continua inteira — por isso a barra nasce oculta
+       e só este script a revela.
+    2. Filtro não pode mentir sobre a amostra. Toda contagem exibida diz
+       "X of Y", e os números do topo da página seguem descrevendo o dia
+       inteiro, o que a própria barra declara em texto.
+
+    Concatenação de string em vez de template literal, de propósito: a
+    checagem 14 recusa a abertura de interpolação no HTML servido, porque foi
+    assim que sintaxe de template já vazou para o artefato — e ela recusa
+    inclusive dentro de comentário, que é o certo, já que o comentário também é
+    servido.
+  */
+  (function () {
+    var bar = document.querySelector('[data-mv-filter]');
+    if (!bar) return;
+
+    var q = document.getElementById('mv-q');
+    var course = document.getElementById('mv-course');
+    var win = document.getElementById('mv-window');
+    var limit = document.getElementById('mv-limit');
+    var details = document.querySelector('details.all');
+    var tables = document.querySelectorAll('[data-mv-table]');
+    if (!q || !course || !win || !limit || !tables.length) return;
+
+    bar.hidden = false;
+
+    function active() {
+      return Boolean(q.value.trim() || course.value || win.value || limit.value !== '0');
+    }
+
+    function inWindow(off) {
+      var mode = win.value;
+      if (!mode) return true;
+      var t = Date.parse(off);
+      if (isNaN(t)) return true;
+      var now = Date.now();
+      if (mode === 'upcoming') return t > now;
+      if (mode === 'past') return t <= now;
+      var mins = parseInt(mode, 10);
+      return t > now && t - now <= mins * 60000;
+    }
+
+    function apply() {
+      var needle = q.value.trim().toLowerCase();
+      var cap = parseInt(limit.value, 10) || 0;
+      var on = active();
+
+      for (var i = 0; i < tables.length; i++) {
+        var table = tables[i];
+        var rows = table.querySelectorAll('[data-mv-row]');
+        var shown = 0;
+        var matched = 0;
+
+        for (var j = 0; j < rows.length; j++) {
+          var row = rows[j];
+          var name = (row.dataset.runner || '').toLowerCase();
+          var venue = (row.dataset.course || '').toLowerCase();
+          var ok =
+            (!needle || name.indexOf(needle) >= 0 || venue.indexOf(needle) >= 0) &&
+            (!course.value || row.dataset.course === course.value) &&
+            inWindow(row.dataset.off);
+
+          if (ok) matched++;
+          var visible = ok && (!cap || shown < cap);
+          if (visible) shown++;
+          row.hidden = !visible;
+        }
+
+        // Um bloco de corrida sem corredor visível some inteiro, senão sobra o
+        // cabeçalho prometendo linhas que o filtro tirou.
+        var groups = table.querySelectorAll('[data-mv-group]');
+        for (var g = 0; g < groups.length; g++) {
+          var alive = groups[g].querySelectorAll('[data-mv-row]:not([hidden])').length;
+          groups[g].hidden = alive === 0;
+        }
+
+        var empty = table.querySelector('[data-mv-empty]');
+        if (empty) empty.hidden = shown !== 0;
+
+        var label = document.querySelector('[data-mv-count="' + table.dataset.mvTable + '"]');
+        if (label) {
+          var txt = 'Showing ' + shown + ' of ' + rows.length + ' runners in this table';
+          if (matched > shown) txt += ' (' + matched + ' match; the rest are past the row limit)';
+          label.textContent = txt + '. The figures at the top of the page still describe all runners collected today.';
+          label.hidden = !on;
+        }
+      }
+
+      // Filtrar com a lista fechada esconderia o resultado do próprio filtro.
+      if (details && on) details.open = true;
+    }
+
+    bar.addEventListener('input', apply);
+    bar.addEventListener('change', apply);
+    bar.addEventListener('reset', function () {
+      setTimeout(apply, 0);
+    });
+    apply();
+  })();
+</script>

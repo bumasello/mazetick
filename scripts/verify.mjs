@@ -644,6 +644,51 @@ check(
   check('Nenhuma coluna rotulada pelo relógio do leitor', [...new Set(problems)]);
 }
 
+// 20. Sem JavaScript, a página de dado continua inteira.
+//
+//     A /movers ganhou filtro e busca. Os dois escondem linhas que JÁ ESTÃO no
+//     HTML — nada é buscado, nada é renderizado no cliente —, porque é o HTML
+//     servido que o Google indexa e é ele que o leitor sem script recebe. Se um
+//     refactor passar a renderizar só os notáveis e deixar o resto para o
+//     JavaScript, as duas páginas de dado perdem a indexação em silêncio, que é
+//     a falha mais cara possível para um site que aposta em ser achado.
+//
+//     Duas afirmações, e as duas são sobre o ARTEFATO:
+//     (a) controle que só funciona com script nasce oculto — controle morto é
+//         pior que controle nenhum;
+//     (b) nenhuma linha de dado nasce oculta, e a contagem servida cobre o
+//         arquivo inteiro. `>=` porque a tabela dos notáveis repete linhas que
+//         a lista completa também traz.
+{
+  const problems = [];
+
+  for (const f of pages) {
+    const html = read(f);
+    for (const m of html.matchAll(/<[a-z]+\b[^>]*\bdata-js-only\b[^>]*>/gi)) {
+      if (!/\shidden(\s|=|>)/i.test(m[0])) {
+        problems.push(`${rel(f)}: data-js-only sem hidden — ${m[0].slice(0, 60)}…`);
+      }
+    }
+    for (const m of html.matchAll(/<tr\b[^>]*\bdata-mv-row\b[^>]*>/gi)) {
+      if (/\shidden(\s|=|>)/i.test(m[0])) {
+        problems.push(`${rel(f)}: linha de dado servida oculta — ${m[0].slice(0, 60)}…`);
+      }
+    }
+  }
+
+  const moversPage = pages.find((f) => rel(f) === 'movers.html');
+  const moversData = 'src/data/movers.json';
+  if (moversPage && fs.existsSync(moversData)) {
+    const n = (JSON.parse(read(moversData)).runners || []).length;
+    const served = [...read(moversPage).matchAll(/\bdata-mv-row\b/g)].length;
+    if (served < n) {
+      problems.push(`movers.html serve ${served} linhas para ${n} corredores no JSON — o resto ficaria só no cliente`);
+    }
+  }
+
+  check('Página de dado completa no HTML servido', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);
