@@ -1,6 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
+// A linha de base cresce um dia por dia. Escrita à mão, a home já dizia 27
+// quando o arquivo dizia 28 — número na tela que nenhum script emite é número
+// que envelhece calado. Sai do mesmo JSON que a /movers usa.
+import movers from '../data/movers.json';
 ---
 <BaseLayout
   title="mazetick — what the market knew, and when"
@@ -33,7 +37,8 @@ import StatFigure from '../components/StatFigure.astro';
       <span class="card-title">What moved, and whether that is unusual for the price</span>
       <span class="card-note">
         Every portal lists drifters. We publish the yardstick too: how far a
-        price of that size normally travels, from 27 days of our own collection.
+        price of that size normally travels, from {movers.baseline.days} days of our
+        own collection.
       </span>
     </a>
     <a class="card" href="/research">
