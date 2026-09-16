@@ -518,12 +518,26 @@ check(
   // `price` legitimamente, o build quebra. É o lado certo para errar — o erro
   // oposto é revenda —, e a saída é a lista de permissão abaixo, explícita e
   // deliberada, uma chave por vez. NUNCA afrouxar o padrão.
+  //
+  //     ⚠️ E havia um segundo buraco, fechado em 2026-09-16: a fronteira
+  //     não-alfanumérica não vê camelCase. `winOdds`, `midPrice` e
+  //     `betfairMarketId` passavam, porque a letra maiúscula É alfanumérica. O
+  //     contrato de hoje é todo snake_case, mas isso vale para os nomes de
+  //     hoje, não para o dia em que o produtor mudar de convenção — e a
+  //     checagem existe justamente para o dia em que alguém mudar algo.
+  //
+  //     Em vez de alargar o padrão (que é o caminho que afrouxa), a chave é
+  //     NORMALIZADA antes do teste: camelCase vira snake_case e qualquer
+  //     separador vira `_`. Assim `winOdds`, `win-odds`, `win.odds` e
+  //     `win_odds` são a mesma coisa, e a fronteira volta a ser simples.
   const TERMS = ['win_odds', 'ew_odds', 'betfair', 'bsp', 'selection_id', 'market_id', 'price', 'odds'];
-  const BANNED = new RegExp(`(?:^|[^A-Za-z0-9])(${TERMS.join('|')})(?:[^A-Za-z0-9]|$)`, 'i');
+  const BANNED = new RegExp(`(?:^|_)(${TERMS.join('|')})(?:_|$)`);
+  const normaliza = (k) =>
+    k.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase().replace(/[^a-z0-9]+/g, '_');
   // Vazia, e que continue assim. Cada nome aqui é uma exceção que alguém teve
   // de justificar por escrito no commit que a acrescentou.
   const ALLOW = new Set([]);
-  const forbidden = (k) => !ALLOW.has(k) && BANNED.test(k);
+  const forbidden = (k) => !ALLOW.has(k) && BANNED.test(normaliza(k));
 
   const banned = [];
   const undated = [];
