@@ -699,6 +699,31 @@ check(
   check('Página de dado completa no HTML servido', problems);
 }
 
+// 21. O atributo `hidden` vence no CSS servido.
+//
+//     O `display: none` de [hidden] vem da folha do NAVEGADOR, e QUALQUER regra
+//     de autor o sobrepõe — não é questão de especificidade, é ordem de origem
+//     na cascata. O modo lista do celular declara `.dense tr { display: block }`
+//     e, sem um override explícito, abaixo de 720px o filtro da /movers não
+//     esconderia linha nenhuma: o leitor de celular veria a lista inteira com o
+//     aviso de "nenhum resultado" por cima. Nenhuma outra checagem enxerga isso,
+//     porque o HTML está correto — quem mente é a folha de estilo.
+//
+//     Vale por todo bundle CSS servido, e exige o !important, que é o que
+//     realmente fecha a cascata.
+{
+  const cssFiles = all.filter((f) => f.endsWith('.css'));
+  const covers = cssFiles.some((f) =>
+    /\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important/i.test(read(f).replace(/\s+/g, ' ')),
+  );
+  const problems = [];
+  if (!cssFiles.length) problems.push('nenhum CSS em dist/ — o bundle sumiu?');
+  else if (!covers) {
+    problems.push('nenhum bundle declara [hidden] { display: none !important } — no celular o filtro não esconde nada');
+  }
+  check('O atributo hidden vence no CSS servido', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

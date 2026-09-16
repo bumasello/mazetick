@@ -23,6 +23,15 @@ body {
 }
 
 h1, h2, h3, p, ul, ol, dl, dd, figure, table { margin: 0; }
+
+/* -- `hidden` tem de vencer QUALQUER display do sistema ---------------------
+   O `display: none` de [hidden] vem da folha do NAVEGADOR, e qualquer regra de
+   autor o sobrepõe — não é questão de especificidade. O modo lista do celular
+   declara `.dense tr { display: block }`, então abaixo de 720px as linhas que o
+   filtro da /movers esconde continuariam na tela, junto com o aviso de "nenhum
+   resultado" que nasce oculto. É o único !important do sistema, e existe por
+   isso. */
+[hidden] { display: none !important; }
 ul, ol { padding: 0; list-style: none; }
 img { max-width: 100%; height: auto; }
 
