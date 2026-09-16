@@ -504,16 +504,26 @@ check(
   const distData = all.filter((f) => f.endsWith('.json'));
   const dataFiles = [...srcData, ...distData];
 
-  // Classe A — nomes de coluna de fornecedor. Casam com `_` de qualquer lado,
-  // porque é assim que eles aparecem: `win_odds_dec`, `betfair_market_id`.
-  const SUPPLIER = /(?:^|[^A-Za-z0-9])(win_odds|ew_odds|betfair|bsp|selection_id|market_id)(?:[^A-Za-z0-9]|$)/i;
-  // Classe B — palavras genéricas, só com fronteira real. É HEURÍSTICA, e
-  // assumidamente falível nos dois sentidos: preço do Smarkets É publicável
-  // (regra 3 do handoff), então se um dia o produtor renomear `mid` para
-  // `price` o build quebra por um campo legítimo. Aceitável — o conserto é
-  // renomear uma chave, e o erro oposto é revenda.
-  const GENERIC = /\b(price|odds)\b/i;
-  const forbidden = (k) => SUPPLIER.test(k) || GENERIC.test(k);
+  // Uma classe só, e a fronteira é a mesma para todos os termos: começo/fim da
+  // chave ou qualquer caractere não alfanumérico — o que INCLUI o sublinhado.
+  //
+  // ⚠️ A versão anterior tinha duas classes e a genérica usava `\b`. Em
+  // JavaScript `_` é caractere de palavra, então `\bprice\b` não fecha antes de
+  // `_`: `sp_odds`, `odds_dec` e `pre_price` passavam os três. Apertado em
+  // 2026-09-15 por decisão da orquestração, depois de conferir que NENHUM campo
+  // do contrato de hoje contém "odds" ou "price".
+  //
+  // O falso positivo futuro é aceito de propósito: o preço do Smarkets é
+  // publicável (regra 3 do handoff), então se um dia o produtor nomear um campo
+  // `price` legitimamente, o build quebra. É o lado certo para errar — o erro
+  // oposto é revenda —, e a saída é a lista de permissão abaixo, explícita e
+  // deliberada, uma chave por vez. NUNCA afrouxar o padrão.
+  const TERMS = ['win_odds', 'ew_odds', 'betfair', 'bsp', 'selection_id', 'market_id', 'price', 'odds'];
+  const BANNED = new RegExp(`(?:^|[^A-Za-z0-9])(${TERMS.join('|')})(?:[^A-Za-z0-9]|$)`, 'i');
+  // Vazia, e que continue assim. Cada nome aqui é uma exceção que alguém teve
+  // de justificar por escrito no commit que a acrescentou.
+  const ALLOW = new Set([]);
+  const forbidden = (k) => !ALLOW.has(k) && BANNED.test(k);
 
   const banned = [];
   const undated = [];
