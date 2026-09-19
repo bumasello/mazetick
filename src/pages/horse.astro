@@ -1,0 +1,390 @@
+---
+/**
+ * O índice do acervo de cavalos.
+ *
+ * Serve o apostador que está investigando um nome, e por isso existe antes de
+ * os permalinks importarem: sem ele, as páginas de cavalo só são alcançáveis
+ * por quem já sabe o slug.
+ *
+ * ⚠️ AS LINHAS SAEM TODAS NO HTML SERVIDO. O corte inicial é do CLIENTE, como
+ * na /movers, porque é o HTML servido que o Google indexa e é ele que o leitor
+ * sem JavaScript recebe. Cortar na geração perderia a indexação em silêncio, e a
+ * checagem 20 do verify.mjs recusa o build se acontecer.
+ *
+ * ⚠️ A TABELA É MONTADA A PARTIR DOS REGISTROS, não do `horses-index.json`. O
+ * índice do produtor serve para CONFERIR (o `fetch-data.mjs` recusa o build se
+ * os dois discordarem), e a tela sai da mesma fonte que as páginas de cavalo —
+ * senão o índice poderia dizer 43 corridas e a página do bicho dizer 44, com os
+ * dois números "corretos" segundo o seu próprio arquivo.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatFigure from '../components/StatFigure.astro';
+import { loadRecords, loadCard, rate, statusLabel, plural } from '../lib/horses';
+import { ukDate } from '../lib/horse-copy.mjs';
+
+const records = loadRecords();
+// O cartão é lido com `fs` e não importado como módulo: importado, o
+// TypeScript infere o tipo LITERAL do arquivo inteiro — 678 objetos — e o
+// `astro check` passa a analisar dado em vez de código.
+const card = loadCard();
+
+// A data do cartão sai do próprio cartão. Se um dia o arquivo trouxer mais de
+// um dia (o produtor mudar a janela), a página NÃO afirma uma data só.
+const cardDates = [...new Set(card.horses.map((x) => x.as_of))].sort();
+const cardDate = cardDates.length === 1 ? cardDates[0] : null;
+
+// Quem foi declarado no cartão mais recente, e quem é registro acumulado de
+// dias anteriores. Hoje as duas populações coincidem; o texto abaixo é escrito
+// para não depender disso, porque amanhã não coincidem mais.
+const declaredDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
+const newest = declaredDates[declaredDates.length - 1];
+const onCard = records.filter((h) => h.last_declared.date === newest);
+const earlier = records.filter((h) => h.last_declared.date !== newest);
+
+const archiveThrough = card.history_depth.through;
+const generated = card.generated_at.replace('T', ' ').replace('Z', ' UTC');
+
+const headline =
+  records.length === 0
+    ? 'No horse records collected yet'
+    : earlier.length === 0
+      ? `${plural(records.length, 'horse')}, every one declared on the ${ukDate(newest)} card`
+      : `${plural(records.length, 'horse')} in the archive, ${onCard.length.toLocaleString('en-GB')} of them declared on the ${ukDate(newest)} card`;
+
+/** O que a linha diz na coluna de amostra, e é onde os três estados divergem. */
+const runsCell = (h: (typeof records)[number]) =>
+  h.status === 'no_record' ? null : h.career.runs;
+---
+<BaseLayout
+  title="Horse form by going, course and distance — mazetick"
+  description="Every horse we have seen declared in UK and Irish racing, with its record by going, course and distance band — the whole of what we hold, cut at the archive date, with the sample beside every rate."
+>
+  <header class="mast">
+    <p class="mono kicker">Horse records &middot; UK &amp; Irish racing</p>
+    <h1 class="display title">{headline}</h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      <p class="lead">
+        The portals show a rolling recent window, because that is what their feed
+        delivers. We show <strong>the whole of what we hold</strong> &mdash; split by
+        going, by course and by distance band, computed using only races run before
+        the race being described, and cut at a date that every page states.
+      </p>
+      <p class="note">
+        A record is true as of its last-declared date and is never deleted. A horse
+        that stops running becomes dated, not wrong. Our archive of results runs to{' '}
+        {ukDate(archiveThrough)}; a run after that date is missing from these figures.
+        Derived {generated}.
+      </p>
+    </div>
+
+    <aside class="rail">
+      {records.length > 0 && (
+        <div class="figures">
+          <StatFigure value={records.length.toLocaleString('en-GB')} label="horses in the archive" />
+          <StatFigure value={onCard.length.toLocaleString('en-GB')} label={`declared on the ${ukDate(newest)} card`} accent />
+        </div>
+      )}
+    </aside>
+  </div>
+
+  {records.length === 0 ? (
+    <section>
+      <h2 class="section-rule">Nothing to show</h2>
+      <div class="empty">
+        <p class="lead">
+          No horse record has reached us. This is a statement about our collection,
+          not about the racing: there may well have been a card. The archive file was
+          derived {generated} and carried no horses.
+        </p>
+      </div>
+    </section>
+  ) : (
+    <>
+      {/*
+        A barra nasce OCULTA e é revelada pelo script. Sem JavaScript ela não
+        existe — controle morto é pior que controle nenhum — e a tabela inteira
+        continua na página. Nada aqui busca dado: o filtro esconde linhas que já
+        estão servidas.
+      */}
+      <form class="filters" data-hz-filter data-js-only hidden>
+        <div class="f f-wide">
+          <label for="hz-q">Search</label>
+          <input id="hz-q" type="search" autocomplete="off" placeholder="Horse or course" />
+        </div>
+        {earlier.length > 0 && (
+          <div class="f">
+            <label for="hz-when">Declared</label>
+            <select id="hz-when">
+              <option value="">Any date</option>
+              <option value={newest}>{ukDate(newest)} card</option>
+              <option value="earlier">Earlier than that</option>
+            </select>
+          </div>
+        )}
+        <div class="f">
+          <label for="hz-state">Record</label>
+          <select id="hz-state">
+            <option value="">Any</option>
+            <option value="has_history">Runs held</option>
+            <option value="debut">No recorded run</option>
+            <option value="no_record">Ran before; not held</option>
+          </select>
+        </div>
+        <div class="f">
+          <label for="hz-limit">Rows</label>
+          <select id="hz-limit">
+            <option value="50" selected>First 50</option>
+            <option value="100">First 100</option>
+            <option value="250">First 250</option>
+            <option value="0">All {records.length.toLocaleString('en-GB')}</option>
+          </select>
+        </div>
+        <button type="reset" class="reset">Clear</button>
+        <p class="note filters-note on-axis">
+          Filtering changes the table only. The counts above describe all{' '}
+          {records.length.toLocaleString('en-GB')} records held, filtered or not.
+        </p>
+      </form>
+
+      <section>
+        <h2 class="section-rule">Every horse we hold a record for</h2>
+        <p class="note showing on-axis" data-hz-count aria-live="polite" hidden></p>
+        <table class="dense" data-hz-table>
+          <thead>
+            <tr>
+              <th scope="col">Horse</th>
+              <th scope="col">Last declared</th>
+              <th scope="col" class="num">Runs</th>
+              <th scope="col" class="num">Wins</th>
+              <th scope="col" class="num">Win rate</th>
+              <th scope="col">What we hold</th>
+            </tr>
+          </thead>
+          <tbody>
+            {records.map((h) => (
+              <tr data-hz-row data-name={h.name} data-course={h.last_declared.venue} data-when={h.last_declared.date} data-state={h.status}>
+                <td data-label="Horse"><a href={`/horse/${h.slug}`}>{h.name}</a></td>
+                <td data-label="Last declared" class="n">
+                  {ukDate(h.last_declared.date)} <span class="muted">{h.last_declared.venue}</span>
+                </td>
+                <td data-label="Runs" class="num">{runsCell(h) === null ? '—' : runsCell(h)}</td>
+                {/*
+                  `debut` mostra 0 e 0 porque é AFIRMAÇÃO: não há corrida
+                  registrada, logo não há vitória. `no_record` mostra travessão
+                  nos três porque é CONFISSÃO: não sabemos quantas foram. Pôr
+                  zero ali seria transformar a nossa lacuna em fato sobre o
+                  cavalo, que é o defeito que esta página existe para não ter.
+                */}
+                <td data-label="Wins" class="num">{h.status === 'no_record' ? '—' : h.career.wins}</td>
+                <td data-label="Win rate" class="num">{rate(h.career.win_pct)}</td>
+                <td data-label="What we hold" class="faint">
+                  {h.status === 'has_history' ? '' : statusLabel(h.status)}
+                </td>
+              </tr>
+            ))}
+            <tr class="nomatch" data-hz-empty hidden>
+              <td colspan="6">No horse here matches the filter.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="note caption on-axis">
+          <strong>Runs</strong> is what our archive holds, not the horse&rsquo;s official
+          career: the two differ by whatever ran after {ukDate(archiveThrough)} and by
+          whatever predates the archive. A dash under Runs means the horse has run before
+          and those races are not in our archive &mdash; which is a statement about us.
+          <strong>No recorded run</strong> is the other thing entirely: it is a statement
+          about the horse, that we hold no earlier race for it.
+          {cardDate === null && ' This file spans more than one card date, so the counts above are read from the records themselves.'}
+        </p>
+      </section>
+    </>
+  )}
+</BaseLayout>
+
+<style>
+  .mast .title { max-width: 26ch; }
+  .lead { margin-bottom: var(--sp-5); }
+  .figures {
+    border-left: 1px solid var(--rule-med);
+    padding-left: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
+  section { margin-top: var(--sp-14); }
+  .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
+  .nomatch { color: var(--ink-faint); }
+
+  /* Mesma barra da /movers: grade, não flex, para que os rótulos partilhem
+     linha de base e os campos partilhem largura. */
+  .filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    align-items: end;
+    gap: var(--sp-4);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule-med);
+    padding: var(--sp-4) 0;
+    margin-top: var(--sp-14);
+    margin-bottom: var(--sp-8);
+  }
+  .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+  .f label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .f input, .f select {
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-2);
+    width: 100%;
+  }
+  .reset {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: transparent;
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-3);
+    cursor: pointer;
+    justify-self: start;
+  }
+  .reset:hover { color: var(--ink); }
+  .filters-note { grid-column: 1 / -1; margin: 0; }
+  .showing { margin-bottom: var(--sp-4); color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .figures { border-left: 0; padding-left: 0; }
+    .filters { grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr)); }
+    .reset { grid-column: 1 / -1; }
+  }
+
+  /* -- O índice no celular ---------------------------------------------------
+     O modo lista padrão do `.dense` empilha as seis células de cada linha, uma
+     por linha. Numa TABELA DE DADO isso é o certo — são seis grandezas a
+     comparar. Aqui não: a linha é uma ENTRADA DE ÍNDICE, e empilhada ela dava
+     **20.743 px de página** para as primeiras 100 entradas, medido em 390 px de
+     largura. Ninguém rola vinte mil pixels para achar um nome.
+
+     Então, e só nesta tabela, a linha volta a ser uma linha: nome em destaque,
+     declaração embaixo, e os números correndo numa terceira, cada um com o seu
+     rótulo colado. Nada é escondido — as seis células continuam servidas e
+     legíveis, o que muda é a direção em que se leem. */
+  @media (max-width: 720px) {
+    .dense[data-hz-table] tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      column-gap: var(--sp-4);
+      row-gap: var(--sp-1);
+    }
+    .dense[data-hz-table] td {
+      display: inline-flex;
+      width: auto;
+      gap: var(--sp-2);
+      padding: 0;
+      justify-content: flex-start;
+    }
+    .dense[data-hz-table] td[data-label='Horse'] { flex: 1 0 100%; font-size: var(--fs-lead); }
+    .dense[data-hz-table] td[data-label='Horse']::before { display: none; }
+    .dense[data-hz-table] td[data-label='Last declared'] { flex: 1 0 100%; }
+    .dense[data-hz-table] td[data-label='What we hold'] { flex: 1 0 100%; }
+    /* Célula vazia não vira rótulo órfão. O `.dense td:empty` do base.css perde
+       para os seletores acima por especificidade, e o resultado era um
+       "WHAT WE HOLD" solto embaixo de 615 das 678 entradas. */
+    .dense[data-hz-table] td:empty { display: none; }
+  }
+</style>
+
+<script is:inline>
+  /*
+    Busca e filtro do índice. Esconde linhas que já estão no HTML; não busca
+    nada, não reordena e não inventa número.
+
+    Concatenação de string em vez de template literal, de propósito: a checagem
+    14 recusa abertura de interpolação no HTML servido — inclusive dentro de
+    comentário, que também é servido.
+  */
+  (function () {
+    var bar = document.querySelector('[data-hz-filter]');
+    var table = document.querySelector('[data-hz-table]');
+    if (!bar || !table) return;
+
+    var q = document.getElementById('hz-q');
+    var when = document.getElementById('hz-when');
+    var state = document.getElementById('hz-state');
+    var limit = document.getElementById('hz-limit');
+    if (!q || !state || !limit) return;
+
+    bar.hidden = false;
+
+    var rows = table.querySelectorAll('[data-hz-row]');
+    var empty = table.querySelector('[data-hz-empty]');
+    var label = document.querySelector('[data-hz-count]');
+    var newest = when ? when.options[1].value : '';
+
+    function apply() {
+      var needle = q.value.trim().toLowerCase();
+      var cap = parseInt(limit.value, 10) || 0;
+      var wantWhen = when ? when.value : '';
+      var wantState = state.value;
+      var on = Boolean(needle || wantWhen || wantState || cap);
+      var shown = 0;
+      var matched = 0;
+
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        if (!row.__hz) {
+          row.__hz = {
+            name: (row.dataset.name || '').toLowerCase(),
+            course: (row.dataset.course || '').toLowerCase(),
+          };
+        }
+        var c = row.__hz;
+        var okWhen =
+          !wantWhen ||
+          (wantWhen === 'earlier' ? row.dataset.when !== newest : row.dataset.when === wantWhen);
+        var ok =
+          (!needle || c.name.indexOf(needle) >= 0 || c.course.indexOf(needle) >= 0) &&
+          okWhen &&
+          (!wantState || row.dataset.state === wantState);
+
+        if (ok) matched++;
+        var visible = ok && (!cap || shown < cap);
+        if (visible) shown++;
+        row.hidden = !visible;
+      }
+
+      if (empty) empty.hidden = shown !== 0;
+      if (label) {
+        var txt = 'Showing ' + shown + ' of ' + rows.length + ' horses';
+        if (matched > shown) {
+          txt += ' — ' + matched + ' match, and the rest are past the row limit you chose';
+        }
+        label.textContent = txt + '. The counts at the top of the page describe every record held.';
+        label.hidden = !on;
+      }
+    }
+
+    bar.addEventListener('input', apply);
+    bar.addEventListener('change', apply);
+    bar.addEventListener('reset', function () {
+      setTimeout(apply, 0);
+    });
+    apply();
+  })();
+</script>

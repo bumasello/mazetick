@@ -1,0 +1,66 @@
+---
+/**
+ * A tabela de amostra e taxa, com a MESMA forma em toda parte da `/horse`:
+ * carreira, terreno, pista, faixa de distância, jóquei, treinador e garanhão.
+ *
+ * ⚠️ AS COLUNAS SÃO FIXAS DE PROPÓSITO, e `Runs` vem sempre antes das taxas.
+ * "23.5% on good" sem o `runs = 17` ao lado é o número que um leitor usaria
+ * para apostar, e é o defeito que esta página existe para não cometer. A
+ * checagem 27 do verify.mjs recusa o build se alguma linha servida mostrar
+ * porcentagem sem trazer a amostra na mesma linha.
+ *
+ * Taxa `null` sai como travessão, NUNCA como "0%": sem amostra não há taxa.
+ * Grupo com menos de duas corridas já vem omitido pelo produtor, e não é
+ * reintroduzido aqui — não existe linha "0 runs" nesta página.
+ */
+import { rate, type Group } from '../lib/horses';
+
+interface Props {
+  /** Cabeçalho da primeira coluna: "Going", "Course", "Jockey"… */
+  firstCol: string;
+  /** Cada linha traz um rótulo próprio; `sub` é o nome de quem produziu o número. */
+  rows: { label: string; sub?: string; group: Group | { runs: number; wins: number; places: number; win_pct: number | null; place_pct: number | null } }[];
+}
+const { firstCol, rows } = Astro.props;
+---
+<table class="dense horse-stats">
+  <thead>
+    <tr>
+      <th scope="col">{firstCol}</th>
+      <th scope="col" class="num">Runs</th>
+      <th scope="col" class="num">Wins</th>
+      <th scope="col" class="num">Placed</th>
+      <th scope="col" class="num">Win rate</th>
+      <th scope="col" class="num">Placed rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((r) => (
+      <tr>
+        <td data-label={firstCol}>
+          <strong>{r.label}</strong>{r.sub && <span class="sub">{r.sub}</span>}
+        </td>
+        <td data-label="Runs" class="num">{r.group.runs}</td>
+        <td data-label="Wins" class="num">{r.group.wins}</td>
+        <td data-label="Placed" class="num faint">{r.group.places}</td>
+        <td data-label="Win rate" class="num">{rate(r.group.win_pct)}</td>
+        <td data-label="Placed rate" class="num faint">{rate(r.group.place_pct)}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+<style>
+  .horse-stats { margin-bottom: var(--sp-5); }
+  /* O nome de quem produziu o número fica na mesma célula do rótulo: numa
+     coluna própria ele empurraria as taxas para fora da tela no celular. */
+  .sub {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: var(--sp-1);
+  }
+</style>

@@ -18,6 +18,7 @@ const year = new Date().getUTCFullYear();
       <a href="/about">About</a>
       <a href="/extra-places">Extra places</a>
       <a href="/movers">Movers</a>
+      <a href="/horse">Horses</a>
       <a href="/research">Research</a>
       <a href="/privacy">Privacy</a>
       <a href="/cookies">Cookies</a>
@@ -31,21 +32,27 @@ const year = new Date().getUTCFullYear();
       como transparente e esconde de quem vêm os seus dados está incoerente antes
       da primeira tabela.
 
-      ⚠️ E o crédito é DELIMITADO de propósito. Conferido em `build_site_data.py`
-      e nas cinco derivações: hoje nada nas páginas vem do theracingapi — o
-      produtor lê só os CSVs da Paddy Power e do Smarkets, e os artigos saem de
-      rpscrape e dos CSVs do exchange. Escrever "racecards and form from The
-      Racing API" no rodapé seria creditar uma fonte que não está na tela, que é a
-      mesma classe de erro que o site existe para não cometer, só na direção
-      oposta. Quando `/horse/[id]` publicar, a cláusula muda de tempo verbal.
+      ⚠️ E o crédito é DELIMITADO de propósito. A cláusula mudou de tempo verbal
+      em 2026-09-19, quando a `/horse` entrou no ar: as estatísticas de carreira
+      por terreno, pista e distância são contagem NOSSA sobre um arquivo de
+      resultados publicados, e é isso que a frase diz.
+
+      ⚠️ O que ela NÃO diz, e não deve dizer sem que a orquestração confirme: de
+      qual fornecedor veio o arquivo histórico de 2019 em diante. O
+      `site_handoff.md` §11.1 registra que ele foi exportado do Supabase
+      (`rpscrape_results`) para o `bspnode` e que as declarações do dia vêm da HR
+      API — duas procedências diferentes dentro do mesmo número. Creditar a fonte
+      errada é a mesma classe de erro que não creditar nenhuma, e este arquivo não
+      tem como decidir qual é.
     */}
     <div class="colophon">
       <span class="rail-label">Sources</span>
       <p class="note">
         What is on these pages is our own measurement over public records:
-        each-way terms from <strong>Paddy Power</strong>&rsquo;s own race pages, and
-        order-book prices from <strong>Smarkets</strong>&rsquo; public API. Racecard
-        and form data used elsewhere in this project comes from{' '}
+        each-way terms from <strong>Paddy Power</strong>&rsquo;s own race pages,
+        order-book prices from <strong>Smarkets</strong>&rsquo; public API, and the
+        horse pages from our own count over an archive of published race results.
+        Racecard and form data in this project comes from{' '}
         <strong>The Racing API</strong>. We publish measurements over those records,
         never the records themselves.
       </p>

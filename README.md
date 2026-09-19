@@ -30,7 +30,7 @@ Two things, if you build anything that publishes numbers:
   date *required* fields. An article whose sample is not declared does not
   compile.
 - **`scripts/verify.mjs`** runs inside `npm run build` and fails the build.
-  Eighteen checks, governed by two rules learned the hard way — see
+  Twenty-eight checks, governed by two rules learned the hard way — see
   [Verificação](#verificação).
 
 ---
@@ -213,7 +213,9 @@ src/
 ├── content/research/     # os artigos, em Markdown
 ├── styles/tokens.css     # a única fonte de cor, tipo e espaçamento
 ├── components/           # MethodBox, DataAge, StatFigure, RailIndex, ThemeToggle…
-├── lib/                  # canonical.ts (a canônica, uma implementação só), time.ts
+├── lib/                  # canonical.ts (a canônica, uma implementação só), time.ts,
+│                         # horses.ts (o acervo), horse-copy.mjs (as frases dos
+│                         # três estados — .mjs porque o verify.mjs as importa)
 ├── layouts/              # BaseLayout (canônica, JSON-LD, densidade), ArticleLayout
 └── pages/
 ```
@@ -248,6 +250,11 @@ quebrar. Vinte e três checagens:
 | `[hidden]` vence no CSS servido | sem o `!important`, no celular o filtro não esconderia nada |
 | índice da margem coerente com os títulos da página | índice à mão sai de sincronia em silêncio: âncora morta não dá erro em lugar nenhum |
 | tema escuro cobre todos os tokens, e os dois caminhos concordam | token esquecido no escuro não quebra nada — só fica ilegível numa página que ninguém abriu naquele tema |
+| acervo, índice e páginas de cavalo em correspondência 1:1 | o acervo cresce ~600/dia e nenhuma lista é escrita à mão: registro sem página é link para 404, página sem registro é conteúdo que o produtor já não reconhece |
+| cada estado com a sua palavra, e sem a do outro | `debut` afirma algo SOBRE O CAVALO, `no_record` confessa algo SOBRE NÓS. Trocar as duas foi o defeito que segurou a `/horse`, e errava por ~4× |
+| toda página de cavalo declara até quando o arquivo vai | "career: 83 runs" sem dizer até quando mente por omissão |
+| nenhuma taxa publicada sem a amostra na mesma linha | "23.5% on good" sem o `runs = 17` é o número que alguém usaria para apostar |
+| título e descrição por cavalo distintos de verdade | 678 páginas novas de uma vez; gabarito com o nome trocado é como se erra isso |
 
 Duas regras governam este arquivo:
 

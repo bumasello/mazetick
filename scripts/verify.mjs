@@ -14,6 +14,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { inlineScripts, NON_EXECUTABLE_TYPES, sha256 } from './headers.mjs';
 import { stampProblems } from './data-contract.mjs';
+import { STATUS_COPY, ARCHIVE_PREFIX, ukDate } from '../src/lib/horse-copy.mjs';
 
 const DIST = 'dist';
 const fail = [];
@@ -364,7 +365,6 @@ check(
     }
   }
 
-
   check('Cabeçalhos presentes e CSP cobrindo os scripts servidos', problems);
 }
 
@@ -468,7 +468,13 @@ check(
     //     na comparação: o WebSite/Organization declara a raiz do site em toda
     //     página, e isso está certo.
     const canon = read(f).match(/rel="canonical" href="([^"]+)"/)?.[1];
-    const PAGE_TYPES = new Set(['Article', 'NewsArticle', 'BlogPosting', 'WebPage']);
+    // `Dataset` entrou em 2026-09-19 com a /horse: cada página de cavalo marca
+    // o que ela é — um conjunto pequeno de estatísticas derivadas — e declara
+    // uma `url`. Sem o tipo nesta lista, 678 páginas passariam a declarar a URL
+    // delas sem que ninguém conferisse se ela bate com a canônica e com o
+    // sitemap, que é exatamente o defeito (c) que esta checagem existe para
+    // pegar, só que multiplicado por 678.
+    const PAGE_TYPES = new Set(['Article', 'NewsArticle', 'BlogPosting', 'WebPage', 'Dataset']);
     const flat = parsed.flatMap((o) => [o, ...(o['@graph'] || [])]);
     for (const o of flat) {
       if (!PAGE_TYPES.has(o['@type']) || !o.url) continue;
@@ -907,6 +913,259 @@ check(
 
   check('Tema escuro cobre todos os tokens de cor, e os dois caminhos concordam', problems);
   console.log(`    (${light.size} tokens de cor na paleta clara)`);
+}
+
+// ---------------------------------------------------------------------------
+// 24 a 28: a /horse.
+//
+// Lidas do disco uma vez, porque as cinco checagens seguintes perguntam coisas
+// diferentes do MESMO par (registro, página). Sem o acervo em mãos, cada uma
+// teria de reabrir 678 arquivos.
+// ---------------------------------------------------------------------------
+const horseRecords = fs.existsSync('src/data/horses')
+  ? walk('src/data/horses')
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => JSON.parse(read(f)))
+  : [];
+const horseBySlug = new Map(horseRecords.map((h) => [h.slug, h]));
+const horsePages = pages.filter((f) => /^horse[/\\][^/\\]+\.html$/.test(rel(f)));
+const horseIndexPage = pages.find((f) => rel(f) === 'horse.html');
+
+// 24. Acervo e páginas em correspondência 1:1, e o índice servindo todo mundo.
+//
+//     O acervo cresce cerca de 600 registros por dia e nenhuma lista é escrita à
+//     mão em lugar nenhum — o que torna esta a checagem mais barata de esquecer
+//     e a mais cara de não ter. Um registro sem página é um cavalo que o índice
+//     linka para o 404; uma página sem registro é conteúdo publicado que o
+//     produtor já não reconhece. (A 7 pega o primeiro caso só se o link existir,
+//     e a 18 pega o segundo só depois de o sitemap o listar. Nenhuma das duas
+//     confere o que a ORIGEM diz.)
+{
+  const problems = [];
+  const indexFile = 'src/data/horses-index.json';
+
+  if (!horseRecords.length) {
+    problems.push('src/data/horses/ sem nenhum registro — o prebuild rodou?');
+  }
+  if (!horseIndexPage) problems.push('dist/horse.html não existe — a página índice sumiu');
+
+  if (fs.existsSync(indexFile)) {
+    const declared = new Set(JSON.parse(read(indexFile)).horses.map((h) => h.slug));
+    for (const slug of declared) {
+      if (!horseBySlug.has(slug)) problems.push(`índice declara "${slug}" e não há registro em src/data/horses/`);
+    }
+    for (const slug of horseBySlug.keys()) {
+      if (!declared.has(slug)) problems.push(`registro "${slug}" não está no índice do produtor`);
+    }
+  } else {
+    problems.push(`${indexFile} ausente`);
+  }
+
+  const built = new Set(horsePages.map((f) => rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '')));
+  for (const slug of horseBySlug.keys()) {
+    if (!built.has(slug)) problems.push(`registro "${slug}" não virou página`);
+  }
+  for (const slug of built) {
+    if (!horseBySlug.has(slug)) problems.push(`dist/horse/${slug}.html não tem registro de origem`);
+  }
+
+  // O índice tem de SERVIR uma linha por cavalo. É a metade que a checagem 20
+  // faz para a /movers, e sem ela o corte no cliente poderia virar corte na
+  // geração sem ninguém notar.
+  if (horseIndexPage) {
+    const served = [...read(horseIndexPage).matchAll(/\bdata-hz-row\b/g)].length;
+    if (served < horseBySlug.size) {
+      problems.push(`horse.html serve ${served} linhas para ${horseBySlug.size} registros — o resto ficaria só no cliente`);
+    }
+  }
+
+  check('Acervo, índice e páginas de cavalo em correspondência 1:1', problems);
+  console.log(`    (${horseBySlug.size} registros, ${horsePages.length} páginas de cavalo)`);
+}
+
+// 25. Os três estados, e a palavra que cada um exige.
+//
+//     ESTA É A CHECAGEM QUE A PÁGINA EXISTIA PARA TER. O defeito que a segurou
+//     foi escrever "debut" para um cavalo `no_record`, e errava por cerca de
+//     quatro vezes. São afirmações opostas:
+//
+//       debut      → não há corrida registrada antes desta data.
+//                    É afirmação SOBRE O CAVALO.
+//       no_record  → correu antes, e não está no nosso arquivo.
+//                    É confissão SOBRE NÓS.
+//
+//     Trocar uma pela outra transforma lacuna nossa em fato sobre o animal. As
+//     frases são IMPORTADAS de src/lib/horse-copy.mjs, o mesmo módulo que a
+//     página usa: uma lista aqui e outra lá divergiriam no primeiro edit.
+//
+//     Os nomes próprios da página (cavalo, jóquei, treinador, garanhão, pista)
+//     são REMOVIDOS antes de procurar a frase proibida. Sem isso, um garanhão
+//     chamado "Debut" quebraria o build por um motivo que não é o defeito.
+{
+  const problems = [];
+  for (const f of horsePages) {
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = horseBySlug.get(slug);
+    if (!h) continue;
+    const html = read(f);
+    const copy = STATUS_COPY[h.status];
+    if (!copy) {
+      problems.push(`${rel(f)}: status "${h.status}" não tem texto declarado`);
+      continue;
+    }
+
+    const required =
+      h.status === 'debut'
+        ? copy.sentence({ asOf: h.as_of })
+        : h.status === 'no_record'
+          ? copy.sentence()
+          : copy.sentence({ asOf: h.as_of, runs: h.career.runs });
+    if (!html.includes(required)) {
+      problems.push(`${rel(f)} (${h.status}): falta a frase do estado — "${required.slice(0, 60)}…"`);
+    }
+
+    let scrubbed = html;
+    for (const n of [h.name, h.jockey?.name, h.trainer?.name, h.sire?.name, h.last_declared?.venue,
+                     ...(h.by_course || []).map((g) => g.key)]) {
+      if (n) scrubbed = scrubbed.split(n).join('·');
+    }
+    for (const bad of copy.forbidden) {
+      if (scrubbed.toLowerCase().includes(bad.toLowerCase())) {
+        problems.push(`${rel(f)} (${h.status}): a página usa a palavra do OUTRO estado — "${bad}"`);
+      }
+    }
+  }
+  check('Cada estado com a sua palavra, e sem a do outro', problems);
+}
+
+// 26. O limite do arquivo aparece na PÁGINA, não só no JSON.
+//
+//     "Career: 83 runs" sem dizer até quando mente por omissão: o arquivo
+//     termina numa data e o que veio depois simplesmente não está ali. Vale
+//     inclusive para as páginas sem número nenhum — é lá que a lacuna é a única
+//     informação que temos a dar.
+//
+//     A data conferida é a DO REGISTRO. Registros acumulados de dias diferentes
+//     carregam cortes diferentes, e uma data global na página seria falsa para a
+//     maioria deles no dia seguinte.
+{
+  const problems = [];
+  for (const f of horsePages) {
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = horseBySlug.get(slug);
+    if (!h) continue;
+    // Sem carimbo no registro não há o que conferir, e `ukDate` de `undefined`
+    // LANÇA — o que derrubaria o verify no meio e engoliria o relatório das
+    // outras checagens. (Aconteceu no teste de quebra da 17a: a 17 anotava o
+    // problema certo e a 26 explodia antes de alguém o ler.) A ausência é
+    // reportada como problema, não como exceção.
+    if (!h.history_through || Number.isNaN(Date.parse(h.history_through))) {
+      problems.push(`${rel(f)}: o registro não traz history_through utilizável`);
+      continue;
+    }
+    const expected = `${ARCHIVE_PREFIX}${ukDate(h.history_through)}`;
+    if (!read(f).includes(expected)) {
+      problems.push(`${rel(f)}: não diz o corte do arquivo — esperado "${expected}"`);
+    }
+  }
+  check('Toda página de cavalo declara até quando o arquivo vai', problems);
+}
+
+// 27. Nenhuma taxa sem a amostra ao lado.
+//
+//     "23.5% on good" sem o `runs = 17` é o número que um leitor usaria para
+//     apostar. Duas metades:
+//
+//     (a) UNIVERSAL, em todas as páginas: numa tabela que TEM coluna de
+//         amostra, nenhuma linha pode mostrar porcentagem com a célula de
+//         amostra vazia. Vale para /movers e /extra-places também, e é por isso
+//         que a regra fala de "tabela com coluna Runs" em vez de "página de
+//         cavalo": um filtro por família de página é exatamente o escopo curto
+//         que já nos custou três incidentes.
+//     (b) nas páginas de cavalo: TODA tabela tem de ter a coluna de amostra.
+//         Sem esta metade, apagar a coluna faria a metade (a) passar sorrindo.
+{
+  const problems = [];
+  const cellText = (td) => td.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+  for (const f of pages) {
+    const html = read(f);
+    for (const t of html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const table = t[1];
+      const heads = [...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => cellText(m[1]));
+      const hasSample = heads.includes('Runs');
+      if (!hasSample) continue;
+      for (const r of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+        const row = r[1];
+        if (!/%/.test(row)) continue;
+        const sample = [...row.matchAll(/<td\b[^>]*data-label="Runs"[^>]*>([\s\S]*?)<\/td>/gi)]
+          .map((m) => cellText(m[1]));
+        if (!sample.length || sample.every((x) => x === '')) {
+          problems.push(`${rel(f)}: linha com taxa e sem amostra — ${cellText(row).slice(0, 70)}`);
+        }
+      }
+    }
+  }
+
+  for (const f of horsePages) {
+    for (const t of read(f).matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const heads = [...t[1].matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => cellText(m[1]));
+      if (!heads.includes('Runs')) {
+        problems.push(`${rel(f)}: tabela sem coluna de amostra — ${heads.join(', ') || '(sem cabeçalho)'}`);
+      }
+    }
+  }
+
+  check('Nenhuma taxa publicada sem a amostra na mesma linha', [...new Set(problems)]);
+}
+
+// 28. Título e descrição distintos DE VERDADE.
+//
+//     Setecentas páginas novas de uma vez só são um risco de SEO assumido com a
+//     decisão na mesa, e a forma de errá-lo é publicar gabarito com o nome
+//     trocado. O teste tira o nome do cavalo da frase: se o que sobra é o mesmo
+//     em fatia grande do acervo, a descrição não descreve nada.
+//
+//     O limiar é 25% e é generoso de propósito — com números reais dentro da
+//     frase, a maior classe hoje fica em poucos por cento. Ele pega a regressão
+//     (alguém simplificar para "Form and statistics for <nome>"), não a
+//     semelhança natural entre dois cavalos parecidos.
+{
+  const problems = [];
+  const titles = new Map();
+  const shapes = new Map();
+
+  for (const f of horsePages) {
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = horseBySlug.get(slug);
+    const html = read(f);
+    const title = html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '';
+    const desc = html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+
+    if (!title) problems.push(`${rel(f)}: sem <title>`);
+    if (!desc) problems.push(`${rel(f)}: sem meta description`);
+    if (titles.has(title)) problems.push(`${rel(f)}: título idêntico ao de ${titles.get(title)}`);
+    else titles.set(title, rel(f));
+
+    // O nome fora, o que sobra é o "molde" daquela descrição.
+    const shape = h ? desc.split(h.name).join('·') : desc;
+    shapes.set(shape, (shapes.get(shape) ?? 0) + 1);
+  }
+
+  let detail = null;
+  if (horsePages.length) {
+    const [worst, n] = [...shapes.entries()].sort((a, b) => b[1] - a[1])[0];
+    const share = n / horsePages.length;
+    if (share > 0.25) {
+      problems.push(
+        `${n} de ${horsePages.length} descrições (${(share * 100).toFixed(0)}%) são a mesma frase com o nome trocado: "${worst.slice(0, 80)}…"`,
+      );
+    }
+    detail = `    (${shapes.size} moldes de descrição em ${horsePages.length} páginas; o maior cobre ${(share * 100).toFixed(1)}%)`;
+  }
+
+  check('Título e descrição por cavalo distintos de verdade', problems);
+  if (detail) console.log(detail);
 }
 
 console.log();
