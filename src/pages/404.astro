@@ -2,16 +2,25 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Not found — mazetick" description="That page does not exist." noindex>
-  <h1 class="display title">Not found</h1>
-  <div class="prose body">
-    <p>
-      That page does not exist. Try <a href="/research">Research</a>, or start from
-      the <a href="/">front page</a>.
-    </p>
+  <header class="mast">
+    <p class="mono kicker">404</p>
+    <h1 class="display title">Not found</h1>
+  </header>
+
+  {/*
+    A margem fica vazia aqui, e isso é o comportamento desenhado: a coluna
+    continua reservada, o corpo mantém o mesmo eixo das outras páginas, e nada
+    é desenhado no lugar. Margem vazia não vira caixa vazia.
+  */}
+  <div class="spread">
+    <div class="body">
+      <div class="prose">
+        <p>
+          That page does not exist. Try <a href="/research">Research</a>, or start from
+          the <a href="/">front page</a>.
+        </p>
+      </div>
+    </div>
+    <aside class="rail"></aside>
   </div>
 </BaseLayout>
-
-<style>
-  .title { font-size: var(--fs-display-l); line-height: 1.1; letter-spacing: -0.015em; }
-  .body { margin-top: var(--sp-5); }
-</style>

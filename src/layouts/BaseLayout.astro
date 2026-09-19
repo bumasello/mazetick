@@ -12,17 +12,13 @@ import { canonicalUrl } from '../lib/canonical';
 interface Props {
   title: string;
   description: string;
-  /** O toggle de densidade só renderiza onde morde. Prosa não tem o que apertar. */
-  density?: boolean;
-  /** Carimbo no cabeçalho. Regra 4: todo número na tela carrega o instante. */
-  asOf?: string;
   /** JSON-LD extra da página (Article), somado ao WebSite/Organization do site. */
   jsonLd?: Record<string, unknown>;
   /** 404 e afins: fora do índice, e sem canônica que a legitime. */
   noindex?: boolean;
 }
 
-const { title, description, density = false, asOf, jsonLd, noindex = false } = Astro.props;
+const { title, description, jsonLd, noindex = false } = Astro.props;
 
 // Canônica absoluta a partir de `site`, nunca da URL de request — senão cada
 // deploy de preview publica a sua própria canônica e compete com a produção.
@@ -62,7 +58,7 @@ const siteJsonLd = {
 const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
 ---
 <!doctype html>
-<html lang="en-GB" data-density="full">
+<html lang="en-GB">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -93,24 +89,34 @@ const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
     )}
 
     {/*
-      A alavanca de densidade. O HTML servido sai sempre em "full" — é o estado
-      que o Google indexa e o que o visitante novo vê. Este script roda antes da
-      pintura e só troca para quem já escolheu, uma vez, no próprio navegador.
+      O tema, aplicado ANTES da primeira pintura.
+
+      O HTML servido sai SEM `data-theme`, e é isso que o Google indexa: sem
+      atributo, vale `prefers-color-scheme`, que é o padrão correto para quem
+      chega pela primeira vez e para quem não tem JavaScript. Este script só
+      escreve o atributo para quem já escolheu, uma vez, no próprio navegador.
+
+      Tem de ser inline e síncrono no <head>: em <body> ou com `defer` o leitor
+      veria um lampejo do tema errado. E por ser inline exige hash na CSP — o
+      headers.mjs o calcula a partir do HTML construído e a checagem 12 recusa o
+      build se algum script servido ficar sem hash, então o hash não depende de
+      ninguém lembrar de regerá-lo.
+
       A preferência nunca chega ao servidor: é preferência, não dado.
     */}
     <script is:inline>
       try {
-        var d = localStorage.getItem('mazetick:density');
-        if (d === 'compact') document.documentElement.dataset.density = 'compact';
+        var t = localStorage.getItem('mazetick:theme');
+        if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
       } catch (e) {
-        /* localStorage bloqueado: fica em full, que é o padrão correto. */
+        /* localStorage bloqueado: segue o sistema, que é o padrão correto. */
       }
     </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="page">
-      <SiteHeader density={density} asOf={asOf} />
+      <SiteHeader />
       <main id="main">
         <slot />
       </main>

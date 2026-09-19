@@ -13,33 +13,84 @@ const human = (x: Date) =>
 const latest = articles.length
   ? articles.map((a) => a.data.measured).sort((a, b) => b.getTime() - a.getTime())[0]
   : null;
+
+// O veredicto de cada peça descreve o destino da AFIRMAÇÃO TESTADA, não a
+// qualidade do achado. Publicar resultado negativo com amostra grande é a
+// postura editorial, então o placar vai para a margem em vez de ficar implícito.
+const verdictLabel: Record<string, string> = {
+  negative: 'Refuted',
+  positive: 'Held up',
+  inconclusive: 'Inconclusive',
+};
+const tally = articles.reduce<Record<string, number>>((acc, a) => {
+  acc[a.data.verdict] = (acc[a.data.verdict] ?? 0) + 1;
+  return acc;
+}, {});
 ---
 <BaseLayout
   title="Research — mazetick"
   description="Measurements on UK and Irish racing, published with their sample size and window. Including the ones that went against us."
-  density={articles.length > 0}
-  asOf={latest ? `measured to ${human(latest)}` : undefined}
 >
-  <header class="head">
+  <header class="mast">
+    <p class="mono kicker">Research</p>
     <h1 class="display title">Is the thing everyone repeats actually true?</h1>
-    <p class="lead">
-      Each piece below is one measurement, with its sample size and its window on
-      the page rather than in a footnote. Most of them are negative results: we
-      tested something, it did not work, and the number is large enough to say so.
-      That is the part of this trade nobody publishes, and it is the reason to
-      believe the rest of the site.
-    </p>
   </header>
 
+  <div class="spread">
+    <div class="body">
+      <div class="prose">
+        <p>
+          Each piece below is one measurement, with its sample size and its window on
+          the page rather than in a footnote. Most of them are negative results: we
+          tested something, it did not work, and the number is large enough to say so.
+          That is the part of this trade nobody publishes, and it is the reason to
+          believe the rest of the site.
+        </p>
+      </div>
+    </div>
+
+    <aside class="rail">
+      {latest && (
+        <div class="rail-block">
+          <span class="rail-label">As of</span>
+          <p class="rail-note">
+            <span class="stamp">measured to {human(latest)}</span>
+          </p>
+        </div>
+      )}
+      {articles.length > 0 && (
+        <div class="rail-block">
+          <span class="rail-label">The scoreboard</span>
+          <ul class="tally">
+            {Object.entries(tally).map(([k, n]) => (
+              <li><span class="tally-n n">{n}</span> {verdictLabel[k]}</li>
+            ))}
+          </ul>
+          <p class="rail-note">
+            The verdict describes what happened to the claim under test, not how we
+            felt about it.
+          </p>
+        </div>
+      )}
+    </aside>
+  </div>
+
   {articles.length === 0 ? (
-    <p class="lead">No articles published yet.</p>
+    <section class="block">
+      <h2 class="section-rule">Nothing published yet</h2>
+      <p class="note caption on-axis">
+        No measurement has been published. This page does not fill the gap with a
+        placeholder.
+      </p>
+    </section>
   ) : (
-    <>
+    <section class="block">
       <h2 class="section-rule">Published</h2>
       <table class="dense">
         <thead>
           <tr>
             <th scope="col">Question</th>
+            <th scope="col">Verdict</th>
             <th scope="col" class="num">Sample</th>
             <th scope="col" class="num">Window</th>
             <th scope="col" class="num">Measured</th>
@@ -51,6 +102,7 @@ const latest = articles.length
               <td data-label="Question">
                 <a href={`/research/${a.id}`}>{a.data.title}</a>
               </td>
+              <td data-label="Verdict" class="verdict">{verdictLabel[a.data.verdict]}</td>
               <td data-label="Sample" class="num muted">{a.data.sample.split('·')[0].trim()}</td>
               <td data-label="Window" class="num faint">{a.data.windowShort}</td>
               <td data-label="Measured" class="num faint">{human(a.data.measured)}</td>
@@ -59,25 +111,39 @@ const latest = articles.length
         </tbody>
       </table>
 
-      <p class="note more">
+      <p class="note caption on-axis">
         Every figure above was measured by us and can be argued with: each piece
         states its sample, its window and its method, and lists what it does not
         show. Corrections are welcome &mdash; <a href="/contact">tell us</a> if a
         number here is wrong.
       </p>
-    </>
+    </section>
   )}
 </BaseLayout>
 
 <style>
-  .head { margin-bottom: var(--sp-11); }
-  .title {
-    font-size: var(--fs-display-l);
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    max-width: 20ch;
-    margin-bottom: var(--sp-4);
+  .block { margin-top: var(--sp-14); }
+  .tally { margin-bottom: var(--sp-3); }
+  .tally li {
+    font-size: var(--fs-caption);
+    color: var(--ink-muted);
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2);
   }
-  .more { margin-top: var(--sp-6); }
+  .tally li + li { margin-top: var(--sp-1); }
+  .tally-n {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-s);
+    line-height: 1;
+    color: var(--ink);
+    min-width: 1.4em;
+  }
+  .dense .verdict {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
 </style>

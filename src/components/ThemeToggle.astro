@@ -1,0 +1,92 @@
+---
+/**
+ * Escolha de tema. Três estados, e o terceiro é o que costuma faltar:
+ *
+ *   System — sem `data-theme` na raiz; vale `prefers-color-scheme`
+ *   Light  — data-theme="light", mesmo com o sistema em escuro
+ *   Dark   — data-theme="dark"
+ *
+ * Sem "System" explícito não há como VOLTAR a seguir o sistema depois de
+ * escolher uma vez, e o leitor fica preso à decisão que tomou num dia.
+ *
+ * Nasce oculto (`data-js-only hidden`) e só este script o revela: controle que
+ * não funciona é pior que controle nenhum, e sem JavaScript a página continua
+ * correta — ela segue o sistema, que é o padrão certo.
+ */
+---
+<div class="theme" role="group" aria-label="Colour theme" data-theme-bar data-js-only hidden>
+  <button type="button" data-theme-set="system" aria-pressed="true">Auto</button>
+  <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+  <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+</div>
+
+<style>
+  .theme {
+    display: flex;
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .theme button {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    padding: var(--toggle-y) var(--sp-2);
+    border: 0;
+    background: transparent;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .theme button + button { border-left: 1px solid var(--rule-med); }
+  .theme button:hover { color: var(--ink); }
+  .theme button[aria-pressed='true'] {
+    background: var(--panel);
+    color: var(--ink);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var bar = document.querySelector('[data-theme-bar]');
+    if (!bar) return;
+    var root = document.documentElement;
+    var buttons = bar.querySelectorAll('[data-theme-set]');
+
+    function stored() {
+      try {
+        var v = localStorage.getItem('mazetick:theme');
+        return v === 'dark' || v === 'light' ? v : 'system';
+      } catch (e) {
+        return 'system';
+      }
+    }
+
+    function paint() {
+      var current = root.dataset.theme || 'system';
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].setAttribute('aria-pressed', String(buttons[i].dataset.themeSet === current));
+      }
+    }
+
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function (ev) {
+        var want = ev.currentTarget.dataset.themeSet;
+        if (want === 'system') delete root.dataset.theme;
+        else root.dataset.theme = want;
+        try {
+          if (want === 'system') localStorage.removeItem('mazetick:theme');
+          else localStorage.setItem('mazetick:theme', want);
+        } catch (e) {
+          /* Sem localStorage a escolha vale só para esta visita. Tudo bem. */
+        }
+        paint();
+      });
+    }
+
+    // Reconcilia com o que o script do <head> já aplicou antes da pintura.
+    if (stored() !== 'system') root.dataset.theme = stored();
+    bar.hidden = false;
+    paint();
+  })();
+</script>

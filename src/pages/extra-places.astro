@@ -123,31 +123,35 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
 <BaseLayout
   title="Extra places — mazetick"
   description="Which UK and Irish races are paying above the bookmaker's own each-way ladder, with the hour every change was made and whether the race has run."
-  density={races.length > 0}
 >
-  <header class="head">
-    <div>
-      {/*
-        Três manchetes, porque três estados. Confundir "nenhuma corrida mudou"
-        com "não temos corrida nenhuma" é o erro fácil aqui: o primeiro é um
-        fato sobre o mercado, o segundo é um fato sobre a NOSSA coleta, e
-        apresentar o segundo como o primeiro mente.
-      */}
-      <h1 class="display title">
-        {races.length === 0
-          ? 'Nothing collected for today yet'
-          : racesThatAdded > 0
-            ? `${racesThatAdded} races added a place while we watched`
-            : 'No race changed its each-way terms while we watched'}
-      </h1>
+  <header class="mast">
+    <p class="mono kicker">Each-way terms &middot; Paddy Power</p>
+    {/*
+      Três manchetes, porque três estados. Confundir "nenhuma corrida mudou"
+      com "não temos corrida nenhuma" é o erro fácil aqui: o primeiro é um
+      fato sobre o mercado, o segundo é um fato sobre a NOSSA coleta, e
+      apresentar o segundo como o primeiro mente.
+    */}
+    <h1 class="display title">
+      {races.length === 0
+        ? 'Nothing collected for today yet'
+        : racesThatAdded > 0
+          ? `${racesThatAdded} races added a place while we watched`
+          : 'No race changed its each-way terms while we watched'}
+    </h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
       {placeAdds.length > 0 && (
         <p class="lead">
           {cutFraction.length > 0 && (
             <>
               <strong>{cutFraction.length} of them cut the fraction at the same time</strong>
               {sameFraction.length > 0 && (
-                <>, and the other {sameFraction.length} were already on the worse fraction
-                with nothing left to cut</>
+                <>, and the other {sameFraction.length}{' '}
+                {sameFraction.length === 1 ? 'was' : 'were'} already on the worse
+                fraction with nothing left to cut</>
               )}.{' '}
             </>
           )}
@@ -180,20 +184,26 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
       />
     </div>
 
-    {races.length > 0 && (
-      <aside class="figures">
-        {/*
-          Sem âncora de coleta não dá para afirmar que nenhuma correu — o número
-          seria o total, com um rótulo que promete mais do que sabemos.
-        */}
-        <StatFigure
-          value={String(splitKnown ? upcoming.length : races.length)}
-          label={splitKnown ? 'races not yet run at our last look' : 'races held here'}
-        />
-        <StatFigure value={String(aboveLadder.length)} label="paying above the house ladder" accent />
-      </aside>
-    )}
-  </header>
+    {/*
+      A linha divisória entre o texto e os números fica — é a separação que
+      distingue a leitura do placar, e é o que a margem existe para carregar.
+    */}
+    <aside class="rail">
+      {races.length > 0 && (
+        <div class="figures">
+          {/*
+            Sem âncora de coleta não dá para afirmar que nenhuma correu — o número
+            seria o total, com um rótulo que promete mais do que sabemos.
+          */}
+          <StatFigure
+            value={String(splitKnown ? upcoming.length : races.length)}
+            label={splitKnown ? 'races not yet run at our last look' : 'races held here'}
+          />
+          <StatFigure value={String(aboveLadder.length)} label="paying above the house ladder" accent />
+        </div>
+      )}
+    </aside>
+  </div>
 
   {races.length === 0 ? (
     <section>
@@ -243,7 +253,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
       {placeDrops.length > 0 && (
         <section>
           <h2 class="section-rule">Places taken away</h2>
-          <p class="lead drops-lead">
+          <p class="lead drops-lead on-axis">
             {dropsFieldShrunk.length > 0 && (
               <>
                 {dropsFieldShrunk.length} race{dropsFieldShrunk.length === 1 ? '' : 's'} lost a
@@ -301,7 +311,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
       )}
 
       {peakHour && peakHour[1] > 1 && (
-        <p class="note peak">
+        <p class="note peak on-axis">
           {peakHour[1]} of the {changes.length} term changes in the window above landed at
           exactly <strong>{peakHour[0]} UTC</strong>, whichever day they fell on. The
           bookmaker moves its each-way terms on a schedule, and knowing the hour is the whole
@@ -316,7 +326,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
               ? `Not yet run at our last look, ${lastLookStamp} · ${d.label}`
               : `Race day · ${d.label}`}
           </h2>
-          <p class="note section-note">
+          <p class="note section-note on-axis">
             {d.races.length} races, {d.above} of them paying above the house ladder. Terms are
             the last we saw and can still change before the off.
           </p>
@@ -358,7 +368,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
       {finishedDays.length > 0 && (
         <section>
           <h2 class="section-rule">Already run by our last look &middot; the finished record</h2>
-          <p class="note section-note">
+          <p class="note section-note on-axis">
             These races had started before our final collection at {lastLookStamp}, so the
             terms are final and no place can be taken now. They stay on the page because a
             finished day is the only version of it that is complete &mdash; and because the
@@ -406,7 +416,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
     </>
   )}
 
-  <p class="note foot">
+  <p class="note foot caption on-axis">
     Terms are the last the bookmaker advertised before our final collection; for a race that
     has not run they can change again before the off.{' '}
     <strong>&ldquo;House ladder&rdquo; is the bookmaker&rsquo;s own standard</strong>,
@@ -417,32 +427,34 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
 </BaseLayout>
 
 <style>
-  .head {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--sp-11);
-    align-items: start;
-    margin-bottom: var(--sp-11);
-  }
-  .title {
-    font-size: var(--fs-display-l);
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    margin-bottom: var(--sp-4);
-  }
+  .mast .title { max-width: 24ch; }
   .lead { margin-bottom: var(--sp-5); }
   .window { margin-bottom: var(--sp-5); }
-  .figures { border-left: 1px solid var(--rule-med); padding-left: var(--sp-6); }
+  /* A régua entre o texto e os números — pedida de volta por nome. */
+  .figures {
+    border-left: 1px solid var(--rule-med);
+    padding-left: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
 
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
     gap: var(--sp-4);
-    margin-bottom: var(--sp-11);
   }
-  .card { background: var(--panel); padding: var(--sp-5); }
-  .card-race { font-size: var(--fs-lead); font-weight: 500; margin: var(--sp-2) 0 var(--sp-3); }
+  .card {
+    background: var(--panel);
+    padding: var(--sp-5);
+    border-top: 2px solid var(--ink);
+  }
+  .card-race {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-s);
+    line-height: 1.15;
+    margin: var(--sp-2) 0 var(--sp-3);
+  }
   .swap { display: flex; align-items: baseline; gap: var(--sp-2); }
   .swap .old {
     font-family: var(--font-display);
@@ -472,10 +484,9 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
     color: var(--ink-faint);
   }
   .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
-  .foot { margin-top: var(--sp-6); }
   .drops-lead { margin-bottom: var(--sp-5); }
   .section-note { margin-bottom: var(--sp-5); }
-  .peak { margin: var(--sp-6) 0 var(--sp-8); }
+  .peak { margin: var(--sp-8) 0; }
   .day {
     font-family: var(--font-mono);
     font-size: var(--fs-label);
@@ -485,10 +496,9 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
     font-weight: 400;
     margin: var(--sp-8) 0 var(--sp-3);
   }
-  section + section { margin-top: var(--sp-11); }
+  section { margin-top: var(--sp-14); }
 
-  @media (max-width: 720px) {
-    .head { grid-template-columns: 1fr; gap: var(--sp-8); }
+  @media (max-width: 900px) {
     .figures { border-left: 0; padding-left: 0; }
   }
 </style>

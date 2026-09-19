@@ -1,0 +1,27 @@
+---
+/**
+ * Índice das seções da página, na margem.
+ *
+ * ⚠️ Ele é escrito à mão em cada página, porque numa página .astro os títulos
+ * são literais e não há como colhê-los no build. Índice à mão sai de sincronia
+ * no primeiro edit — por isso a checagem 22 do verify.mjs confere, em TODAS as
+ * páginas servidas, que cada item aponta para um id que existe e que o texto do
+ * item é o texto do heading. Se alguém renomear uma seção e esquecer o índice,
+ * o build para.
+ */
+interface Props {
+  items: { id: string; title: string }[];
+  label?: string;
+}
+const { items, label = 'On this page' } = Astro.props;
+---
+{items.length > 0 && (
+  <nav class="rail-block rail-index" data-rail-index aria-label={label}>
+    <span class="rail-label">{label}</span>
+    <ol>
+      {items.map((i) => (
+        <li><a href={`#${i.id}`}>{i.title}</a></li>
+      ))}
+    </ol>
+  </nav>
+)}

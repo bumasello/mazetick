@@ -1,29 +1,29 @@
 ---
-import DensityToggle from './DensityToggle.astro';
-
-interface Props { density?: boolean; asOf?: string }
-const { density = false, asOf } = Astro.props;
+import ThemeToggle from './ThemeToggle.astro';
 ---
 <header class="head">
   <a class="brand" href="/">mazetick</a>
-  <nav class="nav">
+  <nav class="nav" aria-label="Sections">
     <a href="/extra-places">Extra places</a>
     <a href="/movers">Movers</a>
     <a href="/research">Research</a>
-    <span class="spacer"></span>
-    {asOf && <span class="stamp">{asOf}</span>}
-    {density && <DensityToggle />}
   </nav>
+  <ThemeToggle />
 </header>
 
 <style>
+  /* Cabeçalho de jornal: marca à esquerda, seções ao centro-direita, controle
+     de tema na ponta, tudo pendurado numa régua pesada. A régua é o que faz o
+     cabeçalho pertencer à página em vez de flutuar sobre ela. */
   .head {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
     gap: var(--sp-5);
-    margin-bottom: var(--sp-8);
     flex-wrap: wrap;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-11);
   }
   /* A marca: caixa baixa, em Newsreader. site_handoff.md §6.2. */
   .brand {
@@ -33,14 +33,24 @@ const { density = false, asOf } = Astro.props;
     color: var(--ink);
     text-decoration: none;
     line-height: 1;
+    letter-spacing: -0.01em;
   }
   .brand:hover { color: var(--ink); }
   .nav {
     display: flex;
-    align-items: center;
-    gap: var(--sp-5);
-    font-size: var(--fs-caption);
+    align-items: baseline;
+    gap: var(--sp-6);
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
   }
   .nav a { color: var(--ink-muted); text-decoration: none; }
   .nav a:hover { color: var(--accent); }
+
+  @media (max-width: 720px) {
+    .head { gap: var(--sp-3); }
+    .nav { gap: var(--sp-4); }
+  }
 </style>

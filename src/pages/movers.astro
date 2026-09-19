@@ -127,17 +127,20 @@ const tightest = bands[0];
 <BaseLayout
   title="Movers — mazetick"
   description="Which UK and Irish runners moved today, and whether the move was unusual for that price. Every price stamped against the off, never against your clock."
-  density={runners.length > 0}
 >
-  <header class="head">
-    <div>
-      <h1 class="display title">
-        {runners.length === 0
-          ? 'Nothing collected for today yet'
-          : notable.length > 0
-            ? `${notable.length} runners moved further than usual for their price`
-            : 'Nothing moved unusually today'}
-      </h1>
+  <header class="mast">
+    <p class="mono kicker">Order book &middot; Smarkets</p>
+    <h1 class="display title">
+      {runners.length === 0
+        ? 'Nothing collected for today yet'
+        : notable.length > 0
+          ? `${notable.length} runners moved further than usual for their price`
+          : 'Nothing moved unusually today'}
+    </h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
       <p class="lead">
         Every portal lists drifters. The number that makes a list mean anything is the one
         nobody publishes: <strong>how much a price of that size normally moves</strong>. A 30%
@@ -151,13 +154,15 @@ const tightest = bands[0];
       />
     </div>
 
-    {runners.length > 0 && (
-      <aside class="figures">
-        <StatFigure value={String(runners.length)} label="runners tracked today" />
-        <StatFigure value={String(notable.length)} label="outside the usual range" accent />
-      </aside>
-    )}
-  </header>
+    <aside class="rail">
+      {runners.length > 0 && (
+        <div class="figures">
+          <StatFigure value={String(runners.length)} label="runners tracked today" />
+          <StatFigure value={String(notable.length)} label="outside the usual range" accent />
+        </div>
+      )}
+    </aside>
+  </div>
 
   {runners.length === 0 ? (
     <section>
@@ -184,7 +189,7 @@ const tightest = bands[0];
         página.
       */}
       <form class="filters" data-mv-filter data-js-only hidden>
-        <div class="f">
+        <div class="f f-wide">
           <label for="mv-q">Search</label>
           <input id="mv-q" type="search" autocomplete="off" placeholder="Runner or course" />
         </div>
@@ -205,17 +210,29 @@ const tightest = bands[0];
             <option value="past">Already off</option>
           </select>
         </div>
+        {/*
+          O padrão deixou de ser "All".
+
+          ⚠️ E o corte é do CLIENTE, nunca do build: as {runners.length} linhas
+          continuam inteiras no HTML servido, porque é ele que o Google indexa e
+          é ele que o leitor sem JavaScript recebe. Cortar na geração encurtaria
+          a página e perderia a indexação das duas páginas de dado em silêncio —
+          a checagem 20 do verify.mjs existe para impedir exatamente isso e
+          recusaria o build. O que muda aqui é quanto se mostra de uma vez, com
+          o número dito na tela e o controle ao lado.
+        */}
         <div class="f">
           <label for="mv-limit">Rows</label>
           <select id="mv-limit">
-            <option value="0">All</option>
             <option value="25">First 25</option>
-            <option value="50">First 50</option>
+            <option value="50" selected>First 50</option>
             <option value="100">First 100</option>
+            <option value="250">First 250</option>
+            <option value="0">All {runners.length}</option>
           </select>
         </div>
         <button type="reset" class="reset">Clear</button>
-        <p class="note filters-note">
+        <p class="note filters-note on-axis">
           Filtering changes the tables only. The counts at the top of the page describe all{' '}
           {runners.length} runners collected today, filtered or not. The off-time options read
           your own clock; every other number on this page is anchored to the race, not to you.
@@ -225,7 +242,7 @@ const tightest = bands[0];
       {notable.length > 0 && (
         <section>
           <h2 class="section-rule">Outside the usual range</h2>
-          <p class="note showing" data-mv-count="notable" aria-live="polite" hidden></p>
+          <p class="note showing on-axis" data-mv-count="notable" aria-live="polite" hidden></p>
           <table class="dense" data-mv-table="notable">
             <thead>
               <tr>
@@ -283,56 +300,73 @@ const tightest = bands[0];
         {sections.map((s) => (
           <section class="grouped">
             <h2 class="section-rule">{s.heading}</h2>
-            <p class="note section-note">{s.note}</p>
-            <p class="note showing" data-mv-count={s.id} aria-live="polite" hidden></p>
-            <table class="dense" data-mv-table={s.id}>
-              <thead>
-                <tr>
-                  <th scope="col">Runner</th>
-                  <th scope="col" class="num">First seen</th>
-                  <th scope="col" class="num">Last seen</th>
-                  <th scope="col" class="num">Move</th>
-                  <th scope="col" class="num">Last look</th>
-                  <th scope="col" class="num">Spread</th>
-                </tr>
-              </thead>
+            <p class="note section-note on-axis">{s.note}</p>
+            <p class="note showing on-axis" data-mv-count={s.id} aria-live="polite" hidden></p>
+
+            {/*
+              ⚠️ CADA CORRIDA É UM BLOCO, não um <tbody> no meio de uma tabela só.
+
+              Antes eram 35 corridas empilhadas numa tabela contínua, separadas
+              por uma linha de cabeçalho que usava a mesma régua das linhas de
+              dado: não dava para ver onde uma corrida terminava e a seguinte
+              começava, e a leitura que justifica agrupar — dinheiro saindo de um
+              cavalo para outro na MESMA prova — desaparecia junto.
+
+              Agora o bloco tem começo declarado (faixa com hora, pista e
+              contagem, sobre régua pesada) e fim declarado (a tabela acaba e o
+              bloco respira). O contêiner continua carregando `data-mv-table`
+              para o filtro contar sobre a seção inteira, e cada bloco continua
+              sendo `data-mv-group` para sumir inteiro quando o filtro o esvazia.
+            */}
+            <div class="races" data-mv-table={s.id}>
               {s.groups.map((g) => (
-                <tbody data-mv-group data-off={g.off_utc} data-course={g.venue}>
-                  <tr class="race-head">
-                    <th colspan="6" scope="colgroup">
-                      <span class="rh-time n">{raceTime(g.off_utc)}</span>{' '}
-                      <span class="rh-venue">{g.venue}</span>{' '}
-                      <span class="rh-meta">
-                        {g.runners.length} runners &middot; last look {beforeOff(g.lastLook)} before the off
-                        {g.notable > 0 && <span class="rh-flag"> &middot; {g.notable} outside the usual range</span>}
-                      </span>
-                    </th>
-                  </tr>
-                  {g.runners.map((r) => (
-                    <tr data-mv-row data-off={r.off_utc} data-course={r.venue} data-runner={r.runner}>
-                      <td data-label="Runner" class={r.notable ? 'above' : ''}>{r.runner}</td>
-                      <td data-label="First seen" class="num faint">{odds(r.first.mid)}</td>
-                      <td data-label="Last seen" class="num">{odds(r.latest.mid)}</td>
-                      <td data-label="Move" class="num">{pc(r.move_pct)}</td>
-                      <td data-label="Last look" class="num faint">{beforeOff(r.latest.mins_to_off)}</td>
-                      <td data-label="Spread" class="num faint">
-                        {r.latest.spread_pct == null ? (
-                          <span title="no two-sided book at the last sample">&mdash;</span>
-                        ) : (
-                          `${r.latest.spread_pct.toFixed(1)}%`
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                <section class="race" data-mv-group data-off={g.off_utc} data-course={g.venue}>
+                  <header class="race-head">
+                    <span class="rh-time n">{raceTime(g.off_utc)}</span>
+                    <span class="rh-venue">{g.venue}</span>
+                    <span class="rh-meta">
+                      {g.runners.length} runners &middot; last look {beforeOff(g.lastLook)} before the off
+                    </span>
+                    {g.notable > 0 && (
+                      <span class="rh-flag">{g.notable} outside the usual range</span>
+                    )}
+                  </header>
+                  <table class="dense">
+                    <thead>
+                      <tr>
+                        <th scope="col">Runner</th>
+                        <th scope="col" class="num">First seen</th>
+                        <th scope="col" class="num">Last seen</th>
+                        <th scope="col" class="num">Move</th>
+                        <th scope="col" class="num">Last look</th>
+                        <th scope="col" class="num">Spread</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.runners.map((r) => (
+                        <tr data-mv-row data-runner={r.runner}>
+                          <td data-label="Runner" class={r.notable ? 'above' : ''}>{r.runner}</td>
+                          <td data-label="First seen" class="num faint">{odds(r.first.mid)}</td>
+                          <td data-label="Last seen" class="num">{odds(r.latest.mid)}</td>
+                          <td data-label="Move" class="num">{pc(r.move_pct)}</td>
+                          <td data-label="Last look" class="num faint">{beforeOff(r.latest.mins_to_off)}</td>
+                          <td data-label="Spread" class="num faint">
+                            {r.latest.spread_pct == null ? (
+                              <span title="no two-sided book at the last sample">&mdash;</span>
+                            ) : (
+                              `${r.latest.spread_pct.toFixed(1)}%`
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </section>
               ))}
-              <tbody>
-                <tr class="nomatch" data-mv-empty hidden>
-                  <td colspan="6">No runner here matches the filter.</td>
-                </tr>
-              </tbody>
-            </table>
-            <p class="note">
+              <p class="note nomatch" data-mv-empty hidden>No runner here matches the filter.</p>
+            </div>
+
+            <p class="note caption on-axis">
               Within a race the order is by move, shortest to longest: when money leaves one
               runner for another in the same race, the two ends of the block are the two sides
               of it.
@@ -345,7 +379,7 @@ const tightest = bands[0];
 
       <section>
     <h2 class="section-rule">What a normal move looks like, by price</h2>
-    <p class="lead baseline-lead">
+    <p class="lead baseline-lead on-axis">
       {data.baseline.days} days of our own order-book collection, excluding today so that
       today&rsquo;s moves cannot influence the yardstick that judges them.{' '}
       <strong>The median is near zero in every band</strong> &mdash; what changes with
@@ -379,7 +413,7 @@ const tightest = bands[0];
     </table>
   </section>
 
-  <p class="note foot">
+  <p class="note foot caption on-axis">
     Prices are the mid of the best available bid and offer on a public exchange order book,
     sampled through the day. <strong>Neither price is &ldquo;now&rdquo;</strong> &mdash; the
     first is the earliest sample we hold for that runner, and the last is the final quote we
@@ -392,41 +426,40 @@ const tightest = bands[0];
 </BaseLayout>
 
 <style>
-  .head {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--sp-11);
-    align-items: start;
-    margin-bottom: var(--sp-11);
-  }
-  .title {
-    font-size: var(--fs-display-l);
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    margin-bottom: var(--sp-4);
-  }
+  .mast .title { max-width: 24ch; }
   .lead { margin-bottom: var(--sp-5); }
-  .figures { border-left: 1px solid var(--rule-med); padding-left: var(--sp-6); }
+  /* A régua entre o texto e os números, igual à da /extra-places. */
+  .figures {
+    border-left: 1px solid var(--rule-med);
+    padding-left: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
   .baseline-lead { margin-bottom: var(--sp-5); }
-  .section-note { margin-bottom: var(--sp-5); }
+  .section-note { margin-bottom: var(--sp-3); }
   .dense .above { color: var(--accent); }
   .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
-  .foot { margin-top: var(--sp-8); }
-  section + section { margin-top: var(--sp-11); }
+  section { margin-top: var(--sp-14); }
+  .grouped { margin-top: var(--sp-11); }
 
-  /* -- Barra de filtro ---------------------------------------------------- */
+  /* -- Barra de filtro ------------------------------------------------------
+     Grade, não flex: com `align-items: end` num flex, cada controle achava a
+     sua própria largura e a fileira saía desalinhada. Em colunas iguais os
+     rótulos partilham a mesma linha de base e os campos a mesma largura. */
   .filters {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
     align-items: end;
     gap: var(--sp-4);
-    border-top: 1px solid var(--rule-med);
+    border-top: 1px solid var(--ink);
     border-bottom: 1px solid var(--rule-med);
     padding: var(--sp-4) 0;
+    margin-top: var(--sp-14);
     margin-bottom: var(--sp-8);
   }
-  .f { display: flex; flex-direction: column; gap: var(--sp-1); }
+  .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+  .f-wide { grid-column: auto; }
   .f label {
     font-family: var(--font-mono);
     font-size: var(--fs-label);
@@ -442,26 +475,31 @@ const tightest = bands[0];
     border: 1px solid var(--rule-med);
     border-radius: var(--radius);
     padding: var(--toggle-y) var(--sp-2);
+    width: 100%;
   }
   .reset {
-    font-family: var(--font-body);
-    font-size: var(--fs-caption);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
     color: var(--ink-faint);
     background: transparent;
     border: 1px solid var(--rule-med);
     border-radius: var(--radius);
     padding: var(--toggle-y) var(--sp-3);
     cursor: pointer;
+    justify-self: start;
   }
-  .filters-note { flex-basis: 100%; margin: 0; }
-  .showing { margin-bottom: var(--sp-3); color: var(--ink); }
+  .reset:hover { color: var(--ink); }
+  .filters-note { grid-column: 1 / -1; margin: 0; }
+  .showing { margin-bottom: var(--sp-4); color: var(--ink); }
 
   /* -- Lista completa, fechada por padrão --------------------------------- */
-  .all { margin-top: var(--sp-11); }
+  .all { margin-top: var(--sp-14); }
   .all > summary {
     cursor: pointer;
     list-style: none;
-    border-top: 1px solid var(--ink);
+    border-top: 2px solid var(--ink);
     padding-top: var(--rule-pad);
     display: flex;
     flex-wrap: wrap;
@@ -469,7 +507,11 @@ const tightest = bands[0];
     gap: var(--sp-3);
   }
   .all > summary::-webkit-details-marker { display: none; }
-  .sum-main { font-size: var(--fs-lead); color: var(--accent); }
+  .sum-main {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-s);
+    color: var(--accent);
+  }
   .all[open] > summary .sum-main { color: var(--ink); }
   .sum-sub {
     font-family: var(--font-mono);
@@ -478,30 +520,81 @@ const tightest = bands[0];
     text-transform: uppercase;
     color: var(--ink-faint);
   }
-  .grouped { margin-top: var(--sp-8); }
 
-  /* Cabeçalho de corrida dentro da tabela: é linha de grupo, não de dado. */
-  .dense .race-head th {
-    border-bottom: 1px solid var(--rule-med);
-    border-top: 1px solid var(--rule-med);
-    padding: var(--sp-3) 0 var(--rule-pad);
-    text-transform: none;
-    letter-spacing: 0;
-    font-family: var(--font-body);
-    font-size: var(--fs-caption);
+  /* -- O bloco de corrida ---------------------------------------------------
+     A queixa substantiva era esta: não dava para ver onde uma corrida começava
+     e terminava. O começo agora é uma faixa preenchida sobre régua pesada; o
+     fim é o próprio fim da tabela, seguido de respiro grande. Três sinais na
+     mesma direção — cor de fundo, peso de régua e espaço — porque um só não
+     sobrevive a uma página com trinta e cinco deles. */
+  .races { margin-top: var(--sp-5); }
+  .race + .race { margin-top: var(--sp-11); }
+  /* O bloco fecha com régua própria. Sem ela o fim de uma corrida era a linha
+     mais fraca da tabela, indistinguível de uma troca de corredor. */
+  .race { border-bottom: 1px solid var(--rule-med); }
+  .race .dense tr:last-child td { border-bottom: 0; }
+  .race-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-2) var(--sp-3);
+    background: var(--panel);
+    border-top: 2px solid var(--ink);
+    padding: var(--sp-3) var(--sp-4);
+  }
+  .rh-time {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-s);
+    line-height: 1;
     color: var(--ink);
   }
-  .rh-time { font-family: var(--font-mono); }
-  .rh-venue { font-weight: 600; }
-  .rh-meta { color: var(--ink-faint); }
-  .rh-flag { color: var(--accent); }
-  .nomatch td { color: var(--ink-faint); }
+  .rh-venue {
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .rh-meta {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-left: auto;
+  }
+  .rh-flag {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  /* Dentro do bloco o cabeçalho de coluna é sussurro: a faixa acima já disse
+     de que corrida se trata, e trinta e cinco cabeçalhos pesados competiriam
+     com ela. */
+  .race .dense th {
+    border-bottom: 1px solid var(--rule-med);
+    padding-top: var(--sp-3);
+  }
+  .race .dense td:first-child, .race .dense th:first-child { padding-left: var(--sp-4); }
+  .race .dense td:last-child, .race .dense th:last-child { padding-right: var(--sp-4); }
+  .nomatch { color: var(--ink-faint); }
 
-  @media (max-width: 720px) {
-    .head { grid-template-columns: 1fr; gap: var(--sp-8); }
+  @media (max-width: 900px) {
     .figures { border-left: 0; padding-left: 0; }
-    .f, .f input, .f select { width: 100%; }
-    .dense .race-head th { display: block; text-align: left; }
+    .filters { grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr)); }
+    .reset { grid-column: 1 / -1; }
+  }
+  @media (max-width: 720px) {
+    .race-head { flex-direction: column; align-items: flex-start; }
+    .rh-meta { margin-left: 0; }
+    /* Em modo lista quem recua é a LINHA, não a primeira célula: recuar só a
+       primeira deixava o nome do corredor um passo à direita de todo o resto. */
+    .race .dense tr { padding-left: var(--sp-4); padding-right: var(--sp-4); }
+    .race .dense td:first-child { padding-left: 0; }
+    .race .dense td:last-child { padding-right: 0; }
+    /* O bloco já fecha com régua própria; a da última linha seria a segunda. */
+    .race .dense tr:last-child { border-bottom: 0; }
   }
 </style>
 
@@ -542,6 +635,24 @@ const tightest = bands[0];
       return Boolean(q.value.trim() || course.value || win.value || limit.value !== '0');
     }
 
+    /*
+      Pista e horário da corrida agora vivem no BLOCO, não repetidos em cada
+      linha: com 639 corredores eram dois atributos redundantes por linha. A
+      linha continua carregando só o que é dela (o nome), e o contexto sobe até
+      o bloco. Resolvido uma vez por linha e guardado.
+    */
+    function ctx(row) {
+      if (!row.__mv) {
+        var g = row.closest('[data-mv-group]');
+        row.__mv = {
+          name: (row.dataset.runner || '').toLowerCase(),
+          course: row.dataset.course || (g && g.dataset.course) || '',
+          off: row.dataset.off || (g && g.dataset.off) || '',
+        };
+      }
+      return row.__mv;
+    }
+
     function inWindow(off) {
       var mode = win.value;
       if (!mode) return true;
@@ -567,12 +678,12 @@ const tightest = bands[0];
 
         for (var j = 0; j < rows.length; j++) {
           var row = rows[j];
-          var name = (row.dataset.runner || '').toLowerCase();
-          var venue = (row.dataset.course || '').toLowerCase();
+          var c = ctx(row);
+          var venue = c.course.toLowerCase();
           var ok =
-            (!needle || name.indexOf(needle) >= 0 || venue.indexOf(needle) >= 0) &&
-            (!course.value || row.dataset.course === course.value) &&
-            inWindow(row.dataset.off);
+            (!needle || c.name.indexOf(needle) >= 0 || venue.indexOf(needle) >= 0) &&
+            (!course.value || c.course === course.value) &&
+            inWindow(c.off);
 
           if (ok) matched++;
           var visible = ok && (!cap || shown < cap);
@@ -594,16 +705,26 @@ const tightest = bands[0];
         var label = document.querySelector('[data-mv-count="' + table.dataset.mvTable + '"]');
         if (label) {
           var txt = 'Showing ' + shown + ' of ' + rows.length + ' runners in this table';
-          if (matched > shown) txt += ' (' + matched + ' match; the rest are past the row limit)';
+          if (matched > shown) {
+            txt += ' — ' + matched + ' match the filter, and the rest are past the row limit you chose';
+          }
           label.textContent = txt + '. The figures at the top of the page still describe all runners collected today.';
           label.hidden = !on;
         }
       }
 
-      // Filtrar com a lista fechada esconderia o resultado do próprio filtro.
-      if (details && on) details.open = true;
+      /*
+        Filtrar com a lista fechada esconderia o resultado do próprio filtro —
+        mas NÃO na primeira passada. O limite de linhas nasce em 50, o que torna
+        `active()` verdadeiro antes de o leitor tocar em nada; sem esta guarda a
+        lista completa se abriria sozinha em toda visita, que é o oposto do que
+        o <details> fechado existe para fazer.
+      */
+      if (details && on && !first) details.open = true;
+      first = false;
     }
 
+    var first = true;
     bar.addEventListener('input', apply);
     bar.addEventListener('change', apply);
     bar.addEventListener('reset', function () {

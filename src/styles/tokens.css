@@ -1,19 +1,29 @@
 /* ============================================================================
    mazetick — design tokens
    ----------------------------------------------------------------------------
-   Transcrição 1:1 de docs/site_handoff.md → docs/design_tokens.md §1–3
-   (repo horsing-maze), extraídos da direção aprovada em 2026-09-13.
+   Base: docs/site_handoff.md → docs/design_tokens.md §1–3 (repo horsing-maze),
+   extraídos da direção aprovada em 2026-09-13.
 
    REGRA: nenhum componente escreve cor, tamanho ou espaçamento literal.
    Se um valor não está aqui, ele não existe.
+
+   ⚠️ Esta é a ÚNICA fonte de cor do sistema, e a checagem 10 do verify.mjs
+   depende disso: ela deriva daqui a lista de hex permitidos e recusa o build se
+   aparecer cor fora dela no artefato servido. Cor nova entra AQUI ou não entra.
    ========================================================================== */
 
+/* ---------------------------------------------------------------------------
+   §1 Cor — paleta CLARA, completa, em :root puro.
+
+   Os blocos de tema abaixo só REDEFINEM. Nada de valor de tema em :root, senão
+   a paleta clara deixa de existir sozinha e passa a depender do que não foi
+   sobrescrito — que é como uma troca de tema vira caça a token esquecido.
+   ------------------------------------------------------------------------- */
 :root {
-  /* -- §1 Cor ---------------------------------------------------------------
-     Um acento só. Tudo o mais é neutro de tom frio-esverdeado — escolhido para
-     não brigar com o verde e para não parecer papel amarelado. */
+  color-scheme: light;
+
   --ground:       #FCFBF8;  /* fundo da página */
-  --panel:        #F3F5F0;  /* cartão de "mudou hoje" — único preenchimento */
+  --panel:        #F3F5F0;  /* preenchimento único: cartão, bloco de método */
   --ink:          #171A19;  /* texto principal, régua pesada de seção */
   --ink-muted:    #4B534C;  /* texto de apoio, coluna de tipo de corrida */
   --ink-faint:    #7C867F;  /* rótulos, unidades, carimbo de hora */
@@ -32,19 +42,32 @@
      cima". A página não recomenda nada — regra 1 do site_handoff.md. */
 
   /* -- §2 Tipografia -------------------------------------------------------
-     Três famílias, três funções. Nenhuma é Inter, Roboto ou Arial. */
+     Três famílias, quatro funções. Nenhuma é Inter, Roboto ou Arial.
+
+     A repaginação de 2026-09-19 separou DISPLAY de TEXTO: a serifa deixou de
+     ser só a das manchetes e passou a compor a prosa, que é o que dá registro
+     de jornal em vez de aparência de gerador. O sans recuou para o que é
+     interface — navegação, rótulo, tabela, nota —, onde a serifa atrapalharia
+     em corpo pequeno e em coluna estreita.
+
+     As três famílias continuam self-hosted por @fontsource: nenhuma requisição
+     a terceiro, e a CSP segue com `font-src 'self'`. Nenhuma fonte nova entrou
+     na repaginação, então não há host novo a autorizar. */
   --font-display: "Newsreader Variable", "Newsreader", Georgia, serif;
+  --font-text:    "Newsreader Variable", "Newsreader", Georgia, serif;
   --font-body:    "Archivo Variable", "Archivo", system-ui, sans-serif;
   --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
 
-  --fs-display-xl:  52px;   /* numeral da barra lateral */
-  --fs-display-l:   46px;   /* manchete */
+  --fs-display-xl:  52px;   /* numeral da margem */
+  --fs-display-l:   44px;   /* manchete */
+  --fs-display-m:   30px;   /* subtítulo dentro do artigo */
   --fs-numeral:     34px;   /* valor novo numa mudança */
   --fs-numeral-old: 30px;   /* valor antigo, riscado */
-  --fs-display-s:   26px;   /* numeral do cabeçalho compacto */
-  --fs-lead:        16.5px; /* parágrafo de abertura */
-  --fs-body:        14.5px; /* tabela em modo Full */
-  --fs-body-dense:  13.5px; /* tabela em modo Compact */
+  --fs-display-s:   26px;   /* marca no cabeçalho */
+  --fs-text:        18px;   /* prosa em serifa */
+  --fs-text-lead:   20.5px; /* parágrafo de abertura, em serifa */
+  --fs-lead:        16.5px; /* abertura em sans (páginas de dado) */
+  --fs-body:        14.5px; /* tabela, interface */
   --fs-caption:     12.5px; /* nota de rodapé, rótulo de coluna */
   --fs-label:       10.5px; /* mono em caixa alta */
   --ls-label:       .11em;  /* letter-spacing do rótulo mono */
@@ -52,17 +75,18 @@
   /* -- §3 Espaçamento ------------------------------------------------------ */
   --sp-1:  4px;   --sp-2:  8px;   --sp-3: 12px;  --sp-4: 16px;
   --sp-5: 20px;   --sp-6: 24px;   --sp-8: 32px;  --sp-11: 44px;
+  --sp-14: 56px;  --sp-18: 72px;
 
   --page-x: 56px;      /* respiro lateral da página */
-  --row-y: 13px;       /* altura de linha em Full    — fora da escala de propósito */
-  --row-y-dense: 7px;  /* altura de linha em Compact */
+  --row-y: 13px;       /* altura de linha de tabela — fora da escala de propósito */
 
-  /* Raio e sombra: 2px no toggle e NADA MAIS. Sem sombra em lugar nenhum.
+  /* Raio e sombra: 2px em controle e NADA MAIS. Sem sombra em lugar nenhum.
      Se um elemento precisa de borda, sombra e raio para se separar do fundo,
      ele está no lugar errado. */
   --radius: 2px;
 
-  /* Medida de linha. Prosa longa não se lê em 76ch. */
+  /* Medida de linha, para o que vive FORA da grade de duas colunas (legenda de
+     tabela larga, rodapé). Dentro da grade quem dá a medida é a coluna. */
   --measure:      68ch;
   --measure-note: 76ch;
 
@@ -70,45 +94,92 @@
      são ajustes ao olho, como --row-y. Ficam aqui para não virarem literal solto
      num componente. */
   --rule-pad:   9px;    /* respiro sob o rótulo da régua de seção */
-  --toggle-y:   5px;    /* altura interna do toggle de densidade */
+  --toggle-y:   5px;    /* altura interna de controle */
   --label-gap:  6px;    /* numeral grande → rótulo mono */
   --tick:       4px;    /* traço que marca item de lista */
 
-  /* Intrínsecos de layout */
-  --page-max: 1180px;   /* largura das pranchetas do canvas */
+  /* -- Grade editorial -----------------------------------------------------
+     Duas colunas. O corpo lê; a margem carrega o que distingue este site — o
+     carimbo de hora, o tamanho de amostra, a nota lateral.
+
+     --rail é FIXO de propósito. Fracionário, a largura do corpo mudaria de
+     página para página e o eixo de leitura se deslocaria a cada navegação —
+     que é exatamente o defeito que esta grade existe para corrigir. Com corpo
+     em 1fr e margem fixa, o eixo é o mesmo em toda página, com margem cheia ou
+     vazia. */
+  --page-max: 1080px;   /* corpo ~624px em 1440 ≈ 70 caracteres em serifa 18px */
+  --rail:     300px;    /* coluna da margem */
+  --gutter:   var(--sp-11);
   --card-min: 260px;    /* menor cartão antes de a grade quebrar */
   --col-min:  180px;    /* menor coluna do bloco de método */
 
-  /* Ponto de virada da tabela para lista. NÃO é usável em @media — variável CSS
-     não resolve em media query —, então o valor está repetido lá. Se mudar aqui,
-     mudar nos @media de tokens.css e base.css. */
+  /* Pontos de virada. NÃO são usáveis em @media — variável CSS não resolve em
+     media query —, então os valores estão repetidos lá. Mudou aqui, mudar nos
+     @media de tokens.css e base.css.
+       --bp-rail   grade de duas colunas → uma
+       --bp-mobile tabela densa → lista */
+  --bp-rail:   900px;
   --bp-mobile: 720px;
 }
 
-/* -- §4 A alavanca de densidade ---------------------------------------------
-   Não são dois layouts — é um, com dois estados. O HTML estático sai SEMPRE em
-   "full": é o que o Google indexa e o que o visitante novo vê. O script inline
-   de BaseLayout troca para "compact" antes da pintura, só para quem já escolheu.
+/* ---------------------------------------------------------------------------
+   Tema ESCURO — construído junto da repaginação, não depois.
+
+   Três estados, e a ordem importa:
+     1. sem `data-theme`   → segue o sistema (@media prefers-color-scheme)
+     2. data-theme="dark"  → escuro, escolhido pelo leitor
+     3. data-theme="light" → claro, escolhido pelo leitor, mesmo com sistema escuro
+
+   O `:root:not([data-theme])` no bloco de media é o que faz (3) funcionar: sem
+   ele a escolha explícita por claro perderia para a preferência do sistema, e o
+   controle mentiria em metade dos casos.
+
+   Os nomes não mudam de significado. `--ink` continua "texto principal" e
+   `--ground` "fundo da página": o que inverte é o valor, nunca o papel. Por
+   isso `color: var(--ground)` sobre `background: var(--ink)` — o selo de dado
+   vencido — segue legível nos dois temas sem nenhum caso especial.
    ------------------------------------------------------------------------- */
-:root,
-:root[data-density="full"] {
-  --density-row-y: var(--row-y);
-  --density-fs:    var(--fs-body);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --ground:       #101311;
+    --panel:        #1A1F1B;
+    --ink:          #ECEEE8;
+    --ink-muted:    #B8C0B7;
+    --ink-faint:    #8B948A;
+    --ink-ghost:    #5C655C;
+    --rule:         #242923;
+    --rule-med:     #333A33;
+    --accent:       #79C6A1;
+    --accent-hover: #A2DCC0;
+  }
 }
 
-:root[data-density="compact"] {
-  --density-row-y: var(--row-y-dense);
-  --density-fs:    var(--fs-body-dense);
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ground:       #101311;
+  --panel:        #1A1F1B;
+  --ink:          #ECEEE8;
+  --ink-muted:    #B8C0B7;
+  --ink-faint:    #8B948A;
+  --ink-ghost:    #5C655C;
+  --rule:         #242923;
+  --rule-med:     #333A33;
+  --accent:       #79C6A1;
+  --accent-hover: #A2DCC0;
 }
 
 /* -- Escala móvel ----------------------------------------------------------
-   design_tokens.md §5 deixou isto em aberto e apontou o caminho: "provavelmente
-   virar lista, não tabela rolando". Aqui só encolhe o respiro lateral; a virada
-   tabela→lista está em base.css. */
+   Só encolhe respiro e manchete; a virada tabela→lista está em base.css. */
 @media (max-width: 720px) {
   :root {
     --page-x: var(--sp-5);
-    --fs-display-l:  32px;
+    --fs-display-l:  30px;
+    --fs-display-m:  24px;
     --fs-display-xl: 40px;
+    --fs-text:       17px;
+    --fs-text-lead:  19px;
   }
 }
