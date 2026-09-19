@@ -130,6 +130,18 @@ for (const src of SOURCES) {
   else if (index.count !== index.horses.length) {
     problems.push(`horses-index.json: count diz ${index.count} e a lista tem ${index.horses.length}`);
   }
+  // O cartão conta os próprios estados em campos de topo. Se a contagem não
+  // bater com a lista, um dos dois está errado e não há como saber qual — e é
+  // um número que a página publica. Conferir custa duas linhas.
+  if (Array.isArray(card.horses)) {
+    for (const [field, status] of [['debutants', 'debut'], ['no_record', 'no_record']]) {
+      const n = card.horses.filter((x) => x.status === status).length;
+      if (card[field] !== n) {
+        problems.push(`horses.json: ${field} diz ${card[field]} e a lista traz ${n} com status "${status}"`);
+      }
+    }
+  }
+
   if (problems.length) die(['\n✗ horses: contrato violado', ...problems.map((p) => `  - ${p}`)]);
 
   // O diretório é RECONSTRUÍDO, não mesclado. Registro que sumiu da origem tem

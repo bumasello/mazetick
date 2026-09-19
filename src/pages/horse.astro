@@ -42,6 +42,11 @@ const onCard = records.filter((h) => h.last_declared.date === newest);
 const earlier = records.filter((h) => h.last_declared.date !== newest);
 
 const archiveThrough = card.history_depth.through;
+// Lacuna conhecida, publicada em vez de calada: onde dois cavalos do arquivo
+// dividem o nome, não há como dizer de quem é a corrida, e o produtor a REMOVE.
+// Quem for um desses lê uma carreira curta que não é curta — e o único lugar
+// onde temos o número é aqui, porque o arquivo não diz QUAIS cavalos são.
+const collisions = card.name_collisions;
 const generated = card.generated_at.replace('T', ' ').replace('Z', ' UTC');
 
 const headline =
@@ -78,6 +83,16 @@ const runsCell = (h: (typeof records)[number]) =>
         {ukDate(archiveThrough)}; a run after that date is missing from these figures.
         Derived {generated}.
       </p>
+      {collisions && collisions.runs_removed > 0 && (
+        <p class="note">
+          One gap we can measure and cannot close:{' '}
+          <strong>{plural(collisions.horses, 'horse')}</strong> on this card share a name
+          with another horse in the archive, and{' '}
+          <strong>{plural(collisions.runs_removed, 'run')}</strong> were dropped rather
+          than credited to the wrong one. Those careers read short here, and the file
+          does not say which horses they are, so we cannot flag them individually.
+        </p>
+      )}
     </div>
 
     <aside class="rail">

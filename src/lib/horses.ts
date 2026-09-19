@@ -81,6 +81,10 @@ export interface Card {
   history_depth: { from: string; through: string; horses: number };
   debutants: number;
   no_record: number;
+  /** Cavalos do cartão que dividem nome com outro no arquivo, e as corridas que
+   *  foram REMOVIDAS por causa disso. É uma lacuna conhecida do acervo, e o
+   *  índice a publica: carreira curta por ambiguidade não é carreira curta. */
+  name_collisions: { horses: number; runs_removed: number };
   horses: { slug: string; as_of: string; status: Status }[];
 }
 
