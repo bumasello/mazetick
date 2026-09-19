@@ -377,9 +377,22 @@ na própria origem, nenhum formulário, nenhum iframe, nenhum handler `on*`.
 `style-src 'self'` possível.** O padrão (`'auto'`) inlineia folhas pequenas no
 HTML e obrigaria a CSP a aceitar estilo inline. Não mudar sem mudar a CSP junto.
 
-A checagem 12 confere que cada `<script>` inline servido tem o seu hash na
-política, usando a **mesma função** que gerou o arquivo — importada, não
-reimplementada, porque duas implementações divergiriam em silêncio.
+A checagem 12 confere que cada `<script>` inline **executável** servido tem o
+seu hash na política, usando a **mesma função** que gerou o arquivo — importada,
+não reimplementada, porque duas implementações divergiriam em silêncio.
+
+⚠️ **"Executável" passou a importar em 2026-09-19, e o motivo é aritmético.** A
+versão anterior hasheava também os blocos `application/ld+json`. Com 15 páginas
+isso custava 10 hashes; com a `/horse` no ar são 694 páginas, cada uma com o seu
+`Dataset`, e o cabeçalho ia a **37.561 bytes** — muito acima dos 8 a 16 KB que
+uma borda aceita. A política simplesmente não seria servida, e site sem CSP é
+pior que CSP que não cobre um bloco que o navegador nem executa. O medo que
+justificava incluí-los também estava errado no mecanismo: a CSP impede a
+EXECUÇÃO de um script inline, não a presença dele no DOM, e JSON-LD é lido do
+DOM, nunca executado. A isenção é uma **lista de permissão de um item**
+(`NON_EXECUTABLE_TYPES`), e a checagem 12 confere que qualquer outro tipo
+continua exigindo hash — mais um **orçamento de 4 KB** para o cabeçalho, que é o
+que impede a regressão silenciosa num site que cresce ~600 páginas por dia.
 
 Cache: `/_astro/*` leva `immutable` (nome com hash de conteúdo, imutável por
 construção); o HTML **não**, senão uma correção publicada levaria um ano para

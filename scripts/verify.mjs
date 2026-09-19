@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { inlineScripts, sha256 } from './headers.mjs';
+import { inlineScripts, NON_EXECUTABLE_TYPES, sha256 } from './headers.mjs';
 import { stampProblems } from './data-contract.mjs';
 
 const DIST = 'dist';
@@ -322,15 +322,48 @@ check(
       if (h.includes(bad)) problems.push(`_headers: CSP contém ${bad}`);
     }
 
+    // Todo script EXECUTÁVEL servido tem de ter o seu hash. Os de tipo
+    // não-executável (hoje só `application/ld+json`) estão fora por decisão
+    // medida — ver NON_EXECUTABLE_TYPES em headers.mjs —, e a segunda metade do
+    // laço garante que a isenção não vira porta dos fundos: qualquer OUTRO tipo
+    // continua exigindo hash.
     for (const f of pages) {
-      for (const body of inlineScripts(read(f))) {
-        const hash = sha256(body);
+      for (const sc of inlineScripts(read(f))) {
+        if (NON_EXECUTABLE_TYPES.has(sc.type)) continue;
+        const hash = sha256(sc.body);
         if (!h.includes(hash)) {
           problems.push(`${rel(f)}: script inline sem hash na CSP (${hash.slice(0, 24)}…)`);
         }
       }
     }
+
+    /*
+      O CABEÇALHO TEM DE CABER.
+
+      Esta metade nasceu de um número: com a /horse, hashear também os blocos de
+      JSON-LD levava a CSP a 689 hashes e **37.561 bytes**. O limite prático de
+      cabeçalho de resposta é de 8 a 16 KB conforme a borda, então a política
+      simplesmente não seria servida — e um site sem CSP é pior que um site cuja
+      CSP não cobre um bloco que o navegador nem executa.
+
+      O orçamento é deliberadamente folgado (4 KB) e mesmo assim uma ordem de
+      grandeza abaixo do que quebrava. O que ele impede é a REGRESSÃO SILENCIOSA:
+      o site cresce ~600 páginas por dia, e qualquer script inline que passe a
+      variar por página volta a estourar o cabeçalho sem que nada apareça na
+      tela.
+    */
+    const CSP_BUDGET = 4096;
+    for (const line of h.split('\n')) {
+      const t = line.trim();
+      if (!t.startsWith('Content-Security-Policy:')) continue;
+      if (t.length > CSP_BUDGET) {
+        problems.push(
+          `_headers: CSP com ${t.length} bytes, acima do orçamento de ${CSP_BUDGET} — cabeçalho grande demais não é servido`,
+        );
+      }
+    }
   }
+
 
   check('Cabeçalhos presentes e CSP cobrindo os scripts servidos', problems);
 }
