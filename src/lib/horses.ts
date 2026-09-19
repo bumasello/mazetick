@@ -155,7 +155,7 @@ export function horseMeta(h: HorseRecord): { title: string; description: string 
   if (h.status === 'no_record') {
     return {
       title: `${h.name}: ran before, not in our archive — mazetick`,
-      description: `${h.name} has run before, but those races are not in our archive, so we publish no career figures. Declared at ${decl}. ${conn}`,
+      description: `${h.name} has run before, but those races are not in our archive, so we publish no figures of our own for it. Declared at ${decl}. ${conn}`,
     };
   }
 

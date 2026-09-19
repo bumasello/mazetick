@@ -16,6 +16,13 @@
  * 3. Amostra ao lado de toda taxa. É a `HorseStatTable` que garante a forma, e
  *    a checagem 27 que recusa o build se escapar.
  *
+ * ⚠️ E uma regra de palavra que vem da medição independente, não do gosto:
+ * **não se AFIRMA "career"** enquanto o arquivo tiver os buracos conhecidos.
+ * Medido: 86% dos cavalos declarados hoje correram depois do fim do arquivo, e
+ * "career: 83 runs" seria um número verdadeiro há dois meses. A palavra só
+ * aparece onde serve para NEGAR a leitura ("what our archive holds, not the
+ * horse's official career") — que é o oposto de afirmá-la.
+ *
  * O que NÃO está aqui, e por quê: nada de preço, nada de palpite, nada de
  * previsão. A página descreve o que aconteceu, com a data de corte junto.
  */
@@ -177,15 +184,15 @@ const jsonLd = {
     {h.status === 'has_history' ? (
       <>
         <HorseStatTable
-          firstCol="Career"
-          rows={[{ label: 'All runs in our archive', group: h.career }]}
+          firstCol="Record"
+          rows={[{ label: 'All runs we hold', group: h.career }]}
         />
         <p class="note caption on-axis">{archiveLine(h.history_through)}</p>
       </>
     ) : (
       <div class="empty">
         <p class="lead">
-          There is no career line, no going split, no course split and no distance
+          There is no record line, no going split, no course split and no distance
           split, because there is nothing to split. The tables that would carry them
           are absent rather than empty, which is the same thing said honestly.
         </p>
@@ -242,8 +249,8 @@ const jsonLd = {
               : `We hold ${h.career.runs} runs for this horse, and they are spread too thin to split.`}
           </p>
           <p class="note">
-            This is a statement about the sample, not about the horse. The career line
-            above is the whole of what we hold.
+            This is a statement about the sample, not about the horse. The line above
+            is the whole of what we hold.
           </p>
         </div>
       )}
@@ -255,7 +262,7 @@ const jsonLd = {
       <h2 id="connections" class="section-rule">Jockey and trainer</h2>
       <HorseStatTable firstCol="Connection" rows={connections} />
       <p class="note caption on-axis">
-        <strong>These are career records, not this pairing.</strong> The figures are
+        <strong>These are whole-archive records, not this pairing.</strong> The figures are
         the rider&rsquo;s across every ride we hold and the yard&rsquo;s across every
         runner we hold, to {ukDate(h.history_through)} &mdash; not their record with
         this horse, and not their record in conditions like these. We say so because
