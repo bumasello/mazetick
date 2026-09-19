@@ -241,7 +241,7 @@ quebrar. Vinte e três checagens:
 | sem sintaxe de template; JSON-LD parseável **e coerente com a canônica** | olhar não é interpretar, e parsear não é conferir |
 | derivação versionada e resolvível | número sem script commitado não vai ao ar |
 | sem campo proibido nos JSON de dados (em `src/data` **e em `dist/`**) | rede embaixo da regra 6, o dado vem de outro repo |
-| todo JSON carimbado: `generated_at` **e `collected_through`** | sem o segundo a idade na tela vira a da derivação, e a regra 4 cai calada |
+| todo JSON carimbado, **cada um com o carimbo do seu contrato** | sem carimbo a idade na tela vira a da derivação, e a regra 4 cai calada. O carimbo NÃO é o mesmo em todo arquivo: `collected_through` é relógio de coletor contínuo, que o acervo de cavalos não tem — lá o limite é `history_through`. O contrato mora em `scripts/data-contract.mjs` e é lido pelo verify E pelo fetch |
 | sitemap ↔ páginas em correspondência 1:1 | artigo segurado deixaria 404 no Search Console |
 | nenhuma coluna rotulada pelo relógio do leitor | "now" numa página estática é falso em algum momento do dia |
 | página de dado completa no HTML servido | é o HTML que o Google indexa; corte tem de ser do cliente |
@@ -276,7 +276,18 @@ npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
 ## Dados: instantâneo, e falhar alto
 
 `npm run build` começa por `scripts/fetch-data.mjs`, que baixa os JSON de
-`bumasello/mazetick-data` (`extra-places.json` e `movers.json`). **Se o download falhar, o build falha** — sem deploy
+`bumasello/mazetick-data`. São **dois caminhos de download**, e a diferença tem
+motivo:
+
+- `extra-places.json` e `movers.json` vêm por um GET cada;
+- o acervo de cavalos vem pelo **tarball do repositório** (`scripts/untar.mjs`,
+  leitor de tar sem dependência, porque um binário de sistema é mais uma coisa
+  que a Cloudflare decidiria por nós). O índice e os registros por cavalo TÊM de
+  vir do mesmo commit: baixados um a um, um push no meio da rodada daria um
+  índice de uma versão e registros de outra, e a página sairia com um cavalo
+  listado e sem página. É também um pedido de rede em vez de 679.
+
+**Se o download falhar, o build falha** — sem deploy
 novo, a versão anterior continua no ar. É o comportamento certo: degradar para
 "sem corridas hoje" MENTE, e num portal cuja tese é "todo número carrega o
 instante em que era verdade" essa é a pior mentira disponível.

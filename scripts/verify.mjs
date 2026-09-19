@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { inlineScripts, sha256 } from './headers.mjs';
+import { stampProblems } from './data-contract.mjs';
 
 const DIST = 'dist';
 const fail = [];
@@ -515,8 +516,13 @@ check(
 //     importa para o leitor é `collected_through`: `generated_at` fresco sobre
 //     coleta parada é exatamente o disfarce que a regra 5 proíbe.
 {
+  // ⚠️ RECURSIVO, e a mudança tem motivo. A versão anterior usava
+  //     `readdirSync('src/data')` sem descer, então os registros por cavalo —
+  //     hoje 678 arquivos em `src/data/horses/<xx>/` — escapariam INTEIROS da
+  //     varredura de campo proibido. É o erro de escopo que este projeto já
+  //     pagou três vezes: a checagem existia, passava, e olhava o lugar errado.
   const srcData = fs.existsSync('src/data')
-    ? fs.readdirSync('src/data').filter((f) => f.endsWith('.json')).map((f) => path.join('src/data', f))
+    ? walk('src/data').filter((f) => f.endsWith('.json')).map((f) => f.split(path.sep).join('/'))
     : [];
 
   // Todo JSON que chega a dist/ é publicamente acessível, consumido pelo site
@@ -598,26 +604,20 @@ check(
     // qualquer em dist/ (manifest, etc.) tem de passar pela 16, não pela 17.
     if (!srcData.includes(f)) continue;
 
-    if (!json.generated_at || Number.isNaN(Date.parse(json.generated_at))) {
-      undated.push(`${f}: generated_at ausente ou não parseável`);
-    }
-
-    // `collected_through` pode ser null de forma legítima — é o produtor
-    // dizendo "não havia arquivo do coletor hoje", e a página trata isso como o
-    // estado mais grave. O que não pode é a CHAVE sumir: aí a página voltaria a
-    // exibir `generated_at` como se fosse frescor, sem nada denunciar.
-    if (!('collected_through' in json)) {
-      undated.push(`${f}: collected_through ausente — a idade na tela viraria a da derivação`);
-    } else if (
-      json.collected_through !== null &&
-      Number.isNaN(Date.parse(json.collected_through))
-    ) {
-      undated.push(`${f}: collected_through não parseável (${JSON.stringify(json.collected_through)})`);
-    }
+    // Os carimbos exigidos saem de `data-contract.mjs`, o MESMO arquivo que o
+    // `fetch-data.mjs` usa na porta de entrada. E NÃO são os mesmos em todo
+    // arquivo: `collected_through` é o relógio de um coletor contínuo, que o
+    // acervo de cavalos não tem — lá o que limita o número na tela é a
+    // profundidade do arquivo histórico. Exigir o campo errado seria exigir
+    // decoração; não exigir nenhum deixaria a regra 4 cair em silêncio.
+    //
+    // Arquivo que não cai em nenhum padrão do contrato é ERRO, não isenção: o
+    // caminho para acrescentar dado passa por declarar o carimbo dele.
+    undated.push(...stampProblems(f, json));
   }
 
   check('Sem campo proibido nos JSON de dados', banned);
-  check('Todo JSON de dados carimbado: generated_at e collected_through', undated);
+  check('Todo JSON de dados carimbado, cada um com o carimbo do seu contrato', undated);
   console.log(`    (${srcData.length} em src/data + ${distData.length} em dist/ varridos)`);
 }
 
