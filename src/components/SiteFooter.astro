@@ -59,15 +59,25 @@ const year = new Date().getUTCFullYear();
 </footer>
 
 <style>
+  /* A grade vive no RODAPE inteiro, nao so na linha do meio. Enquanto so o
+     `.cols` era grade, as duas linhas soltas caiam em `--measure-note` (76ch
+     de fonte de legenda = 532px) e a coluna do corpo tinha `--measure` (68ch
+     de serifa de 18px = 624px): duas medidas tipograficamente certas que
+     aterrissam em pixels diferentes, e o rodape terminava em tres bordas
+     direitas. Numa grade a largura vem da COLUNA, nunca do `ch`. */
   .foot {
     margin-top: var(--sp-18);
     padding-top: var(--sp-5);
     border-top: 2px solid var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail);
+    column-gap: var(--gutter);
   }
   .age {
+    grid-column: 1;
     font-size: var(--fs-caption);
     color: var(--ink-muted);
-    max-width: var(--measure-note);
+    max-width: none;
     margin-bottom: var(--sp-6);
   }
   .age strong {
@@ -80,6 +90,7 @@ const year = new Date().getUTCFullYear();
      corpo, colofão na coluna da margem. Sem isso ele é a última coisa da página
      a desobedecer ao eixo que todo o resto segue. */
   .cols {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--rail);
     column-gap: var(--gutter);
@@ -97,9 +108,10 @@ const year = new Date().getUTCFullYear();
   .links a { color: var(--ink-muted); text-decoration: none; }
   .links a:hover { color: var(--accent); }
   .colophon .rail-label { margin-bottom: var(--sp-2); }
-  .stance { margin-top: var(--sp-6); }
+  .stance { grid-column: 1; max-width: none; margin-top: var(--sp-6); }
 
   @media (max-width: 900px) {
+    .foot { grid-template-columns: minmax(0, 1fr); }
     .cols { grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-6); }
   }
 </style>
