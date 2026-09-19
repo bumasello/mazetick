@@ -1,92 +1,95 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
 // A linha de base cresce um dia por dia. Escrita à mão, a home já dizia 27
 // quando o arquivo dizia 28 — número na tela que nenhum script emite é número
 // que envelhece calado. Sai do mesmo JSON que a /movers usa.
 import movers from '../data/movers.json';
+
+// Mesma razão, outra fonte: o total de corridas medidas vinha DIGITADO aqui e o
+// artigo que o produziu o declara no próprio frontmatter, junto da derivação
+// versionada. Dois lugares para o mesmo número é um lugar a mais do que cabe.
+const articles = await getCollection('research', ({ data }) => !data.draft);
+const favourite = articles.find((a) => a.id === 'backing-the-favourite');
+// "33,508 races · UK & Ireland · …" → "33,508"
+const racesMeasured = favourite?.data.sample.split('·')[0].trim().replace(/\s*races?$/i, '');
 ---
 <BaseLayout
   title="mazetick — what the market knew, and when"
   description="Time-stamped market data for UK and Irish horse racing. Each-way terms as the bookmaker announced them, hour by hour, and the measurements behind them."
 >
-  <div class="hero">
-    <div>
-      <h1 class="display title">What the market knew, and when it knew it</h1>
-      <p class="lead">
-        Racing Post, Sporting Life and At The Races publish the card, the form and
-        the prices — free, and better than we would. What nobody publishes is how
-        any of it <em>changed through the day</em>: which each-way terms a bookmaker
-        was advertising at 10:00 and again at 14:00, how wide the book was, whether
-        the going moved since the 04:00 declaration.
-      </p>
-      <p class="lead">
-        That is what this site is for. Every figure carries the moment it was true.
-      </p>
+  <header class="mast">
+    <p class="mono kicker">UK &amp; Irish racing &middot; time-stamped</p>
+    <h1 class="display title">What the market knew, and when it knew it</h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      <div class="prose">
+        <p>
+          Racing Post, Sporting Life and At The Races publish the card, the form and
+          the prices — free, and better than we would. What nobody publishes is how
+          any of it <em>changed through the day</em>: which each-way terms a bookmaker
+          was advertising at 10:00 and again at 14:00, how wide the book was, whether
+          the going moved since the 04:00 declaration.
+        </p>
+        <p>
+          That is what this site is for. Every figure carries the moment it was true.
+        </p>
+      </div>
     </div>
-    <aside class="figures">
-      <StatFigure value="33,508" label="races measured so far" />
-      <StatFigure value="15 min" label="book sampled, 08–21 UTC" />
+
+    <aside class="rail">
+      <div class="rail-block figures">
+        {racesMeasured && <StatFigure value={racesMeasured} label="races measured so far" />}
+        <StatFigure value="15 min" label="book sampled, 08–21 UTC" />
+      </div>
     </aside>
   </div>
 
-  <h2 class="section-rule">Open now</h2>
-  <div class="cards">
-    <a class="card" href="/movers">
-      <span class="mono">Movers</span>
-      <span class="card-title">What moved, and whether that is unusual for the price</span>
-      <span class="card-note">
-        Every portal lists drifters. We publish the yardstick too: how far a
-        price of that size normally travels, from {movers.baseline.days} days of our
-        own collection.
-      </span>
-    </a>
-    <a class="card" href="/research">
-      <span class="mono">Research</span>
-      <span class="card-title">Measurements, including the ones that went against us</span>
-      <span class="card-note">
-        What the favourite actually returns. What the standard each-way table gets
-        wrong. Published with sample size and window on the page.
-      </span>
-    </a>
-    <a class="card" href="/extra-places">
-      <span class="mono">Extra places</span>
-      <span class="card-title">Which races pay above the bookmaker&rsquo;s own ladder</span>
-      <span class="card-note">
-        With the hour every change was made &mdash; and whether the extra place
-        cost you a worse fraction, which is the part nobody publishes.
-      </span>
-    </a>
-  </div>
+  <section class="block">
+    <h2 class="section-rule">Open now</h2>
+    <div class="cards">
+      <a class="card" href="/movers">
+        <span class="mono">Movers</span>
+        <span class="card-title">What moved, and whether that is unusual for the price</span>
+        <span class="card-note">
+          Every portal lists drifters. We publish the yardstick too: how far a
+          price of that size normally travels, from {movers.baseline.days} days of our
+          own collection.
+        </span>
+      </a>
+      <a class="card" href="/research">
+        <span class="mono">Research</span>
+        <span class="card-title">Measurements, including the ones that went against us</span>
+        <span class="card-note">
+          What the favourite actually returns. What the standard each-way table gets
+          wrong. Published with sample size and window on the page.
+        </span>
+      </a>
+      <a class="card" href="/extra-places">
+        <span class="mono">Extra places</span>
+        <span class="card-title">Which races pay above the bookmaker&rsquo;s own ladder</span>
+        <span class="card-note">
+          With the hour every change was made &mdash; and whether the extra place
+          cost you a worse fraction, which is the part nobody publishes.
+        </span>
+      </a>
+    </div>
 
-  <p class="note stance">
-    mazetick publishes measurements, not tips. We do not sell selections and we do
-    not promise a return, because we have measured our own attempts to beat the
-    market and they did not.{" "}
-    <a href="/research/backing-the-favourite">That measurement is published here.</a>
-  </p>
+    <p class="note caption on-axis">
+      mazetick publishes measurements, not tips. We do not sell selections and we do
+      not promise a return, because we have measured our own attempts to beat the
+      market and they did not.{" "}
+      <a href="/research/backing-the-favourite">That measurement is published here.</a>
+    </p>
+  </section>
 </BaseLayout>
 
 <style>
-  .hero {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--sp-11);
-    align-items: start;
-    margin-bottom: var(--sp-11);
-  }
-  .title {
-    font-size: var(--fs-display-l);
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    margin-bottom: var(--sp-4);
-  }
-  .lead + .lead { margin-top: var(--sp-4); }
-  .figures {
-    border-left: 1px solid var(--rule-med);
-    padding-left: var(--sp-6);
-  }
+  .block { margin-top: var(--sp-14); }
+  .figures { display: flex; flex-direction: column; gap: var(--sp-6); }
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
@@ -99,18 +102,15 @@ import movers from '../data/movers.json';
     flex-direction: column;
     gap: var(--sp-2);
     text-decoration: none;
+    border-top: 2px solid var(--ink);
   }
   .card-title {
-    font-size: var(--fs-lead);
-    font-weight: 500;
+    font-family: var(--font-display);
+    font-size: var(--fs-display-s);
+    font-weight: 400;
     color: var(--ink);
-    line-height: 1.35;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
   .card-note { font-size: var(--fs-caption); color: var(--ink-muted); line-height: 1.55; }
-  .stance { margin-top: var(--sp-8); }
-
-  @media (max-width: 720px) {
-    .hero { grid-template-columns: 1fr; gap: var(--sp-8); }
-    .figures { border-left: 0; padding-left: 0; }
-  }
 </style>

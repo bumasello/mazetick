@@ -73,11 +73,34 @@ check(
   }),
 );
 
-// 3. Estado inicial indexável: o HTML servido sai sempre em full.
-check(
-  'data-density="full" no HTML servido',
-  pages.filter((f) => !/<html[^>]*data-density="full"/.test(read(f))).map(rel),
-);
+// 3. Estado inicial indexável: o HTML servido NÃO fixa tema, e toda página
+//    aplica a escolha do leitor antes da primeira pintura.
+//
+//    Duas afirmações, e as duas já foram quebradas noutros projetos:
+//
+//    (a) `data-theme` no HTML construído forçaria um tema para todo mundo. Sem
+//        atributo vale `prefers-color-scheme`, que é o padrão correto para
+//        quem chega pela primeira vez, para quem não tem JavaScript e para o
+//        indexador.
+//    (b) o aplicador tem de estar no <head> e ser síncrono. Em <body>, com
+//        `defer` ou ausente, o leitor que escolheu escuro vê um lampejo de
+//        claro — e o defeito não aparece em nenhuma outra checagem porque o
+//        HTML fica correto e o CSS também.
+{
+  const problems = [];
+  for (const f of pages) {
+    const s = read(f);
+    const html = s.match(/<html[^>]*>/);
+    if (html && /\bdata-theme\s*=/.test(html[0])) {
+      problems.push(`${rel(f)}: <html> já vem com data-theme — o tema ficou fixo no artefato`);
+    }
+    const head = s.slice(0, s.indexOf('</head>'));
+    if (!/localStorage\.getItem\('mazetick:theme'\)/.test(head)) {
+      problems.push(`${rel(f)}: sem o aplicador de tema no <head> — lampejo de tema errado`);
+    }
+  }
+  check('Tema não fixado no HTML, e aplicado antes da pintura', problems);
+}
 
 // 4. Idioma declarado, em toda página.
 check(
@@ -736,6 +759,121 @@ check(
     problems.push('nenhum bundle declara [hidden] { display: none !important } — no celular o filtro não esconde nada');
   }
   check('O atributo hidden vence no CSS servido', problems);
+}
+
+// 22. O índice da margem não mente sobre a página.
+//
+//     A grade editorial pôs um índice de seções na coluna da direita. Em página
+//     .astro os títulos são literais e não há como colhê-los no build, então o
+//     índice é escrito à mão — e índice à mão sai de sincronia no primeiro edit,
+//     em silêncio, porque um link para uma âncora que não existe não dá erro em
+//     lugar nenhum: o navegador simplesmente não rola.
+//
+//     Duas afirmações, as duas sobre o ARTEFATO servido:
+//     (a) todo item aponta para um id que existe NAQUELA página;
+//     (b) o texto do item é o texto do heading, não uma paráfrase que envelheceu.
+{
+  const problems = [];
+  const strip = (x) => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&middot;/g, '·')
+    .replace(/&rsquo;/g, '’').replace(/&mdash;/g, '—').replace(/&ndash;/g, '–')
+    .replace(/&ldquo;/g, '“').replace(/&rdquo;/g, '”')
+    .replace(/\s+/g, ' ').trim();
+
+  for (const f of pages) {
+    const html = read(f);
+    // id → texto do heading, de TODOS os headings da página, não só dos h2:
+    // um índice que aponta para um h3 também tem de bater.
+    const headings = new Map();
+    for (const m of html.matchAll(/<h[1-6]\b([^>]*)>([\s\S]*?)<\/h[1-6]>/gi)) {
+      const id = m[1].match(/\bid="([^"]+)"/);
+      if (id) headings.set(id[1], strip(m[2]));
+    }
+
+    for (const nav of html.matchAll(/<nav\b[^>]*\bdata-rail-index\b[\s\S]*?<\/nav>/gi)) {
+      for (const a of nav[0].matchAll(/<a\b[^>]*href="#([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)) {
+        const [, id, label] = a;
+        if (!headings.has(id)) {
+          problems.push(`${rel(f)}: índice aponta para #${id}, que não existe na página`);
+        } else if (headings.get(id) !== strip(label)) {
+          problems.push(
+            `${rel(f)}: índice diz "${strip(label)}" e o título é "${headings.get(id)}"`,
+          );
+        }
+      }
+    }
+  }
+
+  check('Índice da margem coerente com os títulos da página', problems);
+}
+
+// 23. O tema escuro cobre TODOS os tokens de cor, e os dois caminhos concordam.
+//
+//     Esta é a checagem que uma revisão visual não substitui. Esquecer um token
+//     no bloco escuro não quebra nada: o valor claro simplesmente permanece, e o
+//     resultado é um elemento invisível ou ilegível numa página que ninguém
+//     abriu no tema em que o defeito aparece. Foi assim que o realce de sintaxe
+//     entrou (checagem 10) e é assim que um --rule-med claro sobre fundo escuro
+//     entraria.
+//
+//     E confere os DOIS caminhos do escuro:
+//       :root[data-theme="dark"]                    → escolha explícita
+//       @media (prefers-color-scheme: dark) :root:not([data-theme]) → sistema
+//     Se divergirem, o mesmo leitor vê duas páginas diferentes conforme tenha
+//     tocado no controle ou não — que é o defeito mais difícil de reproduzir que
+//     existe.
+{
+  const css = fs.readFileSync('src/styles/tokens.css', 'utf8');
+  const problems = [];
+
+  // Pega o corpo de um bloco pelo seletor, contando chaves a partir dele.
+  const bodyOf = (sel) => {
+    const i = css.indexOf(sel);
+    if (i < 0) return null;
+    const open = css.indexOf('{', i + sel.length);
+    if (open < 0) return null;
+    let depth = 0;
+    for (let j = open; j < css.length; j++) {
+      if (css[j] === '{') depth++;
+      else if (css[j] === '}') {
+        depth--;
+        if (depth === 0) return css.slice(open + 1, j);
+      }
+    }
+    return null;
+  };
+
+  const colours = (body) => {
+    const out = new Map();
+    if (!body) return out;
+    for (const m of body.matchAll(/(--[\w-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})\s*;/g)) {
+      out.set(m[1], m[2].toLowerCase());
+    }
+    return out;
+  };
+
+  const light = colours(bodyOf(':root {'));
+  const explicit = colours(bodyOf(':root[data-theme="dark"]'));
+  const system = colours(bodyOf(':root:not([data-theme])'));
+
+  if (!light.size) problems.push('tokens.css: não achei a paleta clara em :root');
+  if (!explicit.size) problems.push('tokens.css: não achei :root[data-theme="dark"]');
+  if (!system.size) problems.push('tokens.css: não achei :root:not([data-theme]) no bloco de media');
+
+  for (const [name] of light) {
+    if (!explicit.has(name)) problems.push(`tokens.css: ${name} não tem valor em data-theme="dark"`);
+    if (!system.has(name)) problems.push(`tokens.css: ${name} não tem valor no escuro do sistema`);
+  }
+  for (const [name] of explicit) {
+    if (!light.has(name)) problems.push(`tokens.css: ${name} existe só no escuro — a paleta clara está incompleta`);
+    if (system.get(name) !== explicit.get(name)) {
+      problems.push(
+        `tokens.css: ${name} vale ${explicit.get(name)} por escolha e ${system.get(name)} pelo sistema`,
+      );
+    }
+  }
+
+  check('Tema escuro cobre todos os tokens de cor, e os dois caminhos concordam', problems);
+  console.log(`    (${light.size} tokens de cor na paleta clara)`);
 }
 
 console.log();

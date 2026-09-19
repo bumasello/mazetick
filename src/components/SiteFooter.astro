@@ -13,41 +13,46 @@ const year = new Date().getUTCFullYear();
     (National Gambling Helpline, 0808 8020 133).
   </p>
 
-  <nav class="links" aria-label="Site information">
-    <a href="/about">About</a>
-    <a href="/extra-places">Extra places</a>
-    <a href="/movers">Movers</a>
-    <a href="/research">Research</a>
-    <a href="/privacy">Privacy</a>
-    <a href="/cookies">Cookies</a>
-    <a href="/responsible-gambling">Responsible gambling</a>
-    <a href="/contact">Contact</a>
-  </nav>
+  <div class="cols">
+    <nav class="links" aria-label="Site information">
+      <a href="/about">About</a>
+      <a href="/extra-places">Extra places</a>
+      <a href="/movers">Movers</a>
+      <a href="/research">Research</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/cookies">Cookies</a>
+      <a href="/responsible-gambling">Responsible gambling</a>
+      <a href="/contact">Contact</a>
+    </nav>
 
-  {/*
-    Regra 7 do handoff: creditar as fontes mesmo sem obrigação. O theracingapi
-    NÃO exige atribuição; damos assim mesmo, e nomeando. Um site que se vende
-    como transparente e esconde de quem vêm os seus dados está incoerente antes
-    da primeira tabela.
+    {/*
+      Regra 7 do handoff: creditar as fontes mesmo sem obrigação. O theracingapi
+      NÃO exige atribuição; damos assim mesmo, e nomeando. Um site que se vende
+      como transparente e esconde de quem vêm os seus dados está incoerente antes
+      da primeira tabela.
 
-    ⚠️ E o crédito é DELIMITADO de propósito. Conferido em `build_site_data.py`
-    e nas cinco derivações: hoje nada nas páginas vem do theracingapi — o
-    produtor lê só os CSVs da Paddy Power e do Smarkets, e os artigos saem de
-    rpscrape e dos CSVs do exchange. Escrever "racecards and form from The
-    Racing API" no rodapé seria creditar uma fonte que não está na tela, que é a
-    mesma classe de erro que o site existe para não cometer, só na direção
-    oposta. Quando `/horse/[id]` publicar, a cláusula muda de tempo verbal.
-  */}
-  <p class="note">
-    What is on these pages is our own measurement over public records:
-    each-way terms from <strong>Paddy Power</strong>&rsquo;s own race pages, and
-    order-book prices from <strong>Smarkets</strong>&rsquo; public API. Racecard
-    and form data used elsewhere in this project comes from{' '}
-    <strong>The Racing API</strong>. We publish measurements over those records,
-    never the records themselves.
-  </p>
+      ⚠️ E o crédito é DELIMITADO de propósito. Conferido em `build_site_data.py`
+      e nas cinco derivações: hoje nada nas páginas vem do theracingapi — o
+      produtor lê só os CSVs da Paddy Power e do Smarkets, e os artigos saem de
+      rpscrape e dos CSVs do exchange. Escrever "racecards and form from The
+      Racing API" no rodapé seria creditar uma fonte que não está na tela, que é a
+      mesma classe de erro que o site existe para não cometer, só na direção
+      oposta. Quando `/horse/[id]` publicar, a cláusula muda de tempo verbal.
+    */}
+    <div class="colophon">
+      <span class="rail-label">Sources</span>
+      <p class="note">
+        What is on these pages is our own measurement over public records:
+        each-way terms from <strong>Paddy Power</strong>&rsquo;s own race pages, and
+        order-book prices from <strong>Smarkets</strong>&rsquo; public API. Racecard
+        and form data used elsewhere in this project comes from{' '}
+        <strong>The Racing API</strong>. We publish measurements over those records,
+        never the records themselves.
+      </p>
+    </div>
+  </div>
 
-  <p class="note">
+  <p class="note stance">
     mazetick publishes measurements, not tips. We do not sell selections and we
     do not promise a return. Nothing here is betting advice. &copy; {year} mazetick.
   </p>
@@ -55,15 +60,15 @@ const year = new Date().getUTCFullYear();
 
 <style>
   .foot {
-    margin-top: var(--sp-11);
+    margin-top: var(--sp-18);
     padding-top: var(--sp-5);
-    border-top: 1px solid var(--rule-med);
+    border-top: 2px solid var(--ink);
   }
   .age {
     font-size: var(--fs-caption);
     color: var(--ink-muted);
     max-width: var(--measure-note);
-    margin-bottom: var(--sp-4);
+    margin-bottom: var(--sp-6);
   }
   .age strong {
     font-family: var(--font-mono);
@@ -71,14 +76,30 @@ const year = new Date().getUTCFullYear();
     color: var(--ink);
     letter-spacing: .04em;
   }
+  /* O rodapé usa a MESMA geometria da grade editorial: navegação na coluna do
+     corpo, colofão na coluna da margem. Sem isso ele é a última coisa da página
+     a desobedecer ao eixo que todo o resto segue. */
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail);
+    column-gap: var(--gutter);
+    align-items: start;
+  }
   .links {
     display: flex;
     flex-wrap: wrap;
     gap: var(--sp-2) var(--sp-5);
-    font-size: var(--fs-caption);
-    margin-bottom: var(--sp-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
   }
   .links a { color: var(--ink-muted); text-decoration: none; }
   .links a:hover { color: var(--accent); }
-  .note + .note { margin-top: var(--sp-3); }
+  .colophon .rail-label { margin-bottom: var(--sp-2); }
+  .stance { margin-top: var(--sp-6); }
+
+  @media (max-width: 900px) {
+    .cols { grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-6); }
+  }
 </style>

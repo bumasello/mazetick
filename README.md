@@ -87,14 +87,42 @@ grep -rnE '#[0-9A-Fa-f]{3,8}\b' src/components src/layouts src/pages
 ⚠️ **Verde (`--accent`) não quer dizer "aposte aqui".** Quer dizer "difere do
 padrão para cima". A página não recomenda nada.
 
-### A alavanca de densidade
+### A grade editorial — um eixo só, em toda página
 
-Um layout, dois estados. O HTML servido sai **sempre em `full`** — é o estado
-que o Google indexa e o que o visitante novo vê. Um script inline lê
-`localStorage['mazetick:density']` antes da pintura e só então troca, para quem
-já escolheu. A preferência nunca chega ao servidor.
+Duas colunas. O que atravessa a largura inteira (manchete, régua de seção,
+tabela de dado, rodapé) fica no nível da página; o que se lê fica em
+`.spread > .body`; e `.spread > .rail` carrega o que distingue este site — o
+carimbo de hora, o tamanho de amostra, o índice de seções.
 
-O toggle só renderiza onde morde. Numa página de prosa ele não aparece.
+**A largura da margem (`--rail`) é FIXA**, então a largura do corpo é a mesma em
+toda página, com margem cheia ou vazia. É esse o ponto: o defeito que a grade
+corrige não era "o texto está à esquerda", era o EIXO mudar de página para
+página — em `/about` a manchete ocupava 1068px e o corpo 544px, e os dois não
+partilhavam coluna nenhuma. Onde não há o que pôr na margem, ela não desenha
+nada (`.rail:empty`) e o corpo não se move.
+
+`.on-axis` amarra uma legenda de tabela larga à mesma coluna, em vez de a deixar
+inventar uma medida própria.
+
+### A alavanca de tema — três estados, e o terceiro é o que costuma faltar
+
+Substituiu a de densidade, que foi removida em 2026-09-19: os dois estados quase
+não diferiam e o controle custava mais atenção do que devolvia.
+
+| estado | raiz | efeito |
+|---|---|---|
+| Auto | sem `data-theme` | vale `prefers-color-scheme` |
+| Light | `data-theme="light"` | claro, mesmo com o sistema em escuro |
+| Dark | `data-theme="dark"` | escuro |
+
+Sem o "Auto" explícito não há como VOLTAR a seguir o sistema depois de escolher
+uma vez. O HTML servido sai **sem `data-theme`** — é o que o Google indexa e o
+que o leitor sem JavaScript recebe —, e um script inline no `<head>` aplica a
+escolha **antes da primeira pintura**. A preferência nunca chega ao servidor.
+
+⚠️ O script inline exige hash na CSP. Ele é calculado pelo `headers.mjs` a
+partir do HTML CONSTRUÍDO, nunca escrito à mão, e a checagem 12 recusa o build
+se algum script servido ficar sem hash.
 
 ## ⚠️ Com a Cloudflare, o que não está declarado no repositório ela decide
 
@@ -184,7 +212,7 @@ src/
 ├── content.config.ts     # schema Zod dos artigos — método obrigatório
 ├── content/research/     # os artigos, em Markdown
 ├── styles/tokens.css     # a única fonte de cor, tipo e espaçamento
-├── components/           # MethodBox, DataAge, StatFigure, DensityToggle…
+├── components/           # MethodBox, DataAge, StatFigure, RailIndex, ThemeToggle…
 ├── lib/                  # canonical.ts (a canônica, uma implementação só), time.ts
 ├── layouts/              # BaseLayout (canônica, JSON-LD, densidade), ArticleLayout
 └── pages/
@@ -193,13 +221,13 @@ src/
 ## Verificação
 
 `npm run build` roda `scripts/verify.mjs` no fim e **falha com exit 1** se algo
-quebrar. Dezoito checagens:
+quebrar. Vinte e três checagens:
 
 | checagem | por quê |
 |---|---|
 | sem Betfair/BSP no HTML | regra 2 — nenhum preço deles vira campo na tela |
 | espaçamento em volta de `<a>` inline | o compilador apara a quebra de linha em vez de virar espaço, e o texto gruda |
-| `data-density="full"` no HTML servido | é o estado que o Google indexa |
+| tema não fixado no HTML, e aplicado antes da pintura | `data-theme` no artefato forçaria um tema para todo mundo; o aplicador fora do `<head>` dá lampejo do tema errado |
 | `lang="en-GB"` | o site é britânico |
 | canônica sem `.html` | tem de casar com o sitemap |
 | canônicas ⊆ sitemap | senão a página compete consigo mesma no índice |
@@ -215,6 +243,11 @@ quebrar. Dezoito checagens:
 | sem campo proibido nos JSON de dados (em `src/data` **e em `dist/`**) | rede embaixo da regra 6, o dado vem de outro repo |
 | todo JSON carimbado: `generated_at` **e `collected_through`** | sem o segundo a idade na tela vira a da derivação, e a regra 4 cai calada |
 | sitemap ↔ páginas em correspondência 1:1 | artigo segurado deixaria 404 no Search Console |
+| nenhuma coluna rotulada pelo relógio do leitor | "now" numa página estática é falso em algum momento do dia |
+| página de dado completa no HTML servido | é o HTML que o Google indexa; corte tem de ser do cliente |
+| `[hidden]` vence no CSS servido | sem o `!important`, no celular o filtro não esconderia nada |
+| índice da margem coerente com os títulos da página | índice à mão sai de sincronia em silêncio: âncora morta não dá erro em lugar nenhum |
+| tema escuro cobre todos os tokens, e os dois caminhos concordam | token esquecido no escuro não quebra nada — só fica ilegível numa página que ninguém abriu naquele tema |
 
 Duas regras governam este arquivo:
 

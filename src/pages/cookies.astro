@@ -1,73 +1,97 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-const reviewed = '13 September 2026';
+import RailIndex from '../components/RailIndex.astro';
+
+const reviewed = '19 September 2026';
+
+// Os títulos têm de bater LITERALMENTE com os <h2> do corpo — checagem 22.
+const sections = [
+  { id: 'stored', title: 'Then what is stored?' },
+  { id: 'analytics', title: 'Analytics' },
+  { id: 'would-change', title: 'What would change this page' },
+];
 ---
 <BaseLayout
   title="Cookies — mazetick"
   description="mazetick sets no cookies, first-party or third-party. What it does store, and the difference between a cookie and local storage."
 >
-  <h1 class="display title">Cookies</h1>
-  <p class="stamp">Last reviewed {reviewed}</p>
+  <header class="mast">
+    <p class="mono kicker">Notice</p>
+    <h1 class="display title">Cookies</h1>
+  </header>
 
-  <div class="prose body">
-    <p>
-      <strong>This site sets no cookies.</strong> Not our own, not anyone else's.
-      There is no consent banner because there is nothing to consent to.
-    </p>
+  <div class="spread">
+    <div class="body">
+      <div class="prose">
+        <p>
+          <strong>This site sets no cookies.</strong> Not our own, not anyone else's.
+          There is no consent banner because there is nothing to consent to.
+        </p>
 
-    <h2>Then what is stored?</h2>
-    <p>
-      One entry in your browser's <strong>local storage</strong>, named{" "}
-      <code>mazetick:density</code>, whose value is <code>full</code> or{" "}
-      <code>compact</code>. It records whether you prefer tables spaced out or
-      tightened up, so the site can honour that choice when you come back.
-    </p>
+        <h2 id="stored">Then what is stored?</h2>
+        <p>
+          At most one entry in your browser's <strong>local storage</strong>, named{" "}
+          <code>mazetick:theme</code>, whose value is <code>light</code> or{" "}
+          <code>dark</code>. It records that you chose a colour theme by hand, so the
+          site can honour that choice when you come back.
+        </p>
+        <p>
+          If you have never pressed the theme control, <strong>nothing is stored at
+          all</strong> and the site simply follows the light or dark setting your
+          operating system already reports to every website. Choosing
+          &ldquo;Auto&rdquo; again deletes the entry.
+        </p>
 
-    <h3>Why that is not a cookie</h3>
-    <p>
-      The distinction is worth stating rather than hiding behind. A cookie is
-      attached to every request your browser makes to the server, so the server sees
-      it. Local storage is not: it stays on your device and is readable only by this
-      site's own pages, running in your browser. Our server never receives the value
-      and has no way to ask for it.
-    </p>
-    <p>
-      Under the UK's Privacy and Electronic Communications Regulations, storing
-      information on your device requires consent unless it is strictly necessary for
-      a service you requested — and a user-interface preference you set yourself is
-      the textbook example of the exemption. It is stored only once you press the
-      toggle, and never before.
-    </p>
+        <h3>Why that is not a cookie</h3>
+        <p>
+          The distinction is worth stating rather than hiding behind. A cookie is
+          attached to every request your browser makes to the server, so the server sees
+          it. Local storage is not: it stays on your device and is readable only by this
+          site's own pages, running in your browser. Our server never receives the value
+          and has no way to ask for it.
+        </p>
+        <p>
+          Under the UK's Privacy and Electronic Communications Regulations, storing
+          information on your device requires consent unless it is strictly necessary for
+          a service you requested — and a user-interface preference you set yourself is
+          the textbook example of the exemption. It is stored only once you press the
+          control, and never before.
+        </p>
 
-    <h3>How to remove it</h3>
-    <p>
-      Clear site data for this domain in your browser settings, or use a private
-      window. The site works identically without it and simply opens in its default
-      spacing.
-    </p>
+        <h3>How to remove it</h3>
+        <p>
+          Press &ldquo;Auto&rdquo; on the theme control, clear site data for this domain
+          in your browser settings, or use a private window. The site works identically
+          without it and simply follows your system's colour setting.
+        </p>
 
-    <h2>Analytics</h2>
-    <p>
-      We use Cloudflare Web Analytics, which is cookieless and does not fingerprint
-      your browser. It is described in full on the{" "}
-      <a href="/privacy">privacy page</a>.
-    </p>
+        <h2 id="analytics">Analytics</h2>
+        <p>
+          We use Cloudflare Web Analytics, which is cookieless and does not fingerprint
+          your browser. It is described in full on the{" "}
+          <a href="/privacy">privacy page</a>.
+        </p>
 
-    <h2>What would change this page</h2>
-    <ul>
-      <li>Advertising of any kind, including Google AdSense, which sets cookies.</li>
-      <li>Affiliate or referral links, which commonly rely on cookies to attribute a click.</li>
-      <li>Any embedded third-party content — video, maps, social widgets.</li>
-      <li>Any analytics product other than the cookieless one named above.</li>
-    </ul>
-    <p>
-      If any of those arrive, this page and the consent position have to be revised
-      first. That is the point of writing the list down now.
-    </p>
+        <h2 id="would-change">What would change this page</h2>
+        <ul>
+          <li>Advertising of any kind, including Google AdSense, which sets cookies.</li>
+          <li>Affiliate or referral links, which commonly rely on cookies to attribute a click.</li>
+          <li>Any embedded third-party content — video, maps, social widgets.</li>
+          <li>Any analytics product other than the cookieless one named above.</li>
+        </ul>
+        <p>
+          If any of those arrive, this page and the consent position have to be revised
+          first. That is the point of writing the list down now.
+        </p>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <div class="rail-block">
+        <span class="rail-label">As of</span>
+        <p class="rail-note"><span class="stamp">Last reviewed {reviewed}</span></p>
+      </div>
+      <RailIndex items={sections} />
+    </aside>
   </div>
 </BaseLayout>
-
-<style>
-  .title { font-size: var(--fs-display-l); line-height: 1.1; letter-spacing: -0.015em; margin-bottom: var(--sp-2); }
-  .body { margin-top: var(--sp-8); }
-</style>

@@ -8,7 +8,8 @@
 
 html {
   background: var(--ground);
-  color-scheme: light;            /* §5 dos tokens: tema escuro ainda não existe */
+  /* `color-scheme` mora nos blocos de tema de tokens.css, não aqui: ele muda
+     com o tema e precisa sair da mesma fonte que as cores. */
   -webkit-text-size-adjust: 100%;
 }
 
@@ -87,23 +88,26 @@ table,
   max-width: var(--measure-note);
 }
 
-/* Régua pesada de seção: o rótulo mono sobre linha --ink. Vem da maquete. */
+/* Régua pesada de seção: rótulo mono sobre linha --ink, atravessando a largura
+   inteira da página. É o divisor que dá ritmo de jornal, e por isso mora no
+   nível da página e nunca dentro da coluna de leitura. */
 .section-rule {
   font-family: var(--font-mono);
   font-size: var(--fs-label);
   letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink-faint);
+  font-weight: 400;
   border-bottom: 1px solid var(--ink);
   padding-bottom: var(--rule-pad);
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-5);
 }
 
 /* -- Layout --------------------------------------------------------------- */
 .page {
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: var(--sp-11) var(--page-x);
+  padding: var(--sp-11) var(--page-x) var(--sp-18);
 }
 
 .skip-link {
@@ -116,12 +120,144 @@ table,
   padding: var(--sp-2);
 }
 
-/* -- Tabela densa ---------------------------------------------------------
-   A altura de linha e o corpo saem da alavanca de densidade, não de literais. */
+/* ===========================================================================
+   A GRADE EDITORIAL — duas colunas
+   ---------------------------------------------------------------------------
+   O que atravessa a largura inteira (manchete, régua de seção, tabela de dado,
+   rodapé) fica no nível da página. O que se lê fica em `.spread > .body`. A
+   margem — `.spread > .rail` — carrega o que distingue este site: o carimbo de
+   hora, o tamanho de amostra, a nota lateral.
+
+   ⚠️ A largura da margem é FIXA (--rail), então a largura do corpo é a mesma em
+   toda página, com margem cheia ou vazia. É esse o ponto: o defeito que a grade
+   corrige não era "o texto está à esquerda", era o EIXO mudar de página para
+   página — em /about a manchete ocupava 1068px e o corpo 544px, e os dois não
+   partilhavam coluna nenhuma.
+
+   Onde não há o que pôr na margem, ela fica vazia e não desenha nada
+   (`.rail:empty`). Coluna reservada e silenciosa mantém o eixo; caixa vazia com
+   borda seria um buraco, que é o que não pode acontecer.
+   ========================================================================= */
+.spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail);
+  column-gap: var(--gutter);
+  align-items: start;
+}
+
+.spread > .rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  /* Acompanha a rolagem enquanto o corpo passa. Numa página longa é o que
+     impede a margem de ser um bloco no topo e meia tela vazia depois — que é
+     o defeito que a grade veio corrigir, só que deslocado para baixo. */
+  position: sticky;
+  top: var(--sp-5);
+}
+.spread > .rail:empty { display: none; }
+
+/* Dentro da coluna, quem dá a medida de linha é a COLUNA. As larguras máximas
+   dos primitivos existem para quando eles aparecem fora da grade (legenda sob
+   tabela larga, rodapé) e ali continuam valendo. */
+.spread > .body :where(.prose, .lead, .note, .limit-list) { max-width: none; }
+
+/* -- A margem ------------------------------------------------------------- */
+.rail-block {
+  border-top: 1px solid var(--ink);
+  padding-top: var(--rule-pad);
+}
+.rail-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+/* Índice lateral: os títulos de seção da própria página.
+   ⚠️ A checagem 22 do verify.mjs confere item a item que cada entrada aponta
+   para um heading que existe na página servida E que o texto bate. Índice
+   escrito à mão sai de sincronia no primeiro edit; aqui ele não sai calado. */
+.rail-index ol { counter-reset: railitem; }
+.rail-index li {
+  counter-increment: railitem;
+  font-size: var(--fs-caption);
+  line-height: 1.45;
+  padding-left: var(--sp-5);
+  position: relative;
+}
+.rail-index li + li { margin-top: var(--sp-2); }
+.rail-index li::before {
+  content: counter(railitem);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  color: var(--ink-faint);
+}
+.rail-index a { color: var(--ink-muted); text-decoration: none; }
+.rail-index a:hover { color: var(--accent); text-decoration: underline; }
+
+.rail-note {
+  font-size: var(--fs-caption);
+  line-height: 1.55;
+  color: var(--ink-faint);
+}
+
+/* -- Manchete ------------------------------------------------------------- */
+.mast {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: var(--sp-5);
+  margin-bottom: var(--sp-8);
+}
+.mast .kicker { display: block; margin-bottom: var(--sp-4); }
+.mast .title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-display-l);
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  max-width: 26ch;
+  color: var(--ink);
+}
+
+/* Texto que acompanha um bloco de largura inteira mas obedece ao EIXO da grade:
+   exatamente a largura da coluna do corpo.
+
+   É a correção das "legendas desalinhadas": elas estavam capadas em 76ch, uma
+   medida própria que não coincidia com nada mais na página, então cada nota
+   começava no mesmo x e terminava num x diferente do da tabela e do da prosa.
+   Amarradas à coluna, param de inventar medida. */
+.on-axis { max-width: calc(100% - var(--rail) - var(--gutter)); }
+
+/* Legenda ABAIXO de tabela larga: o texto segue o eixo, mas a régua acima dele
+   atravessa. Sem a régua a legenda parecia solta à esquerda de um bloco largo;
+   com ela, fica claro que descreve a tabela inteira. */
+.caption {
+  border-top: 1px solid var(--rule-med);
+  padding-top: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+/* Uma coluna quando a margem não cabe mais. A margem vira bloco ACIMA do corpo:
+   é carimbo e amostra, que é contexto de leitura e não apêndice. */
+@media (max-width: 900px) {
+  .on-axis { max-width: none; }
+  .spread { grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-6); }
+  .spread > .rail { order: -1; position: static; }
+  .spread > .rail:empty { display: none; }
+}
+
+/* -- Tabela densa --------------------------------------------------------- */
 .dense {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--density-fs);
+  font-size: var(--fs-body);
 }
 .dense th {
   font-family: var(--font-mono);
@@ -135,7 +271,7 @@ table,
   padding: 0 var(--sp-4) var(--rule-pad) 0;
 }
 .dense td {
-  padding: var(--density-row-y) var(--sp-4) var(--density-row-y) 0;
+  padding: var(--row-y) var(--sp-4) var(--row-y) 0;
   border-bottom: 1px solid var(--rule);
   vertical-align: baseline;
 }
@@ -174,52 +310,71 @@ table,
   .dense td:empty { display: none; }
 }
 
-/* -- Prosa do artigo ------------------------------------------------------ */
-.prose { max-width: var(--measure); }
+/* -- Prosa ----------------------------------------------------------------
+   Serifa, corpo 18px, entrelinha larga. É aqui que o registro editorial mora:
+   o mesmo texto em sans 16.5px lia como painel de produto. */
+.prose {
+  max-width: var(--measure);
+  font-family: var(--font-text);
+  font-size: var(--fs-text);
+  line-height: 1.62;
+  color: var(--ink);
+}
 .prose > * + * { margin-top: var(--sp-5); }
-.prose p { font-size: var(--fs-lead); line-height: 1.65; color: var(--ink-muted); }
+.prose p { color: var(--ink-muted); }
 .prose strong { color: var(--ink); font-weight: 600; }
+.prose em { font-style: italic; }
+
+/* A abertura, um corpo acima e em --ink: dá a entrada de coluna de jornal. */
+.prose > p:first-child {
+  font-size: var(--fs-text-lead);
+  line-height: 1.5;
+  color: var(--ink);
+}
 
 .prose h2 {
   font-family: var(--font-display);
-  font-weight: 400;
-  font-size: var(--fs-numeral);
-  line-height: 1.2;
+  font-weight: 500;
+  font-size: var(--fs-display-m);
+  line-height: 1.18;
   letter-spacing: -0.01em;
   color: var(--ink);
-  margin-top: var(--sp-11);
+  margin-top: var(--sp-14);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--rule-med);
 }
 
 .prose h3 {
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: var(--fs-lead);
+  font-size: var(--fs-body);
+  letter-spacing: .02em;
+  text-transform: uppercase;
   color: var(--ink);
   margin-top: var(--sp-8);
 }
 
 .prose ul { margin-left: 0; }
 .prose li {
-  font-size: var(--fs-lead);
-  line-height: 1.65;
   color: var(--ink-muted);
   padding-left: var(--sp-5);
   position: relative;
 }
-.prose li + li { margin-top: var(--sp-2); }
+.prose li + li { margin-top: var(--sp-3); }
 .prose li::before {
   content: "";
   position: absolute;
   left: var(--sp-2);
-  top: .7em;
+  top: .72em;
   width: var(--tick);
   height: 1px;
   background: var(--ink-faint);
 }
 
 /* A prosa pode conter tabela; ela usa os mesmos primitivos e rola dentro de si,
-   nunca empurrando a página. */
+   nunca empurrando a página. Em sans, porque é dado e não texto corrido. */
 .prose .table-scroll { overflow-x: auto; }
+.prose table { font-family: var(--font-body); }
 
 /* Selo de concordância numa tabela de comparação. --accent significa "difere do
    padrão para cima"; aqui o sentido é "bate", que é o mesmo eixo: melhor do que
@@ -233,9 +388,10 @@ table,
 }
 
 .prose blockquote {
-  border-left: 1px solid var(--rule-med);
+  border-left: 2px solid var(--rule-med);
   padding-left: var(--sp-5);
   color: var(--ink-faint);
+  font-style: italic;
 }
 
 .prose code {

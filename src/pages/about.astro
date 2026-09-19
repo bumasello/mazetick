@@ -1,89 +1,114 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import RailIndex from '../components/RailIndex.astro';
+
+// Índice da margem. Os títulos abaixo têm de bater LITERALMENTE com os <h2> do
+// corpo — a checagem 22 do verify.mjs recusa o build se divergirem.
+const sections = [
+  { id: 'why', title: 'Why that, and not a card' },
+  { id: 'will-not', title: 'What we will not do' },
+  { id: 'how', title: 'How the numbers are made' },
+  { id: 'sources', title: 'Where the data comes from' },
+  { id: 'contact', title: 'Contact' },
+];
 ---
 <BaseLayout
   title="About — mazetick"
   description="mazetick publishes time-stamped market data for UK and Irish racing, and the measurements behind it. No tips, no promised returns."
 >
-  <h1 class="display title">About</h1>
+  <header class="mast">
+    <p class="mono kicker">The site</p>
+    <h1 class="display title">About</h1>
+  </header>
 
-  <div class="prose body">
-    <p>
-      mazetick is a data site for UK and Irish horse racing. The product is not a
-      prediction and not a selection. It is the <strong>market layer, stamped with
-      the time it was true</strong> — a record of what could be known at each hour of
-      the day.
-    </p>
+  <div class="spread">
+    <div class="body">
+      <div class="prose">
+        <p>
+          mazetick is a data site for UK and Irish horse racing. The product is not a
+          prediction and not a selection. It is the <strong>market layer, stamped with
+          the time it was true</strong> — a record of what could be known at each hour of
+          the day.
+        </p>
 
-    <h2>Why that, and not a card</h2>
-    <p>
-      Racing Post, Sporting Life and At The Races already publish the racecard, the
-      form and the prices, free, and better than we would. Reproducing them would add
-      nothing.
-    </p>
-    <p>
-      What none of them publishes is <em>how any of it moved through the day</em>.
-      Which each-way terms a bookmaker was advertising at 10:00, and again at 14:00.
-      How wide the book was when you looked. Whether the going changed after the
-      04:00 declaration. Those facts exist only if somebody is recording them
-      continuously, and once the day is over they cannot be recovered. So we record
-      them, every hour, and keep them.
-    </p>
+        <h2 id="why">Why that, and not a card</h2>
+        <p>
+          Racing Post, Sporting Life and At The Races already publish the racecard, the
+          form and the prices, free, and better than we would. Reproducing them would add
+          nothing.
+        </p>
+        <p>
+          What none of them publishes is <em>how any of it moved through the day</em>.
+          Which each-way terms a bookmaker was advertising at 10:00, and again at 14:00.
+          How wide the book was when you looked. Whether the going changed after the
+          04:00 declaration. Those facts exist only if somebody is recording them
+          continuously, and once the day is over they cannot be recovered. So we record
+          them, every hour, and keep them.
+        </p>
 
-    <h2>What we will not do</h2>
-    <p>
-      <strong>We do not sell selections and we do not promise a return.</strong> That
-      is not modesty. It is the result of two years of trying to beat these markets
-      with machine learning and with classic handicapping rules, and measuring
-      honestly enough to find that neither worked. The market price already contains
-      what we knew, and more.
-    </p>
-    <p>
-      Those failures are published here rather than buried, in{" "}
-      <a href="/research">Research</a>, with their sample sizes. A site that tells you
-      a bet winning 78.8% of the time still loses money is a site that has no reason
-      to flatter the next number it shows you.
-    </p>
+        <h2 id="will-not">What we will not do</h2>
+        <p>
+          <strong>We do not sell selections and we do not promise a return.</strong> That
+          is not modesty. It is the result of two years of trying to beat these markets
+          with machine learning and with classic handicapping rules, and measuring
+          honestly enough to find that neither worked. The market price already contains
+          what we knew, and more.
+        </p>
+        <p>
+          Those failures are published here rather than buried, in{" "}
+          <a href="/research">Research</a>, with their sample sizes. A site that tells you
+          a bet winning 78.8% of the time still loses money is a site that has no reason
+          to flatter the next number it shows you.
+        </p>
 
-    <h2>How the numbers are made</h2>
-    <ul>
-      <li>
-        <strong>Every figure carries its timestamp.</strong> A table without an "as
-        of" is somebody else's product, not ours.
-      </li>
-      <li>
-        <strong>No look-ahead.</strong> A statistic about a race uses only information
-        that existed before it was run. This sounds obvious and is the single most
-        common way racing statistics are overstated — including, at times, our own.
-      </li>
-      <li>
-        <strong>Sample and window on the page.</strong> If a rate is computed from
-        twelve runs, it says twelve.
-      </li>
-      <li>
-        <strong>Negative results get published.</strong> They are the most defensible
-        thing we own.
-      </li>
-    </ul>
+        <h2 id="how">How the numbers are made</h2>
+        <ul>
+          <li>
+            <strong>Every figure carries its timestamp.</strong> A table without an "as
+            of" is somebody else's product, not ours.
+          </li>
+          <li>
+            <strong>No look-ahead.</strong> A statistic about a race uses only information
+            that existed before it was run. This sounds obvious and is the single most
+            common way racing statistics are overstated — including, at times, our own.
+          </li>
+          <li>
+            <strong>Sample and window on the page.</strong> If a rate is computed from
+            twelve runs, it says twelve.
+          </li>
+          <li>
+            <strong>Negative results get published.</strong> They are the most defensible
+            thing we own.
+          </li>
+        </ul>
 
-    <h2>Where the data comes from</h2>
-    <p>
-      Bookmaker each-way terms are read from the bookmaker's own public pages, hourly.
-      Exchange prices and book depth come from the Smarkets public API. Race records
-      and results come from a licensed racing data feed. Derived statistics — strike
-      rates by going, by course, by distance — are our own calculations over those
-      records, and are described where they appear.
-    </p>
+        <h2 id="sources">Where the data comes from</h2>
+        <p>
+          Bookmaker each-way terms are read from the bookmaker's own public pages, hourly.
+          Exchange prices and book depth come from the Smarkets public API. Race records
+          and results come from a licensed racing data feed. Derived statistics — strike
+          rates by going, by course, by distance — are our own calculations over those
+          records, and are described where they appear.
+        </p>
 
-    <h2>Contact</h2>
-    <p>
-      Corrections are welcome, particularly to the measurements.{" "}
-      <a href="/contact">Get in touch</a>.
-    </p>
+        <h2 id="contact">Contact</h2>
+        <p>
+          Corrections are welcome, particularly to the measurements.{" "}
+          <a href="/contact">Get in touch</a>.
+        </p>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <RailIndex items={sections} />
+      <div class="rail-block">
+        <span class="rail-label">The standing rule</span>
+        <p class="rail-note">
+          Every figure on this site carries the moment it was true, and the sample it
+          was measured over. Where we have no data, the page says so rather than
+          filling the space.
+        </p>
+      </div>
+    </aside>
   </div>
 </BaseLayout>
-
-<style>
-  .title { font-size: var(--fs-display-l); line-height: 1.1; letter-spacing: -0.015em; }
-  .body { margin-top: var(--sp-8); }
-</style>

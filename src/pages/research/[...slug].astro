@@ -8,8 +8,11 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+// `headings` vem do próprio markdown, com os ids que o Astro gera. O índice da
+// margem é derivado daí em vez de escrito à mão — é a única forma de ele não
+// mentir depois que alguém renomear uma seção.
+const { Content, headings } = await render(entry);
 ---
-<ArticleLayout entry={entry}>
+<ArticleLayout entry={entry} headings={headings}>
   <Content />
 </ArticleLayout>
