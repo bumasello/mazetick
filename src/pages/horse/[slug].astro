@@ -29,17 +29,54 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RailIndex from '../../components/RailIndex.astro';
 import HorseStatTable from '../../components/HorseStatTable.astro';
-import { loadRecords, horseMeta, statusSentence, statusLabel, plural, type HorseRecord } from '../../lib/horses';
+import DataAge from '../../components/DataAge.astro';
+import {
+  loadRecords, loadCard, horseMeta, statusSentence, statusLabel, plural, bandLabel,
+  type HorseRecord, type DistanceBand,
+} from '../../lib/horses';
 import { archiveLine, ukDate } from '../../lib/horse-copy.mjs';
 import { raceTime, raceZone } from '../../lib/time';
 import { canonicalUrl } from '../../lib/canonical';
 
 export function getStaticPaths() {
-  return loadRecords().map((h) => ({ params: { slug: h.slug }, props: { h } }));
+  // O cartão é lido UMA vez e viaja nas props. Lido dentro da página, seriam
+  // 863 aberturas do mesmo arquivo — uma por página, e crescendo todo dia.
+  const card = loadCard();
+  const stamp = {
+    collectedThrough: card.collected_through,
+    generatedAt: card.generated_at,
+    cardDate: card.horses[0]?.as_of ?? null,
+    bands: card.distance_bands ?? [],
+  };
+  return loadRecords().map((h) => ({ params: { slug: h.slug }, props: { h, stamp } }));
 }
 
-interface Props { h: HorseRecord }
-const { h } = Astro.props;
+interface Props {
+  h: HorseRecord;
+  stamp: {
+    collectedThrough: string | null;
+    generatedAt: string;
+    cardDate: string | null;
+    bands: DistanceBand[];
+  };
+}
+const { h, stamp } = Astro.props;
+
+/**
+ * ⚠️ O CARIMBO DE COLETA É DO CARTÃO, NÃO DO REGISTRO — e os dois divergem.
+ *
+ * O acervo é acumulado: hoje 187 dos 863 registros estão no cartão lido agora,
+ * e os outros 676 são de cartões anteriores. Estampar a hora da coleta de hoje
+ * na página de um cavalo que não foi declarado hoje é a mesma confusão que o
+ * `collected_through` existe para desfazer, só que ao contrário: frescor de uma
+ * coleta que não olhou para este registro.
+ *
+ * Então a página diz qual dos dois casos é. E o caso "não declarado" só é
+ * afirmável PORQUE houve coleta: sem `collected_through` não dá para distinguir
+ * "não foi declarado" de "não olhamos", e a página não afirma nem um nem outro.
+ */
+const onLatestCard = stamp.cardDate !== null && h.as_of === stamp.cardDate;
+const collectionKnown = Boolean(stamp.collectedThrough && !Number.isNaN(Date.parse(stamp.collectedThrough)));
 
 const meta = horseMeta(h);
 const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
@@ -138,7 +175,20 @@ const jsonLd = {
         </div>
         <div>
           <dt>Distance band</dt>
-          <dd>{decl.distance}</dd>
+          {/*
+            A chave vai dentro do seu próprio elemento, e não solta antes do
+            <span>. Solta, o HTML servido fica "mile<span…>7f to 1m1f", e a
+            checagem 2 reclama com razão: ela não sabe que o `.band` é
+            `display: block`, e no dia em que o CSS mudar a tela diria
+            "mile7f to 1m1f". Com os dois elementos irmãos, o pior caso é um
+            espaço a mais.
+          */}
+          <dd>
+            <span class="key">{decl.distance}</span>
+            {bandLabel(stamp.bands, decl.distance) && (
+              <span class="band">{bandLabel(stamp.bands, decl.distance)}</span>
+            )}
+          </dd>
         </div>
         <div>
           <dt>Trainer</dt>
@@ -168,6 +218,17 @@ const jsonLd = {
           </div>
           <div><dt>State</dt><dd>{statusLabel(h.status)}</dd></div>
         </dl>
+      </div>
+      <div class="rail-block">
+        <span class="rail-label">Collection</span>
+        <p class="rail-note">
+          {!collectionKnown
+            ? 'This file carries no collection timestamp, so we cannot say when the card was last read, nor whether this horse has been declared since.'
+            : onLatestCard
+              ? 'This horse was declared on the card we last read.'
+              : 'This horse was not on the card we last read. The figures above are carried forward from the day it was, and nothing about it has changed since.'}
+        </p>
+        <DataAge collectedThrough={stamp.collectedThrough} generatedAt={stamp.generatedAt} />
       </div>
       <div class="rail-block">
         <span class="rail-label">No look-ahead</span>
@@ -223,13 +284,21 @@ const jsonLd = {
 
           {h.by_going.length > 0 && <HorseStatTable firstCol="Going" rows={h.by_going.map((g) => ({ label: g.key, group: g }))} />}
           {h.by_course.length > 0 && <HorseStatTable firstCol="Course" rows={h.by_course.map((g) => ({ label: g.key, group: g }))} />}
-          {h.by_distance.length > 0 && <HorseStatTable firstCol="Distance band" rows={h.by_distance.map((g) => ({ label: g.key, group: g }))} />}
+          {h.by_distance.length > 0 && (
+            <HorseStatTable
+              firstCol="Distance band"
+              subPlain
+              rows={h.by_distance.map((g) => ({ label: g.key, sub: bandLabel(stamp.bands, g.key), group: g }))}
+            />
+          )}
 
           <p class="note caption on-axis">
             A going, course or distance band appears only where we hold at least two
             runs of it. A single run is not a strike rate, and rounding one run to
             &ldquo;100%&rdquo; would be noise wearing the clothes of a finding. Going
-            and distance are grouped into bands by us; the course is as the record
+            and distance are grouped into bands by us, and{' '}
+            <strong>each band carries the range it covers</strong>, because a rate over
+            &ldquo;staying&rdquo; is unreadable without it; the course is as the record
             names it.
           </p>
         </>
@@ -324,6 +393,17 @@ const jsonLd = {
     color: var(--ink);
   }
   .ident .faint { color: var(--ink-faint); }
+  /* O intervalo da faixa, colado à chave: "staying" sozinho não é conferível. */
+  .ident .band {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    color: var(--ink-faint);
+    margin-top: var(--sp-1);
+  }
+  /* Na margem o carimbo empilha: 300px não comportam a linha do .age em fila. */
+  .rail-block :global(.age) { flex-direction: column; gap: var(--sp-1); margin-top: var(--sp-2); }
 
   .stamp-list dt {
     font-family: var(--font-mono);

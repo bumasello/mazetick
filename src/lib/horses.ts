@@ -74,11 +74,36 @@ export interface IndexEntry {
  * o tipo literal do arquivo inteiro (hoje 678 objetos, amanhã mais) e o
  * `astro check` passa a gastar o tempo dele analisando dado em vez de código.
  */
+/**
+ * Uma faixa de distância, COM a fronteira publicada.
+ *
+ * Até 2026-09-20 o contrato só trazia a chave (`staying`) e nenhuma definição,
+ * e a página se recusou a inventar o intervalo de furlongs — um leitor não tem
+ * como conferir "27% em staying" sem saber o que é staying. A origem passou a
+ * emitir as fronteiras a partir da MESMA lista que classifica, então o rótulo
+ * publicado não pode divergir do que separa.
+ *
+ * `to_furlongs` é `null` na última faixa (aberta em cima). O que vai para a tela
+ * é o `label`, que também vem da origem: recompor "up to 6f" a partir de
+ * `0 → 7` seria a página derivando texto que nenhum script emite.
+ */
+export interface DistanceBand {
+  key: string;
+  from_furlongs: number;
+  to_furlongs: number | null;
+  label: string;
+}
+
 export interface Card {
   schema: string;
   generated_at: string;
+  /** Instante em que o CARTÃO foi lido da API. Relógio diferente de
+   *  `generated_at`, e é dele que sai a idade na tela — a mesma regra das
+   *  outras duas páginas de dado. */
+  collected_through: string | null;
   note: string;
   history_depth: { from: string; through: string; horses: number };
+  distance_bands: DistanceBand[];
   debutants: number;
   no_record: number;
   /** Cavalos do cartão que dividem nome com outro no arquivo, e as corridas que
@@ -183,6 +208,17 @@ export function horseMeta(h: HorseRecord): { title: string; description: string 
     description: bits.join(' '),
   };
 }
+
+/**
+ * O rótulo legível de uma faixa de distância, ou `undefined`.
+ *
+ * ⚠️ Devolve `undefined` de propósito quando a faixa não está publicada, em vez
+ * de cair para a própria chave. Faixa sem definição na tela é um número que o
+ * leitor não tem como conferir, e é a checagem 29 que recusa o build — a página
+ * não disfarça a lacuna com o nome dela.
+ */
+export const bandLabel = (bands: DistanceBand[], key: string): string | undefined =>
+  bands.find((b) => b.key === key)?.label;
 
 /** O rótulo curto do estado, o mesmo do índice e da margem. */
 export const statusLabel = (s: Status): string => STATUS_COPY[s].label;

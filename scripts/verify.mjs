@@ -1168,6 +1168,90 @@ const horseIndexPage = pages.find((f) => rel(f) === 'horse.html');
   if (detail) console.log(detail);
 }
 
+// 29. Nenhuma faixa de distância aparece sem a fronteira que a define.
+//
+//     "27% em staying" é ilegível sem saber o que é staying, e até 2026-09-20 o
+//     contrato não publicava as fronteiras — a página se recusava a inventá-las,
+//     o que estava certo e deixava o número inconferível. Agora a origem as
+//     emite a partir da MESMA lista que classifica, e esta checagem garante que
+//     a definição chegue à TELA, não só ao JSON.
+//
+//     Duas metades, porque uma sozinha não prende:
+//     (a) toda linha da tabela de faixa carrega a sua definição na página;
+//     (b) toda chave usada nos registros existe em `distance_bands`. Sem (b),
+//         o produtor acrescentar uma quinta faixa passaria despercebido até
+//         alguém reparar num rótulo faltando.
+{
+  const problems = [];
+  const cardFile = 'src/data/horses.json';
+  const bands = fs.existsSync(cardFile) ? JSON.parse(read(cardFile)).distance_bands : null;
+
+  if (!Array.isArray(bands) || !bands.length) {
+    problems.push(`${cardFile}: sem distance_bands — as faixas na tela ficariam sem definição`);
+  } else {
+    const known = new Set(bands.map((b) => b.key));
+    for (const b of bands) {
+      if (!b.label) problems.push(`distance_bands: a faixa "${b.key}" não tem label publicável`);
+    }
+    for (const h of horseRecords) {
+      for (const g of h.by_distance || []) {
+        if (!known.has(g.key)) problems.push(`${h.slug}: faixa "${g.key}" não está em distance_bands`);
+      }
+      const d = h.last_declared?.distance;
+      if (d && !known.has(d)) problems.push(`${h.slug}: faixa declarada "${d}" não está em distance_bands`);
+    }
+  }
+
+  // (a) no artefato: na tabela cujo cabeçalho é "Distance band", toda linha do
+  //     corpo traz a definição junto do nome da faixa.
+  const cellText = (x) => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  for (const f of horsePages) {
+    for (const t of read(f).matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const table = t[1];
+      const first = table.match(/<th\b[^>]*>([\s\S]*?)<\/th>/i);
+      if (!first || cellText(first[1]) !== 'Distance band') continue;
+      for (const r of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+        const cell = r[1].match(/<td\b[^>]*data-label="Distance band"[^>]*>([\s\S]*?)<\/td>/i);
+        if (!cell) continue;
+        // Casa o TOKEN da classe, não a string inteira do atributo: a faixa
+        // usa `class="sub plain"` (notação em minúscula), e um teste por
+        // igualdade literal acusaria as 863 páginas por uma classe a mais.
+        if (!/class="[^"]*\bsub\b[^"]*"/.test(cell[1])) {
+          problems.push(`${rel(f)}: faixa "${cellText(cell[1])}" sem a definição ao lado`);
+        }
+      }
+    }
+  }
+
+  check('Toda faixa de distância publicada com a fronteira que a define', [...new Set(problems)]);
+}
+
+// 30. O carimbo da COLETA chega à tela, e não só ao JSON.
+//
+//     A checagem 17 exige o campo no arquivo; esta exige que ele vire idade na
+//     página. São perguntas diferentes, e a distância entre as duas é o buraco
+//     por onde a regra 4 cai calada: um `collected_through` perfeito no JSON e
+//     uma página que mostra `generated_at` faz "a coleta quebrou" se disfarçar
+//     de "não há corrida hoje".
+//
+//     O marcador é o `data-collected` que o componente DataAge emite quando
+//     conhece o instante, ou `data-state="unknown"` quando não conhece — o
+//     segundo é resposta legítima e tem de ser declarada, nunca omitida.
+{
+  const problems = [];
+  const CARIMBADAS = (f) => {
+    const r = rel(f);
+    return r === 'horse.html' || r === 'movers.html' || r === 'extra-places.html' || /^horse[/\\]/.test(r);
+  };
+  for (const f of pages.filter(CARIMBADAS)) {
+    const html = read(f);
+    if (!/class="age"[^>]*data-collected="/.test(html) && !/class="age"[^>]*data-state="unknown"/.test(html)) {
+      problems.push(`${rel(f)}: publica figuras de um arquivo de dado e não mostra o carimbo da coleta`);
+    }
+  }
+  check('A idade da COLETA aparece em toda página de dado', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

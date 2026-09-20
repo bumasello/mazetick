@@ -19,6 +19,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
+import DataAge from '../components/DataAge.astro';
 import { loadRecords, loadCard, rate, statusLabel, plural, verb } from '../lib/horses';
 import { ukDate } from '../lib/horse-copy.mjs';
 
@@ -47,14 +48,30 @@ const archiveThrough = card.history_depth.through;
 // Quem for um desses lê uma carreira curta que não é curta — e o único lugar
 // onde temos o número é aqui, porque o arquivo não diz QUAIS cavalos são.
 const collisions = card.name_collisions;
-const generated = card.generated_at.replace('T', ' ').replace('Z', ' UTC');
+
+/**
+ * ⚠️ DOIS RELÓGIOS, e confundi-los apaga os três estados vazios.
+ *
+ *   collected_through — quando o CARTÃO foi lido da API
+ *   generated_at      — quando NÓS derivamos o arquivo
+ *
+ * Hoje há duas horas entre um e outro. Se a leitura parar, `generated_at`
+ * continua fresco a cada rodada e o dado não — mostrar a derivação como idade
+ * faria "a coleta quebrou" se disfarçar de "não há corrida hoje". A idade sai do
+ * primeiro, como na /movers e na /extra-places. Até 2026-09-20 o contrato não
+ * trazia o campo e esta página não tinha como fazer a distinção.
+ */
+const cardRead = card.collected_through;
+const cardEmpty = card.horses.length === 0;
 
 const headline =
   records.length === 0
     ? 'No horse records collected yet'
-    : earlier.length === 0
-      ? `${plural(records.length, 'horse')}, every one declared on the ${ukDate(newest)} card`
-      : `${plural(records.length, 'horse')} in the archive, ${onCard.length.toLocaleString('en-GB')} of them declared on the ${ukDate(newest)} card`;
+    : cardEmpty
+      ? `${plural(records.length, 'horse')} in the archive, and no declarations on the last card we read`
+      : earlier.length === 0
+        ? `${plural(records.length, 'horse')}, every one declared on the ${ukDate(newest)} card`
+        : `${plural(records.length, 'horse')} in the archive, ${onCard.length.toLocaleString('en-GB')} of them declared on the ${ukDate(newest)} card`;
 
 /** O que a linha diz na coluna de amostra, e é onde os três estados divergem. */
 const runsCell = (h: (typeof records)[number]) =>
@@ -81,8 +98,15 @@ const runsCell = (h: (typeof records)[number]) =>
         A record is true as of its last-declared date and is never deleted. A horse
         that stops running becomes dated, not wrong. Our archive of results runs to{' '}
         {ukDate(archiveThrough)}; a run after that date is missing from these figures.
-        Derived {generated}.
       </p>
+      <DataAge collectedThrough={cardRead} generatedAt={card.generated_at} />
+      {cardEmpty && records.length > 0 && (
+        <p class="note">
+          {cardRead
+            ? 'We read the card at the time above and it carried no UK or Irish declarations. That is a statement about the racing, not about our collection: the timestamp says we looked.'
+            : 'This file carries no collection timestamp and no declarations, so we cannot tell you which of the two it is — no racing, or no reading. We will not guess.'}
+        </p>
+      )}
       {collisions && collisions.runs_removed > 0 && (
         <p class="note">
           One gap we can measure and cannot close:{' '}
@@ -91,8 +115,11 @@ const runsCell = (h: (typeof records)[number]) =>
           with another horse in the archive, and{' '}
           <strong>{plural(collisions.runs_removed, 'run')}</strong>{' '}
           {verb(collisions.runs_removed, 'was', 'were')} dropped rather
-          than credited to the wrong one. Those careers read short here, and the file
-          does not say which horses they are, so we cannot flag them individually.
+          than credited to the wrong one.{' '}
+          {verb(collisions.horses, 'That career reads', 'Those careers read')} short here,
+          and the file does not say which{' '}
+          {verb(collisions.horses, 'horse it is', 'horses they are')}, so we cannot flag{' '}
+          {verb(collisions.horses, 'it', 'them')} individually.
         </p>
       )}
     </div>
@@ -112,10 +139,11 @@ const runsCell = (h: (typeof records)[number]) =>
       <h2 class="section-rule">Nothing to show</h2>
       <div class="empty">
         <p class="lead">
-          No horse record has reached us. This is a statement about our collection,
-          not about the racing: there may well have been a card. The archive file was
-          derived {generated} and carried no horses.
+          No horse record has reached us at all &mdash; not the latest card, and nothing
+          carried forward from an earlier one. The archive of records is empty, which is
+          a statement about our collection and not about the racing.
         </p>
+        <DataAge collectedThrough={cardRead} generatedAt={card.generated_at} />
       </div>
     </section>
   ) : (

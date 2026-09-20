@@ -52,10 +52,20 @@ export const DATA_CONTRACT = [
     nullable: ['collected_through'],
   },
   {
+    // Três carimbos, e os três medem coisas diferentes:
+    //   collected_through     — quando o CARTÃO foi lido da API
+    //   generated_at          — quando NÓS derivamos o arquivo
+    //   history_depth.through — até onde o arquivo histórico vai
+    //
+    // ⚠️ `collected_through` entrou em 2026-09-20. Ele é NULLABLE (o produtor
+    // pode dizer "não houve leitura"), mas a CHAVE é obrigatória: sem ela a
+    // página não tem como distinguir "não há corrida hoje" de "a coleta
+    // quebrou", e a regra 4 cai em silêncio — que é exatamente o que este
+    // contrato existe para impedir nas outras duas páginas.
     name: 'horses (cartão do dia)',
     match: (p) => p === 'src/data/horses.json',
-    stamps: ['generated_at', 'history_depth.through'],
-    nullable: [],
+    stamps: ['generated_at', 'collected_through', 'history_depth.through'],
+    nullable: ['collected_through'],
   },
   {
     name: 'horses (índice do acervo)',

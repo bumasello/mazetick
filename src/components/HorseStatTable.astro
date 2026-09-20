@@ -20,8 +20,17 @@ interface Props {
   firstCol: string;
   /** Cada linha traz um rótulo próprio; `sub` é o nome de quem produziu o número. */
   rows: { label: string; sub?: string; group: Group | { runs: number; wins: number; places: number; win_pct: number | null; place_pct: number | null } }[];
+  /**
+   * `sub` sem caixa alta.
+   *
+   * O estilo mono do `sub` é caixa alta porque ele costuma carregar rótulo
+   * ("ALL PROGENY IN OUR ARCHIVE"). Nas faixas de distância ele carrega uma
+   * NOTAÇÃO, e ali a caixa significa: `1m2f` é uma milha e dois furlongs,
+   * `1M2F` não é nada. A origem emite em minúscula e a tela tem de respeitar.
+   */
+  subPlain?: boolean;
 }
-const { firstCol, rows } = Astro.props;
+const { firstCol, rows, subPlain = false } = Astro.props;
 ---
 <table class="dense horse-stats">
   <thead>
@@ -38,7 +47,7 @@ const { firstCol, rows } = Astro.props;
     {rows.map((r) => (
       <tr>
         <td data-label={firstCol}>
-          <strong>{r.label}</strong>{r.sub && <span class="sub">{r.sub}</span>}
+          <strong>{r.label}</strong>{r.sub && <span class:list={['sub', { plain: subPlain }]}>{r.sub}</span>}
         </td>
         <td data-label="Runs" class="num">{r.group.runs}</td>
         <td data-label="Wins" class="num">{r.group.wins}</td>
@@ -63,4 +72,5 @@ const { firstCol, rows } = Astro.props;
     color: var(--ink-faint);
     margin-top: var(--sp-1);
   }
+  .sub.plain { text-transform: none; letter-spacing: 0; }
 </style>
