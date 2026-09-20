@@ -30,7 +30,7 @@ Two things, if you build anything that publishes numbers:
   date *required* fields. An article whose sample is not declared does not
   compile.
 - **`scripts/verify.mjs`** runs inside `npm run build` and fails the build.
-  Twenty-eight checks, governed by two rules learned the hard way — see
+  Thirty checks, governed by two rules learned the hard way — see
   [Verificação](#verificação).
 
 ---
@@ -254,7 +254,9 @@ quebrar. Vinte e três checagens:
 | cada estado com a sua palavra, e sem a do outro | `debut` afirma algo SOBRE O CAVALO, `no_record` confessa algo SOBRE NÓS. Trocar as duas foi o defeito que segurou a `/horse`, e errava por ~4× |
 | toda página de cavalo declara até quando o arquivo vai | "career: 83 runs" sem dizer até quando mente por omissão |
 | nenhuma taxa publicada sem a amostra na mesma linha | "23.5% on good" sem o `runs = 17` é o número que alguém usaria para apostar |
-| título e descrição por cavalo distintos de verdade | 678 páginas novas de uma vez; gabarito com o nome trocado é como se erra isso |
+| título e descrição por cavalo distintos de verdade | páginas de cavalo aos milhares de uma vez; gabarito com o nome trocado é como se erra isso |
+| toda faixa de distância publicada com a fronteira que a define | "27% em staying" é ilegível sem saber o que é staying; e a chave tem de existir em `distance_bands`, senão uma faixa nova aparece sem definição |
+| a idade da COLETA aparece em toda página de dado | a 17 exige o campo no arquivo; a distância entre as duas é por onde a regra 4 cai calada |
 
 Duas regras governam este arquivo:
 
