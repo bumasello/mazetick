@@ -19,7 +19,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
-import { loadRecords, loadCard, rate, statusLabel, plural } from '../lib/horses';
+import { loadRecords, loadCard, rate, statusLabel, plural, verb } from '../lib/horses';
 import { ukDate } from '../lib/horse-copy.mjs';
 
 const records = loadRecords();
@@ -86,9 +86,11 @@ const runsCell = (h: (typeof records)[number]) =>
       {collisions && collisions.runs_removed > 0 && (
         <p class="note">
           One gap we can measure and cannot close:{' '}
-          <strong>{plural(collisions.horses, 'horse')}</strong> on this card share a name
+          <strong>{plural(collisions.horses, 'horse')}</strong> on this card{' '}
+          {verb(collisions.horses, 'shares', 'share')} a name
           with another horse in the archive, and{' '}
-          <strong>{plural(collisions.runs_removed, 'run')}</strong> were dropped rather
+          <strong>{plural(collisions.runs_removed, 'run')}</strong>{' '}
+          {verb(collisions.runs_removed, 'was', 'were')} dropped rather
           than credited to the wrong one. Those careers read short here, and the file
           does not say which horses they are, so we cannot flag them individually.
         </p>

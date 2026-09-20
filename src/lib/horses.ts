@@ -122,6 +122,15 @@ export function loadRecords(): HorseRecord[] {
 export const plural = (n: number, word: string): string =>
   `${n.toLocaleString('en-GB')} ${word}${n === 1 ? '' : 's'}`;
 
+/**
+ * O VERBO que concorda com esse número. O `plural` acima cobria só o
+ * substantivo, e a frase saía "1 horse … share a name" — a mesma classe que
+ * ele foi criado para matar, sobrevivendo meia frase adiante. Quem escreve
+ * `plural(n, 'horse')` precisa de `verb(n, 'shares', 'share')` na mesma linha.
+ */
+export const verb = (n: number, singular: string, plural_: string): string =>
+  (n === 1 ? singular : plural_);
+
 /** "18.6" → "18.6%"; `null` → travessão, nunca "0%". */
 export const rate = (v: number | null): string => (v === null ? '—' : `${v.toFixed(1)}%`);
 
