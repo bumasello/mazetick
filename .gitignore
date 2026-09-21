@@ -4,3 +4,4 @@ dist/
 .env*
 .DS_Store
 src/data/*.json
+src/data/horses/

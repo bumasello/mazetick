@@ -1,0 +1,101 @@
+---
+/**
+ * A tabela de entradas do acervo. Uma só implementação, usada pela porta
+ * (`/horse`, o cartão do dia) e por cada página de letra.
+ *
+ * ⚠️ AS LINHAS SAEM TODAS NO HTML SERVIDO, sempre. O corte inicial é do cliente
+ * — é o HTML que o Google indexa e é ele que o leitor sem JavaScript recebe.
+ * A checagem 24 confere que a UNIÃO das páginas de letra serve uma linha por
+ * registro do acervo, exatamente uma vez.
+ *
+ * Os três estados divergem aqui, e é de propósito:
+ *   has_history → números
+ *   debut       → 0 corridas e 0 vitórias. É AFIRMAÇÃO: não há corrida
+ *                 registrada, logo não há vitória.
+ *   no_record   → travessão nos três. É CONFISSÃO: não sabemos quantas foram.
+ *                 Pôr zero ali transformaria a nossa lacuna em fato sobre o
+ *                 cavalo, que é o defeito que esta página existe para não ter.
+ */
+import { rate, statusLabel, type HorseRecord } from '../lib/horses';
+import { ukDate } from '../lib/horse-copy.mjs';
+
+interface Props {
+  rows: HorseRecord[];
+  /** Identifica a tabela para o filtro do cliente e para a contagem na tela. */
+  id: string;
+}
+const { rows, id } = Astro.props;
+---
+<table class="dense" data-hz-table={id}>
+  <thead>
+    <tr>
+      <th scope="col">Horse</th>
+      <th scope="col">Last declared</th>
+      <th scope="col" class="num">Runs</th>
+      <th scope="col" class="num">Wins</th>
+      <th scope="col" class="num">Win rate</th>
+      <th scope="col">What we hold</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((h) => (
+      <tr
+        data-hz-row
+        data-slug={h.slug}
+        data-name={h.name}
+        data-course={h.last_declared.venue}
+        data-when={h.last_declared.date}
+        data-state={h.status}
+      >
+        <td data-label="Horse"><a href={`/horse/${h.slug}`}>{h.name}</a></td>
+        <td data-label="Last declared" class="n">
+          {ukDate(h.last_declared.date)} <span class="muted">{h.last_declared.venue}</span>
+        </td>
+        <td data-label="Runs" class="num">{h.status === 'no_record' ? '—' : h.career.runs}</td>
+        <td data-label="Wins" class="num">{h.status === 'no_record' ? '—' : h.career.wins}</td>
+        <td data-label="Win rate" class="num">{rate(h.career.win_pct)}</td>
+        <td data-label="What we hold" class="faint">
+          {h.status === 'has_history' ? '' : statusLabel(h.status)}
+        </td>
+      </tr>
+    ))}
+    <tr class="nomatch" data-hz-empty hidden>
+      <td colspan="6">No horse here matches the filter.</td>
+    </tr>
+  </tbody>
+</table>
+
+<style>
+  .nomatch { color: var(--ink-faint); }
+
+  /* -- No celular ------------------------------------------------------------
+     O modo lista padrão do `.dense` empilha as seis células, uma por linha. Numa
+     TABELA DE DADO é o certo — são seis grandezas a comparar. Aqui a linha é uma
+     ENTRADA DE ÍNDICE, e empilhada dava **20.743 px** para 100 entradas em 390 px
+     de largura. Ninguém rola vinte mil pixels para achar um nome.
+
+     Nada é escondido: o que muda é a direção em que a linha se lê. */
+  @media (max-width: 720px) {
+    .dense[data-hz-table] tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      column-gap: var(--sp-4);
+      row-gap: var(--sp-1);
+    }
+    .dense[data-hz-table] td {
+      display: inline-flex;
+      width: auto;
+      gap: var(--sp-2);
+      padding: 0;
+      justify-content: flex-start;
+    }
+    .dense[data-hz-table] td[data-label='Horse'] { flex: 1 0 100%; font-size: var(--fs-lead); }
+    .dense[data-hz-table] td[data-label='Horse']::before { display: none; }
+    .dense[data-hz-table] td[data-label='Last declared'] { flex: 1 0 100%; }
+    .dense[data-hz-table] td[data-label='What we hold'] { flex: 1 0 100%; }
+    /* Célula vazia não vira rótulo órfão: o `.dense td:empty` do base.css perde
+       para os seletores acima por especificidade. */
+    .dense[data-hz-table] td:empty { display: none; }
+  }
+</style>

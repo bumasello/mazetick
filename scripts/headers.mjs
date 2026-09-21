@@ -28,24 +28,60 @@ const walk = (d) =>
     e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)],
   );
 
-/** Conteúdo de todo <script> inline (sem src), incluindo os de JSON-LD. */
+/**
+ * Todo <script> inline (sem src), com os atributos da tag ao lado.
+ * @returns {{ attrs: string, body: string, type: string }[]}
+ */
 export function inlineScripts(html) {
   const out = [];
   const re = /<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/gi;
   let m;
-  while ((m = re.exec(html)) !== null) out.push(m[2]);
+  while ((m = re.exec(html)) !== null) {
+    const attrs = m[1];
+    const t = attrs.match(/\btype\s*=\s*"([^"]*)"/i);
+    out.push({ attrs, body: m[2], type: (t ? t[1] : '').trim().toLowerCase() });
+  }
   return out;
 }
+
+/**
+ * Tipos de <script> que o navegador NÃO executa, e que por isso não precisam de
+ * hash na CSP.
+ *
+ * ⚠️ ISTO MUDOU EM 2026-09-19, E O MOTIVO É ARITMÉTICO.
+ *
+ * A versão anterior hasheava TAMBÉM os blocos `application/ld+json`, com a
+ * justificativa de que "a maioria dos navegadores não os submete a script-src,
+ * mas a maioria não é garantia". Com 15 páginas isso custava 10 hashes. Com a
+ * /horse no ar são 694 páginas, cada uma com o seu Dataset: **689 hashes, e o
+ * cabeçalho Content-Security-Policy passa de 37 KB**. O limite prático de
+ * cabeçalho de resposta é de 8 a 16 KB conforme a borda — ou seja, a política
+ * deixaria de ser servida, e um site sem CSP nenhuma é estritamente pior do que
+ * um site cuja CSP não cobre um bloco de dados.
+ *
+ * E o medo que justificava a inclusão estava errado no mecanismo: a CSP impede a
+ * EXECUÇÃO de um script inline, não a presença dele no DOM. JSON-LD nunca é
+ * executado — ele é lido do DOM por quem extrai dado estruturado. Bloqueado ou
+ * não, o `textContent` continua lá. O hash não comprava SEO nenhum; só pesava.
+ *
+ * A lista é de PERMISSÃO e tem um item. Qualquer outro tipo — inclusive tipo
+ * nenhum, que é JavaScript clássico — continua exigindo hash, e a checagem 12
+ * recusa o build se faltar.
+ */
+export const NON_EXECUTABLE_TYPES = new Set(['application/ld+json']);
+
+/** Só os scripts que o navegador de fato executa. São estes que a CSP cobre. */
+export const executableInlineScripts = (html) =>
+  inlineScripts(html).filter((s) => !NON_EXECUTABLE_TYPES.has(s.type));
 
 export const sha256 = (s) => `'sha256-${crypto.createHash('sha256').update(s, 'utf8').digest('base64')}'`;
 
 const pages = walk(DIST).filter((f) => f.endsWith('.html'));
-const hashes = [...new Set(pages.flatMap((f) => inlineScripts(fs.readFileSync(f, 'utf8')).map(sha256)))].sort();
+const hashes = [...new Set(pages.flatMap((f) => executableInlineScripts(fs.readFileSync(f, 'utf8')).map((s) => sha256(s.body))))].sort();
 
-// JSON-LD entra na conta de propósito. Navegador não executa script de tipo
-// não-JS, e a maioria não o submete a script-src — mas "a maioria" não é
-// garantia, e um bloco de dados estruturados bloqueado falharia calado,
-// custando SEO sem avisar ninguém.
+// Os blocos de JSON-LD NÃO entram na conta — ver NON_EXECUTABLE_TYPES acima
+// para o porquê, que é medido e não opinado: com eles a política passava de
+// 37 KB e deixava de caber num cabeçalho de resposta.
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -83,5 +119,7 @@ const headers = `# GERADO POR scripts/headers.mjs — NÃO EDITAR À MÃO.
 
 if (process.argv[1] && process.argv[1].endsWith('headers.mjs')) {
   fs.writeFileSync(path.join(DIST, '_headers'), headers);
-  console.log(`_headers gerado — ${hashes.length} hashes de script inline, ${pages.length} páginas varridas.`);
+  console.log(
+    `_headers gerado — ${hashes.length} hashes de script executável, CSP de ${csp.length} bytes, ${pages.length} páginas varridas.`,
+  );
 }

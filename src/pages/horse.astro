@@ -1,0 +1,536 @@
+---
+/**
+ * A porta do acervo de cavalos.
+ *
+ * ⚠️ ELA DEIXOU DE SER A LISTA INTEIRA em 2026-09-20, quando o acervo passou de
+ * 863 para 3.094 registros. A 689 bytes por linha, a lista completa numa página
+ * só ia a 2,1 MB crus, e na ordem de 30 mil registros — que é o tamanho da
+ * população em treinamento de UK/IRE — passaria de 20 MB. O corte veio antes de
+ * doer, que é quando corte custa barato.
+ *
+ * O CORTE É A–Z, e a razão é uma só: **é o único em que um cavalo nunca muda de
+ * página**. Paginação numérica move o cavalo da página 7 para a 8 quando o
+ * acervo cresce, e URL indexada cujo conteúdo troca todo dia faz o Google
+ * reindexar tudo sem nada estabilizar. Por data seria pior: o mesmo cavalo
+ * apareceria em várias.
+ *
+ * O que fica AQUI:
+ *   - o cartão do dia, inteiro no HTML (é tamanho de página normal);
+ *   - a navegação A–Z, que funciona sem JavaScript;
+ *   - a busca sobre o acervo INTEIRO, não sobre uma letra. Buscar em só uma
+ *     letra seria pior produto que uma página um pouco maior.
+ *
+ * ⚠️ O QUE O ÍNDICE DE BUSCA CUSTA, medido e não estimado:
+ *
+ *     página sem o índice   159 KB crus · 13,7 KB gzip
+ *     só o índice           102 KB crus · 36,6 KB gzip
+ *     página inteira        261 KB crus · 50,8 KB gzip
+ *
+ * Ou seja, o índice é 73% do peso comprimido da porta. Nome de cavalo é texto
+ * de alta entropia e não comprime como prosa — a estimativa de ~15 KB que
+ * autorizou o desenho errou por 2,4×. O alcance fica: cortar a busca para uma
+ * letra seria pior produto. Se a porta precisar emagrecer, a alavanca é servir
+ * o índice como arquivo à parte e buscá-lo na primeira tecla — quem nunca busca
+ * deixa de pagar —, e isso é decisão de produto, não deste arquivo.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatFigure from '../components/StatFigure.astro';
+import DataAge from '../components/DataAge.astro';
+import LetterNav from '../components/LetterNav.astro';
+import HorseIndexTable from '../components/HorseIndexTable.astro';
+import { loadRecords, loadCard, plural, verb, letterCounts } from '../lib/horses';
+import { ukDate } from '../lib/horse-copy.mjs';
+
+const records = loadRecords();
+// O cartão é lido com `fs` e não importado como módulo: importado, o TypeScript
+// infere o tipo LITERAL do arquivo inteiro e o `astro check` passa a analisar
+// dado em vez de código.
+const card = loadCard();
+
+const counts = letterCounts(records);
+const archiveThrough = card.history_depth.through;
+const collisions = card.name_collisions;
+
+/**
+ * ⚠️ DOIS RELÓGIOS, e confundi-los apaga os três estados vazios.
+ *
+ *   collected_through — quando o CARTÃO foi lido da API
+ *   generated_at      — quando NÓS derivamos o arquivo
+ *
+ * Se a leitura parar, `generated_at` continua fresco a cada rodada e o dado
+ * não. A idade na tela sai do primeiro, como na /movers e na /extra-places.
+ */
+const cardRead = card.collected_through;
+const cardEmpty = card.horses.length === 0;
+
+// O cartão mais recente: quem foi declarado nele. O resto do acervo vive nas
+// páginas de letra, e a busca alcança os dois.
+const declaredDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
+const newest = declaredDates[declaredDates.length - 1] ?? null;
+const onCard = newest ? records.filter((h) => h.last_declared.date === newest) : [];
+const courses = [...new Set(onCard.map((h) => h.last_declared.venue))].sort();
+
+const headline =
+  records.length === 0
+    ? 'No horse records collected yet'
+    : cardEmpty
+      ? `${plural(records.length, 'horse')} in the archive, and no declarations on the last card we read`
+      : `${plural(onCard.length, 'horse')} declared on the ${ukDate(newest as string)} card, out of ${records.length.toLocaleString('en-GB')} we hold`;
+
+/**
+ * O índice de busca: slug, nome e data da última declaração, para o acervo todo.
+ *
+ * Array de arrays e não de objetos, de propósito — sem nomes de chave repetidos
+ * três mil vezes —, e a data entra como ÍNDICE de uma lista curta em vez de
+ * texto: há oito datas distintas para 3.094 registros, então repetir
+ * "2026-09-19" três mil vezes custava 37 KB por nada. Medido: 136 KB → 99 KB
+ * crus. E é DERIVADO NOSSO: nome de cavalo declarado é fato de
+ * registro público e a lista é a do nosso acervo. Não há campo de fornecedor
+ * aqui, o que a checagem 16 confere varrendo também o JSON EMBUTIDO no HTML, e
+ * não só os arquivos `.json` — um `<script type="application/json">` é tão
+ * público quanto um arquivo, e era um buraco na varredura.
+ */
+const searchDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
+const searchIndex = {
+  // Formatadas AQUI, não no cliente: são oito strings, e formatar no navegador
+  // significaria uma segunda implementação de data ao lado de `ukDate` — duas
+  // implementações da mesma regra divergem, que é a lição do hash da CSP.
+  dates: searchDates.map((d) => ukDate(d)),
+  rows: records.map((h) => [h.slug, h.name, searchDates.indexOf(h.last_declared.date)]),
+};
+---
+<BaseLayout
+  title="Horse form by going, course and distance — mazetick"
+  description="Every horse we have seen declared in UK and Irish racing, with its record by going, course and distance band — the whole of what we hold, cut at the archive date, with the sample beside every rate."
+>
+  <header class="mast">
+    <p class="mono kicker">Horse records &middot; UK &amp; Irish racing</p>
+    <h1 class="display title">{headline}</h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      <p class="lead">
+        The portals show a rolling recent window, because that is what their feed
+        delivers. We show <strong>the whole of what we hold</strong> &mdash; split by
+        going, by course and by distance band, computed using only races run before
+        the race being described, and cut at a date that every page states.
+      </p>
+      <p class="note">
+        A record is true as of its last-declared date and is never deleted. A horse
+        that stops running becomes dated, not wrong. Our archive of results runs to{' '}
+        {ukDate(archiveThrough)}; a run after that date is missing from these figures.
+      </p>
+      <DataAge collectedThrough={cardRead} generatedAt={card.generated_at} />
+      {cardEmpty && records.length > 0 && (
+        <p class="note">
+          {cardRead
+            ? 'We read the card at the time above and it carried no UK or Irish declarations. That is a statement about the racing, not about our collection: the timestamp says we looked.'
+            : 'This file carries no collection timestamp and no declarations, so we cannot tell you which of the two it is — no racing, or no reading. We will not guess.'}
+        </p>
+      )}
+      {collisions && collisions.runs_removed > 0 && (
+        <p class="note">
+          One gap we can measure and cannot close:{' '}
+          <strong>{plural(collisions.horses, 'horse')}</strong> on this card{' '}
+          {verb(collisions.horses, 'shares', 'share')} a name with another horse in the
+          archive, and <strong>{plural(collisions.runs_removed, 'run')}</strong>{' '}
+          {verb(collisions.runs_removed, 'was', 'were')} dropped rather than credited to
+          the wrong one.{' '}
+          {verb(collisions.horses, 'That career reads', 'Those careers read')} short here,
+          and the file does not say which{' '}
+          {verb(collisions.horses, 'horse it is', 'horses they are')}, so we cannot flag{' '}
+          {verb(collisions.horses, 'it', 'them')} individually.
+        </p>
+      )}
+    </div>
+
+    <aside class="rail">
+      {records.length > 0 && (
+        <div class="figures">
+          <StatFigure value={records.length.toLocaleString('en-GB')} label="horses in the archive" />
+          {!cardEmpty && (
+            <StatFigure
+              value={onCard.length.toLocaleString('en-GB')}
+              label={`declared on the ${ukDate(newest as string)} card`}
+              accent
+            />
+          )}
+        </div>
+      )}
+    </aside>
+  </div>
+
+  {records.length === 0 ? (
+    <section>
+      <h2 class="section-rule">Nothing to show</h2>
+      <div class="empty">
+        <p class="lead">
+          No horse record has reached us at all &mdash; not the latest card, and nothing
+          carried forward from an earlier one. The archive of records is empty, which is
+          a statement about our collection and not about the racing.
+        </p>
+        <DataAge collectedThrough={cardRead} generatedAt={card.generated_at} />
+      </div>
+    </section>
+  ) : (
+    <>
+      {/*
+        BUSCA SOBRE O ACERVO INTEIRO, e não sobre esta página.
+
+        O bloco nasce oculto e só o script o revela: sem JavaScript ele não
+        existe, e quem chega sem script navega pelo A–Z abaixo, que é HTML puro.
+        A lista de nomes viaja num <script type="application/json"> — não é
+        executada, é lida do DOM — e cobre todos, porque busca que só alcança
+        uma letra é pior produto que uma página um pouco maior.
+      */}
+      <section class="find" data-hz-find data-js-only hidden>
+        <h2 id="find" class="section-rule">Find a horse</h2>
+        <form class="findbar" role="search">
+          <label class="sr-only" for="hz-find">Horse name</label>
+          <input
+            id="hz-find"
+            type="search"
+            autocomplete="off"
+            placeholder={`Type a name — searches all ${records.length.toLocaleString('en-GB')}`}
+          />
+        </form>
+        <p class="note" data-hz-find-count aria-live="polite"></p>
+        <ul class="results" data-hz-results></ul>
+      </section>
+
+      <section>
+        <h2 id="letters" class="section-rule">Browse the archive by letter</h2>
+        <LetterNav counts={counts} label="Browse the archive by letter" />
+        <p class="note caption on-axis">
+          The archive is split by the first letter of the horse&rsquo;s name, and each
+          letter page carries every horse under it. We split this way, and not into
+          numbered pages, because <strong>a horse never moves</strong>: page seven
+          becomes page eight as the archive grows, and a URL whose contents change every
+          day is worth less to a reader, and to a search engine, than a large one.
+        </p>
+      </section>
+
+      {!cardEmpty && (
+        <>
+          <form class="filters" data-hz-filter data-js-only hidden>
+            <div class="f f-wide">
+              <label for="hz-q">Filter this card</label>
+              <input id="hz-q" type="search" autocomplete="off" placeholder="Horse or course" />
+            </div>
+            <div class="f">
+              <label for="hz-course">Course</label>
+              <select id="hz-course">
+                <option value="">All courses</option>
+                {courses.map((c) => <option value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div class="f">
+              <label for="hz-state">Record</label>
+              <select id="hz-state">
+                <option value="">Any</option>
+                <option value="has_history">Runs held</option>
+                <option value="debut">No recorded run</option>
+                <option value="no_record">Ran before; not held</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="hz-limit">Rows</label>
+              <select id="hz-limit">
+                <option value="50" selected>First 50</option>
+                <option value="100">First 100</option>
+                <option value="0">All {onCard.length.toLocaleString('en-GB')}</option>
+              </select>
+            </div>
+            <button type="reset" class="reset">Clear</button>
+            <p class="note filters-note on-axis">
+              This filters the card below only. The search above covers all{' '}
+              {records.length.toLocaleString('en-GB')} records held, and the counts at the
+              top of the page describe the whole archive, filtered or not.
+            </p>
+          </form>
+
+          <section>
+            <h2 id="card" class="section-rule">Declared on the {ukDate(newest as string)} card</h2>
+            <p class="note showing on-axis" data-hz-count="card" aria-live="polite" hidden></p>
+            <HorseIndexTable rows={onCard} id="card" />
+            <p class="note caption on-axis">
+              <strong>Runs</strong> is what our archive holds, not the horse&rsquo;s official
+              career: the two differ by whatever ran after {ukDate(archiveThrough)} and by
+              whatever predates the archive. A dash under Runs means the horse has run before
+              and those races are not in our archive &mdash; which is a statement about us.{' '}
+              <strong>No recorded run</strong> is the other thing entirely: it is a statement
+              about the horse, that we hold no earlier race for it.
+            </p>
+          </section>
+        </>
+      )}
+
+      {/*
+        O índice de nomes. `application/json` não é executado pelo navegador —
+        é lido do DOM pelo script abaixo. Fica no fim porque é o maior bloco da
+        página e nada acima dele depende dele para renderizar.
+      */}
+      <script type="application/json" data-hz-index set:html={JSON.stringify(searchIndex)} />
+    </>
+  )}
+</BaseLayout>
+
+<style>
+  .mast .title { max-width: 26ch; }
+  .lead { margin-bottom: var(--sp-5); }
+  .figures {
+    border-left: 1px solid var(--rule-med);
+    padding-left: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
+  section { margin-top: var(--sp-14); }
+  .empty { padding-top: var(--sp-2); }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  /* -- Busca ---------------------------------------------------------------- */
+  .findbar { margin-bottom: var(--sp-3); }
+  .findbar input {
+    font-family: var(--font-body);
+    font-size: var(--fs-lead);
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--sp-3);
+    width: 100%;
+    max-width: calc(100% - var(--rail) - var(--gutter));
+  }
+  /* ⚠️ `:global` AQUI NÃO É PREGUIÇA. Os <li> de resultado nascem do script, em
+     tempo de execução, e por isso NÃO recebem o atributo `data-astro-cid-*` que
+     o Astro usa para escopar estilo. Sem o global, as regras abaixo não casam
+     nada: o primeiro teste na tela mostrou "Albertini Starlast declared
+     2026-09-16" — o `gap` do flex simplesmente não estava sendo aplicado. */
+  .results { list-style: none; margin: 0; padding: 0; }
+  .results :global(li) {
+    border-bottom: 1px solid var(--rule);
+    padding: var(--row-y) 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-2) var(--sp-4);
+  }
+  .results :global(a) { font-size: var(--fs-body); }
+  .results :global(.when) {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: none;
+    color: var(--ink-faint);
+  }
+
+  /* -- Barra de filtro do cartão -------------------------------------------- */
+  .filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    align-items: end;
+    gap: var(--sp-4);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule-med);
+    padding: var(--sp-4) 0;
+    margin-top: var(--sp-14);
+    margin-bottom: var(--sp-8);
+  }
+  .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+  .f label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .f input, .f select {
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-2);
+    width: 100%;
+  }
+  .reset {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: transparent;
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-3);
+    cursor: pointer;
+    justify-self: start;
+  }
+  .reset:hover { color: var(--ink); }
+  .filters-note { grid-column: 1 / -1; margin: 0; }
+  .showing { margin-bottom: var(--sp-4); color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .figures { border-left: 0; padding-left: 0; }
+    .filters { grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr)); }
+    .reset { grid-column: 1 / -1; }
+    .findbar input { max-width: none; }
+  }
+</style>
+
+<script is:inline>
+  /*
+    Duas coisas diferentes, e o código as mantém diferentes de propósito:
+
+    1. A BUSCA varre o acervo inteiro, a partir do índice de nomes embutido na
+       página, e leva para a página do cavalo. Não esconde nem mostra nada da
+       tabela abaixo.
+    2. O FILTRO esconde linhas do cartão do dia, que já estão no HTML servido.
+       Não busca nada e não alcança o resto do acervo — e diz isso na tela,
+       porque filtro que mente sobre a amostra é pior que filtro nenhum.
+
+    Concatenação de string em vez de template literal: a checagem 14 recusa
+    abertura de interpolação no HTML servido, inclusive dentro de comentário.
+  */
+  (function () {
+    // --- 1. busca -----------------------------------------------------------
+    var bloco = document.querySelector('[data-hz-find]');
+    var cru = document.querySelector('[data-hz-index]');
+    if (bloco && cru) {
+      var lista = null;
+      try {
+        lista = JSON.parse(cru.textContent);
+      } catch (e) {
+        lista = null;
+      }
+      // O índice chega como { dates, rows }: a data de cada linha é um índice
+      // na lista curta de datas, não a string repetida três mil vezes.
+      var datas = lista && lista.dates ? lista.dates : [];
+      lista = lista && lista.rows ? lista.rows : null;
+      if (lista && lista.length) {
+        var campo = document.getElementById('hz-find');
+        var saida = document.querySelector('[data-hz-results]');
+        var conta = document.querySelector('[data-hz-find-count]');
+        var TETO = 40;
+
+        bloco.hidden = false;
+
+        var buscar = function () {
+          var q = campo.value.trim().toLowerCase();
+          saida.textContent = '';
+          if (q.length < 2) {
+            conta.textContent =
+              q.length === 1
+                ? 'Two letters or more, please: one letter would match most of the archive.'
+                : 'Type two letters or more. This searches every horse we hold, not just the card below.';
+            return;
+          }
+          var achados = [];
+          for (var i = 0; i < lista.length; i++) {
+            if (lista[i][1].toLowerCase().indexOf(q) >= 0) achados.push(lista[i]);
+          }
+          var frag = document.createDocumentFragment();
+          for (var j = 0; j < achados.length && j < TETO; j++) {
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = '/horse/' + achados[j][0];
+            a.textContent = achados[j][1];
+            var quando = document.createElement('span');
+            quando.className = 'when';
+            quando.textContent = 'last declared ' + (datas[achados[j][2]] || 'date unknown');
+            li.appendChild(a);
+            li.appendChild(quando);
+            frag.appendChild(li);
+          }
+          saida.appendChild(frag);
+          if (achados.length === 0) {
+            conta.textContent =
+              'No horse in the archive has that in its name. We hold ' + lista.length + '.';
+          } else if (achados.length > TETO) {
+            conta.textContent =
+              'Showing the first ' + TETO + ' of ' + achados.length + ' matches. Type more of the name to narrow it.';
+          } else {
+            conta.textContent = achados.length + (achados.length === 1 ? ' match.' : ' matches.');
+          }
+        };
+
+        campo.addEventListener('input', buscar);
+        bloco.querySelector('form').addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          buscar();
+        });
+        buscar();
+      }
+    }
+
+    // --- 2. filtro do cartão ------------------------------------------------
+    var barra = document.querySelector('[data-hz-filter]');
+    var tabela = document.querySelector('[data-hz-table="card"]');
+    if (!barra || !tabela) return;
+
+    var q2 = document.getElementById('hz-q');
+    var course = document.getElementById('hz-course');
+    var state = document.getElementById('hz-state');
+    var limit = document.getElementById('hz-limit');
+    if (!q2 || !course || !state || !limit) return;
+
+    barra.hidden = false;
+
+    var linhas = tabela.querySelectorAll('[data-hz-row]');
+    var vazio = tabela.querySelector('[data-hz-empty]');
+    var rotulo = document.querySelector('[data-hz-count="card"]');
+
+    function aplicar() {
+      var needle = q2.value.trim().toLowerCase();
+      var cap = parseInt(limit.value, 10) || 0;
+      var mostradas = 0;
+      var casadas = 0;
+
+      for (var i = 0; i < linhas.length; i++) {
+        var row = linhas[i];
+        if (!row.__hz) {
+          row.__hz = {
+            name: (row.dataset.name || '').toLowerCase(),
+            course: (row.dataset.course || '').toLowerCase(),
+          };
+        }
+        var c = row.__hz;
+        var ok =
+          (!needle || c.name.indexOf(needle) >= 0 || c.course.indexOf(needle) >= 0) &&
+          (!course.value || row.dataset.course === course.value) &&
+          (!state.value || row.dataset.state === state.value);
+        if (ok) casadas++;
+        var visivel = ok && (!cap || mostradas < cap);
+        if (visivel) mostradas++;
+        row.hidden = !visivel;
+      }
+
+      if (vazio) vazio.hidden = mostradas !== 0;
+      if (rotulo) {
+        var txt = 'Showing ' + mostradas + ' of ' + linhas.length + ' horses on this card';
+        if (casadas > mostradas) {
+          txt += ' — ' + casadas + ' match, and the rest are past the row limit you chose';
+        }
+        rotulo.textContent = txt + '. The archive holds more; the search above reaches all of it.';
+        rotulo.hidden = false;
+      }
+    }
+
+    barra.addEventListener('input', aplicar);
+    barra.addEventListener('change', aplicar);
+    barra.addEventListener('reset', function () {
+      setTimeout(aplicar, 0);
+    });
+    aplicar();
+  })();
+</script>

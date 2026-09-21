@@ -12,7 +12,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { inlineScripts, sha256 } from './headers.mjs';
+import { inlineScripts, NON_EXECUTABLE_TYPES, sha256 } from './headers.mjs';
+import { stampProblems } from './data-contract.mjs';
+import { STATUS_COPY, ARCHIVE_PREFIX, ukDate } from '../src/lib/horse-copy.mjs';
 
 const DIST = 'dist';
 const fail = [];
@@ -66,8 +68,23 @@ check(
     // marcava `Punchestown<span class="faint"> (IE)</span>`, que renderiza
     // "Punchestown (IE)" — o espaço está DENTRO do span. O que denuncia o bug
     // é palavra, tag, e logo em seguida um caractere não-branco.
+    // ⚠️ AMPLIADA EM 2026-09-20, e o motivo apareceu na tela, não no código.
+    //     A /horse servia "…a statement about us.<strong>No recorded run</strong>"
+    //     — o compilador aparou a quebra de linha entre o ponto final e a tag, e
+    //     o texto saiu "us.No recorded run". A versão anterior exigia `\w` ANTES
+    //     da tag, então uma PONTUAÇÃO colada passava batido, que é justamente a
+    //     junção mais provável em prosa: fim de frase, tag inline, palavra.
+    //
+    //     A classe é só de pontuação de frase, e não "qualquer não-espaço": um
+    //     parêntese ou aspa colados a um link — `(<a …>texto</a>)` — são
+    //     legítimos e continuam passando.
     const T = '(?:a|span|strong|em|code|b|i)';
-    const rx = new RegExp(`.{20}(?:\\w<${T}[^>]*>\\S|\\S</${T}>\\w).{20}`, 'g');
+    //     Só o lado de ABERTURA foi ampliado. Pontuação DEPOIS de uma tag que
+    //     fecha — "</a>," ou "</em>." — é inglês normal e aparece em toda página;
+    //     ampliar os dois lados acusou 8.749 ocorrências legítimas na primeira
+    //     tentativa. E `;` fica FORA da classe porque é o fim de toda entidade
+    //     HTML: "&mdash;<em>" é correto e não pode quebrar o build.
+    const rx = new RegExp(`.{20}(?:[\\w.,:!?]<${T}[^>]*>\\S|\\S</${T}>\\w).{20}`, 'g');
     const m = read(f).match(rx);
     return m ? m.map((s) => `${rel(f)}: …${s.replace(/\s+/g, ' ')}…`) : [];
   }),
@@ -321,12 +338,44 @@ check(
       if (h.includes(bad)) problems.push(`_headers: CSP contém ${bad}`);
     }
 
+    // Todo script EXECUTÁVEL servido tem de ter o seu hash. Os de tipo
+    // não-executável (hoje só `application/ld+json`) estão fora por decisão
+    // medida — ver NON_EXECUTABLE_TYPES em headers.mjs —, e a segunda metade do
+    // laço garante que a isenção não vira porta dos fundos: qualquer OUTRO tipo
+    // continua exigindo hash.
     for (const f of pages) {
-      for (const body of inlineScripts(read(f))) {
-        const hash = sha256(body);
+      for (const sc of inlineScripts(read(f))) {
+        if (NON_EXECUTABLE_TYPES.has(sc.type)) continue;
+        const hash = sha256(sc.body);
         if (!h.includes(hash)) {
           problems.push(`${rel(f)}: script inline sem hash na CSP (${hash.slice(0, 24)}…)`);
         }
+      }
+    }
+
+    /*
+      O CABEÇALHO TEM DE CABER.
+
+      Esta metade nasceu de um número: com a /horse, hashear também os blocos de
+      JSON-LD levava a CSP a 689 hashes e **37.561 bytes**. O limite prático de
+      cabeçalho de resposta é de 8 a 16 KB conforme a borda, então a política
+      simplesmente não seria servida — e um site sem CSP é pior que um site cuja
+      CSP não cobre um bloco que o navegador nem executa.
+
+      O orçamento é deliberadamente folgado (4 KB) e mesmo assim uma ordem de
+      grandeza abaixo do que quebrava. O que ele impede é a REGRESSÃO SILENCIOSA:
+      o site cresce ~600 páginas por dia, e qualquer script inline que passe a
+      variar por página volta a estourar o cabeçalho sem que nada apareça na
+      tela.
+    */
+    const CSP_BUDGET = 4096;
+    for (const line of h.split('\n')) {
+      const t = line.trim();
+      if (!t.startsWith('Content-Security-Policy:')) continue;
+      if (t.length > CSP_BUDGET) {
+        problems.push(
+          `_headers: CSP com ${t.length} bytes, acima do orçamento de ${CSP_BUDGET} — cabeçalho grande demais não é servido`,
+        );
       }
     }
   }
@@ -434,7 +483,13 @@ check(
     //     na comparação: o WebSite/Organization declara a raiz do site em toda
     //     página, e isso está certo.
     const canon = read(f).match(/rel="canonical" href="([^"]+)"/)?.[1];
-    const PAGE_TYPES = new Set(['Article', 'NewsArticle', 'BlogPosting', 'WebPage']);
+    // `Dataset` entrou em 2026-09-19 com a /horse: cada página de cavalo marca
+    // o que ela é — um conjunto pequeno de estatísticas derivadas — e declara
+    // uma `url`. Sem o tipo nesta lista, 678 páginas passariam a declarar a URL
+    // delas sem que ninguém conferisse se ela bate com a canônica e com o
+    // sitemap, que é exatamente o defeito (c) que esta checagem existe para
+    // pegar, só que multiplicado por 678.
+    const PAGE_TYPES = new Set(['Article', 'NewsArticle', 'BlogPosting', 'WebPage', 'Dataset']);
     const flat = parsed.flatMap((o) => [o, ...(o['@graph'] || [])]);
     for (const o of flat) {
       if (!PAGE_TYPES.has(o['@type']) || !o.url) continue;
@@ -515,8 +570,13 @@ check(
 //     importa para o leitor é `collected_through`: `generated_at` fresco sobre
 //     coleta parada é exatamente o disfarce que a regra 5 proíbe.
 {
+  // ⚠️ RECURSIVO, e a mudança tem motivo. A versão anterior usava
+  //     `readdirSync('src/data')` sem descer, então os registros por cavalo —
+  //     hoje 678 arquivos em `src/data/horses/<xx>/` — escapariam INTEIROS da
+  //     varredura de campo proibido. É o erro de escopo que este projeto já
+  //     pagou três vezes: a checagem existia, passava, e olhava o lugar errado.
   const srcData = fs.existsSync('src/data')
-    ? fs.readdirSync('src/data').filter((f) => f.endsWith('.json')).map((f) => path.join('src/data', f))
+    ? walk('src/data').filter((f) => f.endsWith('.json')).map((f) => f.split(path.sep).join('/'))
     : [];
 
   // Todo JSON que chega a dist/ é publicamente acessível, consumido pelo site
@@ -526,6 +586,28 @@ check(
   // projeto já pagou três vezes, e o custo de varrer é zero.
   const distData = all.filter((f) => f.endsWith('.json'));
   const dataFiles = [...srcData, ...distData];
+
+  /*
+    ⚠️ E O JSON QUE NÃO É ARQUIVO.
+
+    A /horse embute o índice de nomes num `<script type="application/json">`
+    para a busca alcançar o acervo inteiro. Esse bloco é tão público quanto um
+    `.json` em dist/ — qualquer um lê no fonte da página —, e a varredura por
+    arquivo não o via. Buraco fechado aqui: todo JSON embutido no HTML servido
+    passa pelas MESMAS chaves proibidas.
+
+    Hoje o índice é array de arrays e não tem chave nenhuma, então esta metade
+    passa trivialmente. É exatamente o caso de "olhar o lugar errado" que este
+    projeto já pagou quatro vezes, e o custo de varrer é zero.
+  */
+  const embutidos = [];
+  for (const f of pages) {
+    for (const m of read(f).matchAll(
+      /<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/gi,
+    )) {
+      embutidos.push({ nome: `${rel(f)} (json embutido)`, texto: m[1] });
+    }
+  }
 
   // Uma classe só, e a fronteira é a mesma para todos os termos: começo/fim da
   // chave ou qualquer caractere não alfanumérico — o que INCLUI o sublinhado.
@@ -593,32 +675,61 @@ check(
       return [];
     };
     banned.push(...new Set(walkKeys(json)));
+  }
+
+  // Mesma varredura de chave, agora sobre o JSON que viaja dentro do HTML.
+  for (const { nome, texto } of embutidos) {
+    let json;
+    try {
+      json = JSON.parse(texto);
+    } catch (e) {
+      banned.push(`${nome}: não parseia — ${e.message.slice(0, 50)}`);
+      continue;
+    }
+    const walkEmbutido = (o, at = '') => {
+      if (Array.isArray(o)) return o.flatMap((v, i) => walkEmbutido(v, `${at}[${i}]`));
+      if (o && typeof o === 'object') {
+        return Object.entries(o).flatMap(([k, v]) =>
+          (forbidden(k) ? [`${nome}: campo proibido "${k}" em ${at || 'raiz'}`] : []).concat(
+            walkEmbutido(v, at ? `${at}.${k}` : k),
+          ),
+        );
+      }
+      return [];
+    };
+    banned.push(...new Set(walkEmbutido(json)));
+  }
+
+  for (const f of dataFiles) {
+    const raw = read(f);
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      continue;
+    }
 
     // Só os JSON que ALIMENTAM a página carregam contrato de carimbo. Um .json
     // qualquer em dist/ (manifest, etc.) tem de passar pela 16, não pela 17.
     if (!srcData.includes(f)) continue;
 
-    if (!json.generated_at || Number.isNaN(Date.parse(json.generated_at))) {
-      undated.push(`${f}: generated_at ausente ou não parseável`);
-    }
-
-    // `collected_through` pode ser null de forma legítima — é o produtor
-    // dizendo "não havia arquivo do coletor hoje", e a página trata isso como o
-    // estado mais grave. O que não pode é a CHAVE sumir: aí a página voltaria a
-    // exibir `generated_at` como se fosse frescor, sem nada denunciar.
-    if (!('collected_through' in json)) {
-      undated.push(`${f}: collected_through ausente — a idade na tela viraria a da derivação`);
-    } else if (
-      json.collected_through !== null &&
-      Number.isNaN(Date.parse(json.collected_through))
-    ) {
-      undated.push(`${f}: collected_through não parseável (${JSON.stringify(json.collected_through)})`);
-    }
+    // Os carimbos exigidos saem de `data-contract.mjs`, o MESMO arquivo que o
+    // `fetch-data.mjs` usa na porta de entrada. E NÃO são os mesmos em todo
+    // arquivo: `collected_through` é o relógio de um coletor contínuo, que o
+    // acervo de cavalos não tem — lá o que limita o número na tela é a
+    // profundidade do arquivo histórico. Exigir o campo errado seria exigir
+    // decoração; não exigir nenhum deixaria a regra 4 cair em silêncio.
+    //
+    // Arquivo que não cai em nenhum padrão do contrato é ERRO, não isenção: o
+    // caminho para acrescentar dado passa por declarar o carimbo dele.
+    undated.push(...stampProblems(f, json));
   }
 
   check('Sem campo proibido nos JSON de dados', banned);
-  check('Todo JSON de dados carimbado: generated_at e collected_through', undated);
-  console.log(`    (${srcData.length} em src/data + ${distData.length} em dist/ varridos)`);
+  check('Todo JSON de dados carimbado, cada um com o carimbo do seu contrato', undated);
+  console.log(
+    `    (${srcData.length} em src/data + ${distData.length} em dist/ + ${embutidos.length} embutidos no HTML)`,
+  );
 }
 
 // 18. Toda URL do sitemap resolve para um arquivo gerado, e nenhuma indexável
@@ -874,6 +985,396 @@ check(
 
   check('Tema escuro cobre todos os tokens de cor, e os dois caminhos concordam', problems);
   console.log(`    (${light.size} tokens de cor na paleta clara)`);
+}
+
+// ---------------------------------------------------------------------------
+// 24 a 28: a /horse.
+//
+// Lidas do disco uma vez, porque as cinco checagens seguintes perguntam coisas
+// diferentes do MESMO par (registro, página). Sem o acervo em mãos, cada uma
+// teria de reabrir 678 arquivos.
+// ---------------------------------------------------------------------------
+const horseRecords = fs.existsSync('src/data/horses')
+  ? walk('src/data/horses')
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => JSON.parse(read(f)))
+  : [];
+const horseBySlug = new Map(horseRecords.map((h) => [h.slug, h]));
+const horsePages = pages.filter((f) => /^horse[/\\][^/\\]+\.html$/.test(rel(f)));
+const horseIndexPage = pages.find((f) => rel(f) === 'horse.html');
+// As páginas de letra ficam um nível abaixo (`horse/letter/s.html`), então NÃO
+// caem em `horsePages` — o que é o que se quer: as checagens 25, 26, 27 e 29
+// perguntam de um cavalo, e uma letra não é um cavalo.
+const letterPages = pages.filter((f) => /^horse[/\\]letter[/\\][^/\\]+\.html$/.test(rel(f)));
+const LETTER_SEGMENT = 'letter';
+
+// 24. Acervo e páginas em correspondência 1:1, e o índice servindo todo mundo.
+//
+//     O acervo cresce cerca de 600 registros por dia e nenhuma lista é escrita à
+//     mão em lugar nenhum — o que torna esta a checagem mais barata de esquecer
+//     e a mais cara de não ter. Um registro sem página é um cavalo que o índice
+//     linka para o 404; uma página sem registro é conteúdo publicado que o
+//     produtor já não reconhece. (A 7 pega o primeiro caso só se o link existir,
+//     e a 18 pega o segundo só depois de o sitemap o listar. Nenhuma das duas
+//     confere o que a ORIGEM diz.)
+{
+  const problems = [];
+  const indexFile = 'src/data/horses-index.json';
+
+  if (!horseRecords.length) {
+    problems.push('src/data/horses/ sem nenhum registro — o prebuild rodou?');
+  }
+  if (!horseIndexPage) problems.push('dist/horse.html não existe — a página índice sumiu');
+
+  if (fs.existsSync(indexFile)) {
+    const declared = new Set(JSON.parse(read(indexFile)).horses.map((h) => h.slug));
+    for (const slug of declared) {
+      if (!horseBySlug.has(slug)) problems.push(`índice declara "${slug}" e não há registro em src/data/horses/`);
+    }
+    for (const slug of horseBySlug.keys()) {
+      if (!declared.has(slug)) problems.push(`registro "${slug}" não está no índice do produtor`);
+    }
+  } else {
+    problems.push(`${indexFile} ausente`);
+  }
+
+  const built = new Set(horsePages.map((f) => rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '')));
+  for (const slug of horseBySlug.keys()) {
+    if (!built.has(slug)) problems.push(`registro "${slug}" não virou página`);
+  }
+  for (const slug of built) {
+    if (!horseBySlug.has(slug)) problems.push(`dist/horse/${slug}.html não tem registro de origem`);
+  }
+
+  /*
+    ⚠️ A METADE QUE MUDOU COM A PARTIÇÃO A–Z, e ela ficou MAIS exigente, não
+    menos.
+
+    Antes: a /horse tinha de servir uma linha por registro. Com 3.094 registros
+    isso passou a ser uma página de 2,1 MB, e o acervo foi partido por letra.
+    A exigência não caiu para "alguma página serve" — passou a ser sobre a
+    UNIÃO: cada registro aparece em EXATAMENTE UMA página de letra, e a soma
+    fecha com o acervo. Isso pega três coisas que a versão antiga não pegava:
+    cavalo em nenhuma letra, cavalo em duas, e cavalo na letra errada.
+
+    O alfabeto é fixo em 26, então a contagem de páginas também é: letra que
+    some é link quebrado na navegação de todas as outras.
+  */
+  const vistos = new Map();
+  for (const f of letterPages) {
+    const letra = rel(f).replace(/^horse[/\\]letter[/\\]/, '').replace(/\.html$/, '');
+    for (const m of read(f).matchAll(/<tr\b[^>]*\bdata-hz-row\b[^>]*>/g)) {
+      const slug = m[0].match(/data-slug="([^"]+)"/)?.[1];
+      if (!slug) {
+        problems.push(`${rel(f)}: linha servida sem data-slug — não dá para conferir a cobertura`);
+        continue;
+      }
+      if (vistos.has(slug)) problems.push(`"${slug}" aparece na letra ${vistos.get(slug)} E na ${letra}`);
+      else vistos.set(slug, letra);
+      const esperada = /^[a-z]/.test(slug) ? slug[0] : '#';
+      if (letra !== esperada) problems.push(`"${slug}" está na letra ${letra} e devia estar na ${esperada}`);
+    }
+  }
+  for (const slug of horseBySlug.keys()) {
+    if (!vistos.has(slug)) problems.push(`"${slug}" não aparece em nenhuma página de letra`);
+  }
+  const ALFABETO = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const geradas = new Set(letterPages.map((f) => rel(f).replace(/^horse[/\\]letter[/\\]/, '').replace(/\.html$/, '')));
+  for (const l of ALFABETO) {
+    if (!geradas.has(l)) problems.push(`a letra ${l} não virou página — a navegação A–Z aponta para ela em toda página`);
+  }
+  for (const l of geradas) {
+    if (!ALFABETO.includes(l)) problems.push(`página de letra "${l}" fora do alfabeto`);
+  }
+
+  // A palavra reservada da rota. O conflito seria só conceitual (profundidades
+  // diferentes de caminho), mas seria confuso de depurar, e custa uma linha.
+  if (horseBySlug.has(LETTER_SEGMENT)) {
+    problems.push(`existe um cavalo de slug "${LETTER_SEGMENT}", que é o segmento reservado das páginas de letra`);
+  }
+
+  // E a porta continua servindo, inteiro, o cartão de que ela fala.
+  if (horseIndexPage && fs.existsSync('src/data/horses.json')) {
+    const naCarta = JSON.parse(read('src/data/horses.json')).horses.length;
+    const servidas = [...read(horseIndexPage).matchAll(/\bdata-hz-row\b/g)].length;
+    if (servidas < naCarta) {
+      problems.push(`horse.html serve ${servidas} linhas para ${naCarta} declarados no cartão — o resto ficaria só no cliente`);
+    }
+  }
+
+  check('Acervo, índice e páginas de cavalo em correspondência 1:1', problems);
+  console.log(
+    `    (${horseBySlug.size} registros, ${horsePages.length} páginas de cavalo, ${letterPages.length} páginas de letra, ${vistos.size} linhas servidas)`,
+  );
+}
+
+// 25. Os três estados, e a palavra que cada um exige.
+//
+//     ESTA É A CHECAGEM QUE A PÁGINA EXISTIA PARA TER. O defeito que a segurou
+//     foi escrever "debut" para um cavalo `no_record`, e errava por cerca de
+//     quatro vezes. São afirmações opostas:
+//
+//       debut      → não há corrida registrada antes desta data.
+//                    É afirmação SOBRE O CAVALO.
+//       no_record  → correu antes, e não está no nosso arquivo.
+//                    É confissão SOBRE NÓS.
+//
+//     Trocar uma pela outra transforma lacuna nossa em fato sobre o animal. As
+//     frases são IMPORTADAS de src/lib/horse-copy.mjs, o mesmo módulo que a
+//     página usa: uma lista aqui e outra lá divergiriam no primeiro edit.
+//
+//     Os nomes próprios da página (cavalo, jóquei, treinador, garanhão, pista)
+//     são REMOVIDOS antes de procurar a frase proibida. Sem isso, um garanhão
+//     chamado "Debut" quebraria o build por um motivo que não é o defeito.
+{
+  const problems = [];
+  for (const f of horsePages) {
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = horseBySlug.get(slug);
+    if (!h) continue;
+    const html = read(f);
+    const copy = STATUS_COPY[h.status];
+    if (!copy) {
+      problems.push(`${rel(f)}: status "${h.status}" não tem texto declarado`);
+      continue;
+    }
+
+    const required =
+      h.status === 'debut'
+        ? copy.sentence({ asOf: h.as_of })
+        : h.status === 'no_record'
+          ? copy.sentence()
+          : copy.sentence({ asOf: h.as_of, runs: h.career.runs });
+    if (!html.includes(required)) {
+      problems.push(`${rel(f)} (${h.status}): falta a frase do estado — "${required.slice(0, 60)}…"`);
+    }
+
+    let scrubbed = html;
+    for (const n of [h.name, h.jockey?.name, h.trainer?.name, h.sire?.name, h.last_declared?.venue,
+                     ...(h.by_course || []).map((g) => g.key)]) {
+      if (n) scrubbed = scrubbed.split(n).join('·');
+    }
+    for (const bad of copy.forbidden) {
+      if (scrubbed.toLowerCase().includes(bad.toLowerCase())) {
+        problems.push(`${rel(f)} (${h.status}): a página usa a palavra do OUTRO estado — "${bad}"`);
+      }
+    }
+  }
+  check('Cada estado com a sua palavra, e sem a do outro', problems);
+}
+
+// 26. O limite do arquivo aparece na PÁGINA, não só no JSON.
+//
+//     "Career: 83 runs" sem dizer até quando mente por omissão: o arquivo
+//     termina numa data e o que veio depois simplesmente não está ali. Vale
+//     inclusive para as páginas sem número nenhum — é lá que a lacuna é a única
+//     informação que temos a dar.
+//
+//     A data conferida é a DO REGISTRO. Registros acumulados de dias diferentes
+//     carregam cortes diferentes, e uma data global na página seria falsa para a
+//     maioria deles no dia seguinte.
+{
+  const problems = [];
+  for (const f of horsePages) {
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = horseBySlug.get(slug);
+    if (!h) continue;
+    // Sem carimbo no registro não há o que conferir, e `ukDate` de `undefined`
+    // LANÇA — o que derrubaria o verify no meio e engoliria o relatório das
+    // outras checagens. (Aconteceu no teste de quebra da 17a: a 17 anotava o
+    // problema certo e a 26 explodia antes de alguém o ler.) A ausência é
+    // reportada como problema, não como exceção.
+    if (!h.history_through || Number.isNaN(Date.parse(h.history_through))) {
+      problems.push(`${rel(f)}: o registro não traz history_through utilizável`);
+      continue;
+    }
+    const expected = `${ARCHIVE_PREFIX}${ukDate(h.history_through)}`;
+    if (!read(f).includes(expected)) {
+      problems.push(`${rel(f)}: não diz o corte do arquivo — esperado "${expected}"`);
+    }
+  }
+  check('Toda página de cavalo declara até quando o arquivo vai', problems);
+}
+
+// 27. Nenhuma taxa sem a amostra ao lado.
+//
+//     "23.5% on good" sem o `runs = 17` é o número que um leitor usaria para
+//     apostar. Duas metades:
+//
+//     (a) UNIVERSAL, em todas as páginas: numa tabela que TEM coluna de
+//         amostra, nenhuma linha pode mostrar porcentagem com a célula de
+//         amostra vazia. Vale para /movers e /extra-places também, e é por isso
+//         que a regra fala de "tabela com coluna Runs" em vez de "página de
+//         cavalo": um filtro por família de página é exatamente o escopo curto
+//         que já nos custou três incidentes.
+//     (b) nas páginas de cavalo: TODA tabela tem de ter a coluna de amostra.
+//         Sem esta metade, apagar a coluna faria a metade (a) passar sorrindo.
+{
+  const problems = [];
+  const cellText = (td) => td.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+  for (const f of pages) {
+    const html = read(f);
+    for (const t of html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const table = t[1];
+      const heads = [...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => cellText(m[1]));
+      const hasSample = heads.includes('Runs');
+      if (!hasSample) continue;
+      for (const r of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+        const row = r[1];
+        if (!/%/.test(row)) continue;
+        const sample = [...row.matchAll(/<td\b[^>]*data-label="Runs"[^>]*>([\s\S]*?)<\/td>/gi)]
+          .map((m) => cellText(m[1]));
+        if (!sample.length || sample.every((x) => x === '')) {
+          problems.push(`${rel(f)}: linha com taxa e sem amostra — ${cellText(row).slice(0, 70)}`);
+        }
+      }
+    }
+  }
+
+  for (const f of horsePages) {
+    for (const t of read(f).matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const heads = [...t[1].matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map((m) => cellText(m[1]));
+      if (!heads.includes('Runs')) {
+        problems.push(`${rel(f)}: tabela sem coluna de amostra — ${heads.join(', ') || '(sem cabeçalho)'}`);
+      }
+    }
+  }
+
+  check('Nenhuma taxa publicada sem a amostra na mesma linha', [...new Set(problems)]);
+}
+
+// 28. Título e descrição distintos DE VERDADE.
+//
+//     Setecentas páginas novas de uma vez só são um risco de SEO assumido com a
+//     decisão na mesa, e a forma de errá-lo é publicar gabarito com o nome
+//     trocado. O teste tira o nome do cavalo da frase: se o que sobra é o mesmo
+//     em fatia grande do acervo, a descrição não descreve nada.
+//
+//     O limiar é 25% e é generoso de propósito — com números reais dentro da
+//     frase, a maior classe hoje fica em poucos por cento. Ele pega a regressão
+//     (alguém simplificar para "Form and statistics for <nome>"), não a
+//     semelhança natural entre dois cavalos parecidos.
+{
+  const problems = [];
+  const titles = new Map();
+  const shapes = new Map();
+
+  for (const f of horsePages) {
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = horseBySlug.get(slug);
+    const html = read(f);
+    const title = html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '';
+    const desc = html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+
+    if (!title) problems.push(`${rel(f)}: sem <title>`);
+    if (!desc) problems.push(`${rel(f)}: sem meta description`);
+    if (titles.has(title)) problems.push(`${rel(f)}: título idêntico ao de ${titles.get(title)}`);
+    else titles.set(title, rel(f));
+
+    // O nome fora, o que sobra é o "molde" daquela descrição.
+    const shape = h ? desc.split(h.name).join('·') : desc;
+    shapes.set(shape, (shapes.get(shape) ?? 0) + 1);
+  }
+
+  let detail = null;
+  if (horsePages.length) {
+    const [worst, n] = [...shapes.entries()].sort((a, b) => b[1] - a[1])[0];
+    const share = n / horsePages.length;
+    if (share > 0.25) {
+      problems.push(
+        `${n} de ${horsePages.length} descrições (${(share * 100).toFixed(0)}%) são a mesma frase com o nome trocado: "${worst.slice(0, 80)}…"`,
+      );
+    }
+    detail = `    (${shapes.size} moldes de descrição em ${horsePages.length} páginas; o maior cobre ${(share * 100).toFixed(1)}%)`;
+  }
+
+  check('Título e descrição por cavalo distintos de verdade', problems);
+  if (detail) console.log(detail);
+}
+
+// 29. Nenhuma faixa de distância aparece sem a fronteira que a define.
+//
+//     "27% em staying" é ilegível sem saber o que é staying, e até 2026-09-20 o
+//     contrato não publicava as fronteiras — a página se recusava a inventá-las,
+//     o que estava certo e deixava o número inconferível. Agora a origem as
+//     emite a partir da MESMA lista que classifica, e esta checagem garante que
+//     a definição chegue à TELA, não só ao JSON.
+//
+//     Duas metades, porque uma sozinha não prende:
+//     (a) toda linha da tabela de faixa carrega a sua definição na página;
+//     (b) toda chave usada nos registros existe em `distance_bands`. Sem (b),
+//         o produtor acrescentar uma quinta faixa passaria despercebido até
+//         alguém reparar num rótulo faltando.
+{
+  const problems = [];
+  const cardFile = 'src/data/horses.json';
+  const bands = fs.existsSync(cardFile) ? JSON.parse(read(cardFile)).distance_bands : null;
+
+  if (!Array.isArray(bands) || !bands.length) {
+    problems.push(`${cardFile}: sem distance_bands — as faixas na tela ficariam sem definição`);
+  } else {
+    const known = new Set(bands.map((b) => b.key));
+    for (const b of bands) {
+      if (!b.label) problems.push(`distance_bands: a faixa "${b.key}" não tem label publicável`);
+    }
+    for (const h of horseRecords) {
+      for (const g of h.by_distance || []) {
+        if (!known.has(g.key)) problems.push(`${h.slug}: faixa "${g.key}" não está em distance_bands`);
+      }
+      const d = h.last_declared?.distance;
+      if (d && !known.has(d)) problems.push(`${h.slug}: faixa declarada "${d}" não está em distance_bands`);
+    }
+  }
+
+  // (a) no artefato: na tabela cujo cabeçalho é "Distance band", toda linha do
+  //     corpo traz a definição junto do nome da faixa.
+  const cellText = (x) => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  for (const f of horsePages) {
+    for (const t of read(f).matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const table = t[1];
+      const first = table.match(/<th\b[^>]*>([\s\S]*?)<\/th>/i);
+      if (!first || cellText(first[1]) !== 'Distance band') continue;
+      for (const r of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+        const cell = r[1].match(/<td\b[^>]*data-label="Distance band"[^>]*>([\s\S]*?)<\/td>/i);
+        if (!cell) continue;
+        // Casa o TOKEN da classe, não a string inteira do atributo: a faixa
+        // usa `class="sub plain"` (notação em minúscula), e um teste por
+        // igualdade literal acusaria as 863 páginas por uma classe a mais.
+        if (!/class="[^"]*\bsub\b[^"]*"/.test(cell[1])) {
+          problems.push(`${rel(f)}: faixa "${cellText(cell[1])}" sem a definição ao lado`);
+        }
+      }
+    }
+  }
+
+  check('Toda faixa de distância publicada com a fronteira que a define', [...new Set(problems)]);
+}
+
+// 30. O carimbo da COLETA chega à tela, e não só ao JSON.
+//
+//     A checagem 17 exige o campo no arquivo; esta exige que ele vire idade na
+//     página. São perguntas diferentes, e a distância entre as duas é o buraco
+//     por onde a regra 4 cai calada: um `collected_through` perfeito no JSON e
+//     uma página que mostra `generated_at` faz "a coleta quebrou" se disfarçar
+//     de "não há corrida hoje".
+//
+//     O marcador é o `data-collected` que o componente DataAge emite quando
+//     conhece o instante, ou `data-state="unknown"` quando não conhece — o
+//     segundo é resposta legítima e tem de ser declarada, nunca omitida.
+{
+  const problems = [];
+  const CARIMBADAS = (f) => {
+    const r = rel(f);
+    return r === 'horse.html' || r === 'movers.html' || r === 'extra-places.html' || /^horse[/\\]/.test(r);
+  };
+  for (const f of pages.filter(CARIMBADAS)) {
+    const html = read(f);
+    if (!/class="age"[^>]*data-collected="/.test(html) && !/class="age"[^>]*data-state="unknown"/.test(html)) {
+      problems.push(`${rel(f)}: publica figuras de um arquivo de dado e não mostra o carimbo da coleta`);
+    }
+  }
+  check('A idade da COLETA aparece em toda página de dado', problems);
 }
 
 console.log();

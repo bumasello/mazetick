@@ -6,6 +6,11 @@ import StatFigure from '../components/StatFigure.astro';
 // quando o arquivo dizia 28 — número na tela que nenhum script emite é número
 // que envelhece calado. Sai do mesmo JSON que a /movers usa.
 import movers from '../data/movers.json';
+// A contagem do acervo e a data de corte saem do arquivo, nunca digitadas: é a
+// mesma lição do f33fde9 ("a home dizia 27 dias e o arquivo dizia 28"), e aqui
+// o número cresce cerca de 600 por dia — digitado, nasceria velho.
+import { loadCard, loadIndex } from '../lib/horses';
+import { ukDate } from '../lib/horse-copy.mjs';
 
 // Mesma razão, outra fonte: o total de corridas medidas vinha DIGITADO aqui e o
 // artigo que o produziu o declara no próprio frontmatter, junto da derivação
@@ -14,6 +19,9 @@ const articles = await getCollection('research', ({ data }) => !data.draft);
 const favourite = articles.find((a) => a.id === 'backing-the-favourite');
 // "33,508 races · UK & Ireland · …" → "33,508"
 const racesMeasured = favourite?.data.sample.split('·')[0].trim().replace(/\s*races?$/i, '');
+
+const horseCount = loadIndex().count;
+const archiveThrough = loadCard().history_depth.through;
 ---
 <BaseLayout
   title="mazetick — what the market knew, and when"
@@ -58,6 +66,15 @@ const racesMeasured = favourite?.data.sample.split('·')[0].trim().replace(/\s*r
           Every portal lists drifters. We publish the yardstick too: how far a
           price of that size normally travels, from {movers.baseline.days} days of our
           own collection.
+        </span>
+      </a>
+      <a class="card" href="/horse">
+        <span class="mono">Horses</span>
+        <span class="card-title">The whole record, not a rolling fortnight</span>
+        <span class="card-note">
+          {horseCount.toLocaleString('en-GB')} horses, each split by going, by course
+          and by distance band, cut at {ukDate(archiveThrough)} &mdash; with the sample
+          printed beside every rate.
         </span>
       </a>
       <a class="card" href="/research">

@@ -30,7 +30,7 @@ Two things, if you build anything that publishes numbers:
   date *required* fields. An article whose sample is not declared does not
   compile.
 - **`scripts/verify.mjs`** runs inside `npm run build` and fails the build.
-  Eighteen checks, governed by two rules learned the hard way — see
+  Thirty checks, governed by two rules learned the hard way — see
   [Verificação](#verificação).
 
 ---
@@ -213,7 +213,9 @@ src/
 ├── content/research/     # os artigos, em Markdown
 ├── styles/tokens.css     # a única fonte de cor, tipo e espaçamento
 ├── components/           # MethodBox, DataAge, StatFigure, RailIndex, ThemeToggle…
-├── lib/                  # canonical.ts (a canônica, uma implementação só), time.ts
+├── lib/                  # canonical.ts (a canônica, uma implementação só), time.ts,
+│                         # horses.ts (o acervo), horse-copy.mjs (as frases dos
+│                         # três estados — .mjs porque o verify.mjs as importa)
 ├── layouts/              # BaseLayout (canônica, JSON-LD, densidade), ArticleLayout
 └── pages/
 ```
@@ -226,7 +228,7 @@ quebrar. Vinte e três checagens:
 | checagem | por quê |
 |---|---|
 | sem Betfair/BSP no HTML | regra 2 — nenhum preço deles vira campo na tela |
-| espaçamento em volta de `<a>` inline | o compilador apara a quebra de linha em vez de virar espaço, e o texto gruda |
+| espaçamento em volta de tag inline | o compilador apara a quebra de linha em vez de virar espaço, e o texto gruda. ⚠️ Ampliada em 20/09: exigia `\w` ANTES da tag, então **pontuação** colada passava — e fim de frase é a junção mais provável em prosa (`us.<strong>No recorded run`) |
 | tema não fixado no HTML, e aplicado antes da pintura | `data-theme` no artefato forçaria um tema para todo mundo; o aplicador fora do `<head>` dá lampejo do tema errado |
 | `lang="en-GB"` | o site é britânico |
 | canônica sem `.html` | tem de casar com o sitemap |
@@ -241,13 +243,32 @@ quebrar. Vinte e três checagens:
 | sem sintaxe de template; JSON-LD parseável **e coerente com a canônica** | olhar não é interpretar, e parsear não é conferir |
 | derivação versionada e resolvível | número sem script commitado não vai ao ar |
 | sem campo proibido nos JSON de dados (em `src/data` **e em `dist/`**) | rede embaixo da regra 6, o dado vem de outro repo |
-| todo JSON carimbado: `generated_at` **e `collected_through`** | sem o segundo a idade na tela vira a da derivação, e a regra 4 cai calada |
+| todo JSON carimbado, **cada um com o carimbo do seu contrato** | sem carimbo a idade na tela vira a da derivação, e a regra 4 cai calada. O carimbo NÃO é o mesmo em todo arquivo: `collected_through` é relógio de coletor contínuo, que o acervo de cavalos não tem — lá o limite é `history_through`. O contrato mora em `scripts/data-contract.mjs` e é lido pelo verify E pelo fetch |
 | sitemap ↔ páginas em correspondência 1:1 | artigo segurado deixaria 404 no Search Console |
 | nenhuma coluna rotulada pelo relógio do leitor | "now" numa página estática é falso em algum momento do dia |
 | página de dado completa no HTML servido | é o HTML que o Google indexa; corte tem de ser do cliente |
 | `[hidden]` vence no CSS servido | sem o `!important`, no celular o filtro não esconderia nada |
 | índice da margem coerente com os títulos da página | índice à mão sai de sincronia em silêncio: âncora morta não dá erro em lugar nenhum |
 | tema escuro cobre todos os tokens, e os dois caminhos concordam | token esquecido no escuro não quebra nada — só fica ilegível numa página que ninguém abriu naquele tema |
+| acervo, índice e páginas de cavalo em correspondência 1:1 | o acervo cresce ~600/dia e nenhuma lista é escrita à mão: registro sem página é link para 404, página sem registro é conteúdo que o produtor já não reconhece |
+| cada estado com a sua palavra, e sem a do outro | `debut` afirma algo SOBRE O CAVALO, `no_record` confessa algo SOBRE NÓS. Trocar as duas foi o defeito que segurou a `/horse`, e errava por ~4× |
+| toda página de cavalo declara até quando o arquivo vai | "career: 83 runs" sem dizer até quando mente por omissão |
+| nenhuma taxa publicada sem a amostra na mesma linha | "23.5% on good" sem o `runs = 17` é o número que alguém usaria para apostar |
+| título e descrição por cavalo distintos de verdade | páginas de cavalo aos milhares de uma vez; gabarito com o nome trocado é como se erra isso |
+| toda faixa de distância publicada com a fronteira que a define | "27% em staying" é ilegível sem saber o que é staying; e a chave tem de existir em `distance_bands`, senão uma faixa nova aparece sem definição |
+| a idade da COLETA aparece em toda página de dado | a 17 exige o campo no arquivo; a distância entre as duas é por onde a regra 4 cai calada |
+
+⚠️ Duas dessas mudaram de alvo com a partição A–Z do acervo, e as duas ficaram
+mais exigentes:
+
+- **acervo ↔ páginas** deixou de perguntar "a porta serve tudo?" e passou a
+  perguntar da **união das 26 páginas de letra**: cada registro aparece em
+  exatamente uma, na letra certa, e nenhuma letra do alfabeto falta. Pega o
+  cavalo em nenhuma letra, o em duas e o na letra errada — nada disso a versão
+  anterior via.
+- **campo proibido** passou a varrer também o **JSON embutido no HTML**
+  (`<script type="application/json">`), que é tão público quanto um arquivo e
+  que a varredura por arquivo não alcançava.
 
 Duas regras governam este arquivo:
 
@@ -276,7 +297,18 @@ npm run build; echo "exit: $?"   # tem de ser 1 quando algo quebra
 ## Dados: instantâneo, e falhar alto
 
 `npm run build` começa por `scripts/fetch-data.mjs`, que baixa os JSON de
-`bumasello/mazetick-data` (`extra-places.json` e `movers.json`). **Se o download falhar, o build falha** — sem deploy
+`bumasello/mazetick-data`. São **dois caminhos de download**, e a diferença tem
+motivo:
+
+- `extra-places.json` e `movers.json` vêm por um GET cada;
+- o acervo de cavalos vem pelo **tarball do repositório** (`scripts/untar.mjs`,
+  leitor de tar sem dependência, porque um binário de sistema é mais uma coisa
+  que a Cloudflare decidiria por nós). O índice e os registros por cavalo TÊM de
+  vir do mesmo commit: baixados um a um, um push no meio da rodada daria um
+  índice de uma versão e registros de outra, e a página sairia com um cavalo
+  listado e sem página. É também um pedido de rede em vez de 679.
+
+**Se o download falhar, o build falha** — sem deploy
 novo, a versão anterior continua no ar. É o comportamento certo: degradar para
 "sem corridas hoje" MENTE, e num portal cuja tese é "todo número carrega o
 instante em que era verdade" essa é a pior mentira disponível.
@@ -366,9 +398,22 @@ na própria origem, nenhum formulário, nenhum iframe, nenhum handler `on*`.
 `style-src 'self'` possível.** O padrão (`'auto'`) inlineia folhas pequenas no
 HTML e obrigaria a CSP a aceitar estilo inline. Não mudar sem mudar a CSP junto.
 
-A checagem 12 confere que cada `<script>` inline servido tem o seu hash na
-política, usando a **mesma função** que gerou o arquivo — importada, não
-reimplementada, porque duas implementações divergiriam em silêncio.
+A checagem 12 confere que cada `<script>` inline **executável** servido tem o
+seu hash na política, usando a **mesma função** que gerou o arquivo — importada,
+não reimplementada, porque duas implementações divergiriam em silêncio.
+
+⚠️ **"Executável" passou a importar em 2026-09-19, e o motivo é aritmético.** A
+versão anterior hasheava também os blocos `application/ld+json`. Com 15 páginas
+isso custava 10 hashes; com a `/horse` no ar são 694 páginas, cada uma com o seu
+`Dataset`, e o cabeçalho ia a **37.561 bytes** — muito acima dos 8 a 16 KB que
+uma borda aceita. A política simplesmente não seria servida, e site sem CSP é
+pior que CSP que não cobre um bloco que o navegador nem executa. O medo que
+justificava incluí-los também estava errado no mecanismo: a CSP impede a
+EXECUÇÃO de um script inline, não a presença dele no DOM, e JSON-LD é lido do
+DOM, nunca executado. A isenção é uma **lista de permissão de um item**
+(`NON_EXECUTABLE_TYPES`), e a checagem 12 confere que qualquer outro tipo
+continua exigindo hash — mais um **orçamento de 4 KB** para o cabeçalho, que é o
+que impede a regressão silenciosa num site que cresce ~600 páginas por dia.
 
 Cache: `/_astro/*` leva `immutable` (nome com hash de conteúdo, imutável por
 construção); o HTML **não**, senão uma correção publicada levaria um ano para

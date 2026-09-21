@@ -1,0 +1,315 @@
+---
+/**
+ * Uma letra do acervo: todos os cavalos cujo nome começa por ela.
+ *
+ * ⚠️ A FORMA DA URL É `/horse/letter/<a-z>`, e a escolha tem motivo.
+ *
+ * `/horse/<slug>` já existe e ocupa um segmento, então qualquer palavra que eu
+ * pusesse ali — `/horse/a`, `/horse/s` — disputaria o espaço com um cavalo de
+ * slug de uma letra. Descendo um nível, `/horse/letter/s` não pode colidir com
+ * `/horse/<slug>`: são profundidades diferentes, e nem mesmo um cavalo chamado
+ * "Letter" atrapalha (ele seria `/horse/letter`, um irmão, não um conflito).
+ * Mesmo assim a palavra é RESERVADA e a checagem 24 recusa o build se um dia um
+ * slug a reivindicar — o conflito seria só conceitual, mas confuso de depurar.
+ *
+ * ⚠️ AS 26 LETRAS SAEM SEMPRE, inclusive as que hoje têm dois cavalos (X) e as
+ * que amanhã podem ter zero. O alfabeto é fixo, logo o conjunto de URLs é fixo:
+ * link que aparece e some conforme o dia tem a mesma doença da paginação
+ * numérica, só que na navegação. Letra sem ninguém DIZ que está vazia — e isso
+ * é uma afirmação sobre o nosso acervo, não sobre a corrida.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import StatFigure from '../../../components/StatFigure.astro';
+import DataAge from '../../../components/DataAge.astro';
+import LetterNav from '../../../components/LetterNav.astro';
+import HorseIndexTable from '../../../components/HorseIndexTable.astro';
+import {
+  loadRecords, loadCard, letterOf, letterCounts, ALPHABET, plural,
+  type HorseRecord,
+} from '../../../lib/horses';
+import { ukDate } from '../../../lib/horse-copy.mjs';
+import { canonicalUrl } from '../../../lib/canonical';
+
+export function getStaticPaths() {
+  const records = loadRecords();
+  const card = loadCard();
+  const counts = letterCounts(records);
+  const stamp = { collectedThrough: card.collected_through, generatedAt: card.generated_at };
+  const archiveThrough = card.history_depth.through;
+
+  return ALPHABET.map((letter) => ({
+    params: { letter },
+    props: {
+      letter,
+      rows: records.filter((h) => letterOf(h) === letter),
+      counts,
+      stamp,
+      archiveThrough,
+      total: records.length,
+    },
+  }));
+}
+
+interface Props {
+  letter: string;
+  rows: HorseRecord[];
+  counts: Record<string, number>;
+  stamp: { collectedThrough: string | null; generatedAt: string };
+  archiveThrough: string;
+  total: number;
+}
+const { letter, rows, counts, stamp, archiveThrough, total } = Astro.props;
+
+const upper = letter.toUpperCase();
+const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
+const dates = [...new Set(rows.map((h) => h.last_declared.date))].sort();
+
+// Título e descrição saem dos NÚMEROS desta letra, não de um gabarito: contagem,
+// primeiro e último nome, e a janela de declarações que ela cobre.
+const first = rows[0]?.name;
+const last = rows[rows.length - 1]?.name;
+const title = rows.length
+  ? `Horses beginning with ${upper} — ${plural(rows.length, 'record')} — mazetick`
+  : `Horses beginning with ${upper} — none in our archive — mazetick`;
+const description = rows.length
+  ? `Every horse we hold beginning with ${upper}, from ${first} to ${last}: ${plural(rows.length, 'record')}, each with runs, wins and strike rate by going, course and distance band, cut at ${ukDate(archiveThrough)}.`
+  : `We hold no horse beginning with ${upper}. That is a statement about our archive of ${total.toLocaleString('en-GB')} records, not about the racing.`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': `${canonical}#collection`,
+  url: canonical,
+  name: `Horses beginning with ${upper}`,
+  description,
+  inLanguage: 'en-GB',
+  isPartOf: { '@id': 'https://mazetick.com/#website' },
+  publisher: { '@id': 'https://mazetick.com/#org' },
+  dateModified: stamp.generatedAt,
+};
+---
+<BaseLayout title={title} description={description} jsonLd={jsonLd}>
+  <header class="mast">
+    <p class="mono kicker">Horse records &middot; the archive, by letter</p>
+    <h1 class="display title">
+      {rows.length
+        ? `${plural(rows.length, 'horse')} beginning with ${upper}`
+        : `No horse in our archive begins with ${upper}`}
+    </h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      {rows.length > 0 ? (
+        <p class="lead">
+          Every horse under {upper} that we have seen declared, from{' '}
+          <strong>{first}</strong> to <strong>{last}</strong>. Each name leads to its
+          record by going, by course and by distance band, computed using only races run
+          before the race being described.
+        </p>
+      ) : (
+        <p class="lead">
+          We hold no record for any horse whose name begins with {upper}. That is a
+          statement about our archive, which holds {total.toLocaleString('en-GB')} horses
+          in all, and not about the racing: a horse under {upper} may well have run. This
+          page exists so the alphabet below never leads anywhere broken.
+        </p>
+      )}
+      <p class="note">
+        A record is true as of its last-declared date and is never deleted. Our archive of
+        results runs to {ukDate(archiveThrough)}; a run after that date is missing from
+        these figures.
+        {dates.length > 0 && ` The horses here were last declared between ${ukDate(dates[0])} and ${ukDate(dates[dates.length - 1])}.`}
+      </p>
+      <DataAge collectedThrough={stamp.collectedThrough} generatedAt={stamp.generatedAt} />
+    </div>
+
+    <aside class="rail">
+      <div class="figures">
+        <StatFigure value={rows.length.toLocaleString('en-GB')} label={`records under ${upper}`} />
+        <StatFigure value={total.toLocaleString('en-GB')} label="horses in the archive" />
+      </div>
+    </aside>
+  </div>
+
+  {rows.length > 0 && (
+    <>
+      <form class="filters" data-hz-filter data-js-only hidden>
+        <div class="f f-wide">
+          <label for="hz-q">Filter this letter</label>
+          <input id="hz-q" type="search" autocomplete="off" placeholder="Horse or course" />
+        </div>
+        <div class="f">
+          <label for="hz-limit">Rows</label>
+          <select id="hz-limit">
+            <option value="50">First 50</option>
+            <option value="0" selected>All {rows.length.toLocaleString('en-GB')}</option>
+          </select>
+        </div>
+        <button type="reset" class="reset">Clear</button>
+        <p class="note filters-note on-axis">
+          This box filters the {rows.length.toLocaleString('en-GB')} names on this page.
+          To search the whole archive, use{' '}
+          <a href="/horse#find">the search on the index</a>.
+        </p>
+      </form>
+
+      <section>
+        <h2 id="list" class="section-rule">Every horse we hold under {upper}</h2>
+        <p class="note showing on-axis" data-hz-count="letter" aria-live="polite" hidden></p>
+        <HorseIndexTable rows={rows} id="letter" />
+        <p class="note caption on-axis">
+          <strong>Runs</strong> is what our archive holds, not the horse&rsquo;s official
+          career: the two differ by whatever ran after {ukDate(archiveThrough)} and by
+          whatever predates the archive. A dash under Runs means the horse has run before
+          and those races are not in our archive &mdash; a statement about us.{' '}
+          <strong>No recorded run</strong> is the other thing entirely: a statement about
+          the horse, that we hold no earlier race for it.
+        </p>
+      </section>
+    </>
+  )}
+
+  <section>
+    <h2 id="letters" class="section-rule">The rest of the archive</h2>
+    <LetterNav counts={counts} current={letter} label="The rest of the archive" />
+    <p class="note caption on-axis">
+      The archive is split by first letter and not into numbered pages, because{' '}
+      <strong>a horse never moves</strong>: page seven becomes page eight as the archive
+      grows, and a URL whose contents change every day is worth less than a large one.{' '}
+      <a href="/horse">The index</a> carries today&rsquo;s card and a search across all{' '}
+      {total.toLocaleString('en-GB')}.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .mast .title { max-width: 22ch; }
+  .lead { margin-bottom: var(--sp-5); }
+  .figures {
+    border-left: 1px solid var(--rule-med);
+    padding-left: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
+  section { margin-top: var(--sp-14); }
+  .filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    align-items: end;
+    gap: var(--sp-4);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule-med);
+    padding: var(--sp-4) 0;
+    margin-top: var(--sp-14);
+    margin-bottom: var(--sp-8);
+  }
+  .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+  .f label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .f input, .f select {
+    font-family: var(--font-body);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-2);
+    width: 100%;
+  }
+  .reset {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: transparent;
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--toggle-y) var(--sp-3);
+    cursor: pointer;
+    justify-self: start;
+  }
+  .reset:hover { color: var(--ink); }
+  .filters-note { grid-column: 1 / -1; margin: 0; }
+  .showing { margin-bottom: var(--sp-4); color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .figures { border-left: 0; padding-left: 0; }
+    .filters { grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr)); }
+    .reset { grid-column: 1 / -1; }
+  }
+</style>
+
+<script is:inline>
+  /*
+    Filtro sobre as linhas DESTA letra, que já estão no HTML servido. Não busca
+    nada e não alcança o resto do acervo — e o texto ao lado da barra diz isso e
+    aponta para a busca do índice, porque controle que mente sobre o alcance é
+    pior que controle nenhum.
+
+    Concatenação de string em vez de template literal: a checagem 14 recusa
+    abertura de interpolação no HTML servido, inclusive dentro de comentário.
+  */
+  (function () {
+    var barra = document.querySelector('[data-hz-filter]');
+    var tabela = document.querySelector('[data-hz-table="letter"]');
+    if (!barra || !tabela) return;
+
+    var q = document.getElementById('hz-q');
+    var limit = document.getElementById('hz-limit');
+    if (!q || !limit) return;
+
+    barra.hidden = false;
+
+    var linhas = tabela.querySelectorAll('[data-hz-row]');
+    var vazio = tabela.querySelector('[data-hz-empty]');
+    var rotulo = document.querySelector('[data-hz-count="letter"]');
+
+    function aplicar() {
+      var needle = q.value.trim().toLowerCase();
+      var cap = parseInt(limit.value, 10) || 0;
+      var mostradas = 0;
+      var casadas = 0;
+
+      for (var i = 0; i < linhas.length; i++) {
+        var row = linhas[i];
+        if (!row.__hz) {
+          row.__hz = {
+            name: (row.dataset.name || '').toLowerCase(),
+            course: (row.dataset.course || '').toLowerCase(),
+          };
+        }
+        var c = row.__hz;
+        var ok = !needle || c.name.indexOf(needle) >= 0 || c.course.indexOf(needle) >= 0;
+        if (ok) casadas++;
+        var visivel = ok && (!cap || mostradas < cap);
+        if (visivel) mostradas++;
+        row.hidden = !visivel;
+      }
+
+      if (vazio) vazio.hidden = mostradas !== 0;
+      if (rotulo) {
+        var txt = 'Showing ' + mostradas + ' of ' + linhas.length + ' on this page';
+        if (casadas > mostradas) {
+          txt += ' — ' + casadas + ' match, and the rest are past the row limit you chose';
+        }
+        rotulo.textContent = txt + '. This page is one letter of the archive, not all of it.';
+        rotulo.hidden = false;
+      }
+    }
+
+    barra.addEventListener('input', aplicar);
+    barra.addEventListener('change', aplicar);
+    barra.addEventListener('reset', function () {
+      setTimeout(aplicar, 0);
+    });
+    aplicar();
+  })();
+</script>
