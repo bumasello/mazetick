@@ -210,6 +210,32 @@ export function horseMeta(h: HorseRecord): { title: string; description: string 
 }
 
 /**
+ * A letra sob a qual um cavalo é arquivado.
+ *
+ * Vem do SLUG, não do nome exibido, porque é o slug que define a URL. Conferido
+ * nos 3.094 registros: a primeira letra dos dois coincide em 100% dos casos, e
+ * nenhum slug começa com dígito ou outra coisa. Se um dia houver, cai em `#`, e
+ * a checagem 24 acusa a letra que ninguém gerou em vez de perder o cavalo.
+ */
+export const letterOf = (h: { slug: string }): string => {
+  const c = h.slug[0]?.toLowerCase() ?? '#';
+  return /[a-z]/.test(c) ? c : '#';
+};
+
+/** Quantos cavalos por letra. Letra ausente do mapa é letra sem nenhum. */
+export function letterCounts(records: { slug: string }[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const h of records) {
+    const l = letterOf(h);
+    out[l] = (out[l] ?? 0) + 1;
+  }
+  return out;
+}
+
+/** As 26 letras, sempre as mesmas — o alfabeto não depende do acervo do dia. */
+export const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+/**
  * O rótulo legível de uma faixa de distância, ou `undefined`.
  *
  * ⚠️ Devolve `undefined` de propósito quando a faixa não está publicada, em vez

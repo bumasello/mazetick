@@ -1,52 +1,54 @@
 ---
 /**
- * O índice do acervo de cavalos.
+ * A porta do acervo de cavalos.
  *
- * Serve o apostador que está investigando um nome, e por isso existe antes de
- * os permalinks importarem: sem ele, as páginas de cavalo só são alcançáveis
- * por quem já sabe o slug.
+ * ⚠️ ELA DEIXOU DE SER A LISTA INTEIRA em 2026-09-20, quando o acervo passou de
+ * 863 para 3.094 registros. A 689 bytes por linha, a lista completa numa página
+ * só ia a 2,1 MB crus, e na ordem de 30 mil registros — que é o tamanho da
+ * população em treinamento de UK/IRE — passaria de 20 MB. O corte veio antes de
+ * doer, que é quando corte custa barato.
  *
- * ⚠️ AS LINHAS SAEM TODAS NO HTML SERVIDO. O corte inicial é do CLIENTE, como
- * na /movers, porque é o HTML servido que o Google indexa e é ele que o leitor
- * sem JavaScript recebe. Cortar na geração perderia a indexação em silêncio, e a
- * checagem 20 do verify.mjs recusa o build se acontecer.
+ * O CORTE É A–Z, e a razão é uma só: **é o único em que um cavalo nunca muda de
+ * página**. Paginação numérica move o cavalo da página 7 para a 8 quando o
+ * acervo cresce, e URL indexada cujo conteúdo troca todo dia faz o Google
+ * reindexar tudo sem nada estabilizar. Por data seria pior: o mesmo cavalo
+ * apareceria em várias.
  *
- * ⚠️ A TABELA É MONTADA A PARTIR DOS REGISTROS, não do `horses-index.json`. O
- * índice do produtor serve para CONFERIR (o `fetch-data.mjs` recusa o build se
- * os dois discordarem), e a tela sai da mesma fonte que as páginas de cavalo —
- * senão o índice poderia dizer 43 corridas e a página do bicho dizer 44, com os
- * dois números "corretos" segundo o seu próprio arquivo.
+ * O que fica AQUI:
+ *   - o cartão do dia, inteiro no HTML (é tamanho de página normal);
+ *   - a navegação A–Z, que funciona sem JavaScript;
+ *   - a busca sobre o acervo INTEIRO, não sobre uma letra. Buscar em só uma
+ *     letra seria pior produto que uma página um pouco maior.
+ *
+ * ⚠️ O QUE O ÍNDICE DE BUSCA CUSTA, medido e não estimado:
+ *
+ *     página sem o índice   159 KB crus · 13,7 KB gzip
+ *     só o índice           102 KB crus · 36,6 KB gzip
+ *     página inteira        261 KB crus · 50,8 KB gzip
+ *
+ * Ou seja, o índice é 73% do peso comprimido da porta. Nome de cavalo é texto
+ * de alta entropia e não comprime como prosa — a estimativa de ~15 KB que
+ * autorizou o desenho errou por 2,4×. O alcance fica: cortar a busca para uma
+ * letra seria pior produto. Se a porta precisar emagrecer, a alavanca é servir
+ * o índice como arquivo à parte e buscá-lo na primeira tecla — quem nunca busca
+ * deixa de pagar —, e isso é decisão de produto, não deste arquivo.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StatFigure from '../components/StatFigure.astro';
 import DataAge from '../components/DataAge.astro';
-import { loadRecords, loadCard, rate, statusLabel, plural, verb } from '../lib/horses';
+import LetterNav from '../components/LetterNav.astro';
+import HorseIndexTable from '../components/HorseIndexTable.astro';
+import { loadRecords, loadCard, plural, verb, letterCounts } from '../lib/horses';
 import { ukDate } from '../lib/horse-copy.mjs';
 
 const records = loadRecords();
-// O cartão é lido com `fs` e não importado como módulo: importado, o
-// TypeScript infere o tipo LITERAL do arquivo inteiro — 678 objetos — e o
-// `astro check` passa a analisar dado em vez de código.
+// O cartão é lido com `fs` e não importado como módulo: importado, o TypeScript
+// infere o tipo LITERAL do arquivo inteiro e o `astro check` passa a analisar
+// dado em vez de código.
 const card = loadCard();
 
-// A data do cartão sai do próprio cartão. Se um dia o arquivo trouxer mais de
-// um dia (o produtor mudar a janela), a página NÃO afirma uma data só.
-const cardDates = [...new Set(card.horses.map((x) => x.as_of))].sort();
-const cardDate = cardDates.length === 1 ? cardDates[0] : null;
-
-// Quem foi declarado no cartão mais recente, e quem é registro acumulado de
-// dias anteriores. Hoje as duas populações coincidem; o texto abaixo é escrito
-// para não depender disso, porque amanhã não coincidem mais.
-const declaredDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
-const newest = declaredDates[declaredDates.length - 1];
-const onCard = records.filter((h) => h.last_declared.date === newest);
-const earlier = records.filter((h) => h.last_declared.date !== newest);
-
+const counts = letterCounts(records);
 const archiveThrough = card.history_depth.through;
-// Lacuna conhecida, publicada em vez de calada: onde dois cavalos do arquivo
-// dividem o nome, não há como dizer de quem é a corrida, e o produtor a REMOVE.
-// Quem for um desses lê uma carreira curta que não é curta — e o único lugar
-// onde temos o número é aqui, porque o arquivo não diz QUAIS cavalos são.
 const collisions = card.name_collisions;
 
 /**
@@ -55,27 +57,47 @@ const collisions = card.name_collisions;
  *   collected_through — quando o CARTÃO foi lido da API
  *   generated_at      — quando NÓS derivamos o arquivo
  *
- * Hoje há duas horas entre um e outro. Se a leitura parar, `generated_at`
- * continua fresco a cada rodada e o dado não — mostrar a derivação como idade
- * faria "a coleta quebrou" se disfarçar de "não há corrida hoje". A idade sai do
- * primeiro, como na /movers e na /extra-places. Até 2026-09-20 o contrato não
- * trazia o campo e esta página não tinha como fazer a distinção.
+ * Se a leitura parar, `generated_at` continua fresco a cada rodada e o dado
+ * não. A idade na tela sai do primeiro, como na /movers e na /extra-places.
  */
 const cardRead = card.collected_through;
 const cardEmpty = card.horses.length === 0;
+
+// O cartão mais recente: quem foi declarado nele. O resto do acervo vive nas
+// páginas de letra, e a busca alcança os dois.
+const declaredDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
+const newest = declaredDates[declaredDates.length - 1] ?? null;
+const onCard = newest ? records.filter((h) => h.last_declared.date === newest) : [];
+const courses = [...new Set(onCard.map((h) => h.last_declared.venue))].sort();
 
 const headline =
   records.length === 0
     ? 'No horse records collected yet'
     : cardEmpty
       ? `${plural(records.length, 'horse')} in the archive, and no declarations on the last card we read`
-      : earlier.length === 0
-        ? `${plural(records.length, 'horse')}, every one declared on the ${ukDate(newest)} card`
-        : `${plural(records.length, 'horse')} in the archive, ${onCard.length.toLocaleString('en-GB')} of them declared on the ${ukDate(newest)} card`;
+      : `${plural(onCard.length, 'horse')} declared on the ${ukDate(newest as string)} card, out of ${records.length.toLocaleString('en-GB')} we hold`;
 
-/** O que a linha diz na coluna de amostra, e é onde os três estados divergem. */
-const runsCell = (h: (typeof records)[number]) =>
-  h.status === 'no_record' ? null : h.career.runs;
+/**
+ * O índice de busca: slug, nome e data da última declaração, para o acervo todo.
+ *
+ * Array de arrays e não de objetos, de propósito — sem nomes de chave repetidos
+ * três mil vezes —, e a data entra como ÍNDICE de uma lista curta em vez de
+ * texto: há oito datas distintas para 3.094 registros, então repetir
+ * "2026-09-19" três mil vezes custava 37 KB por nada. Medido: 136 KB → 99 KB
+ * crus. E é DERIVADO NOSSO: nome de cavalo declarado é fato de
+ * registro público e a lista é a do nosso acervo. Não há campo de fornecedor
+ * aqui, o que a checagem 16 confere varrendo também o JSON EMBUTIDO no HTML, e
+ * não só os arquivos `.json` — um `<script type="application/json">` é tão
+ * público quanto um arquivo, e era um buraco na varredura.
+ */
+const searchDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
+const searchIndex = {
+  // Formatadas AQUI, não no cliente: são oito strings, e formatar no navegador
+  // significaria uma segunda implementação de data ao lado de `ukDate` — duas
+  // implementações da mesma regra divergem, que é a lição do hash da CSP.
+  dates: searchDates.map((d) => ukDate(d)),
+  rows: records.map((h) => [h.slug, h.name, searchDates.indexOf(h.last_declared.date)]),
+};
 ---
 <BaseLayout
   title="Horse form by going, course and distance — mazetick"
@@ -111,11 +133,10 @@ const runsCell = (h: (typeof records)[number]) =>
         <p class="note">
           One gap we can measure and cannot close:{' '}
           <strong>{plural(collisions.horses, 'horse')}</strong> on this card{' '}
-          {verb(collisions.horses, 'shares', 'share')} a name
-          with another horse in the archive, and{' '}
-          <strong>{plural(collisions.runs_removed, 'run')}</strong>{' '}
-          {verb(collisions.runs_removed, 'was', 'were')} dropped rather
-          than credited to the wrong one.{' '}
+          {verb(collisions.horses, 'shares', 'share')} a name with another horse in the
+          archive, and <strong>{plural(collisions.runs_removed, 'run')}</strong>{' '}
+          {verb(collisions.runs_removed, 'was', 'were')} dropped rather than credited to
+          the wrong one.{' '}
           {verb(collisions.horses, 'That career reads', 'Those careers read')} short here,
           and the file does not say which{' '}
           {verb(collisions.horses, 'horse it is', 'horses they are')}, so we cannot flag{' '}
@@ -128,7 +149,13 @@ const runsCell = (h: (typeof records)[number]) =>
       {records.length > 0 && (
         <div class="figures">
           <StatFigure value={records.length.toLocaleString('en-GB')} label="horses in the archive" />
-          <StatFigure value={onCard.length.toLocaleString('en-GB')} label={`declared on the ${ukDate(newest)} card`} accent />
+          {!cardEmpty && (
+            <StatFigure
+              value={onCard.length.toLocaleString('en-GB')}
+              label={`declared on the ${ukDate(newest as string)} card`}
+              accent
+            />
+          )}
         </div>
       )}
     </aside>
@@ -149,103 +176,102 @@ const runsCell = (h: (typeof records)[number]) =>
   ) : (
     <>
       {/*
-        A barra nasce OCULTA e é revelada pelo script. Sem JavaScript ela não
-        existe — controle morto é pior que controle nenhum — e a tabela inteira
-        continua na página. Nada aqui busca dado: o filtro esconde linhas que já
-        estão servidas.
+        BUSCA SOBRE O ACERVO INTEIRO, e não sobre esta página.
+
+        O bloco nasce oculto e só o script o revela: sem JavaScript ele não
+        existe, e quem chega sem script navega pelo A–Z abaixo, que é HTML puro.
+        A lista de nomes viaja num <script type="application/json"> — não é
+        executada, é lida do DOM — e cobre todos, porque busca que só alcança
+        uma letra é pior produto que uma página um pouco maior.
       */}
-      <form class="filters" data-hz-filter data-js-only hidden>
-        <div class="f f-wide">
-          <label for="hz-q">Search</label>
-          <input id="hz-q" type="search" autocomplete="off" placeholder="Horse or course" />
-        </div>
-        {earlier.length > 0 && (
-          <div class="f">
-            <label for="hz-when">Declared</label>
-            <select id="hz-when">
-              <option value="">Any date</option>
-              <option value={newest}>{ukDate(newest)} card</option>
-              <option value="earlier">Earlier than that</option>
-            </select>
-          </div>
-        )}
-        <div class="f">
-          <label for="hz-state">Record</label>
-          <select id="hz-state">
-            <option value="">Any</option>
-            <option value="has_history">Runs held</option>
-            <option value="debut">No recorded run</option>
-            <option value="no_record">Ran before; not held</option>
-          </select>
-        </div>
-        <div class="f">
-          <label for="hz-limit">Rows</label>
-          <select id="hz-limit">
-            <option value="50" selected>First 50</option>
-            <option value="100">First 100</option>
-            <option value="250">First 250</option>
-            <option value="0">All {records.length.toLocaleString('en-GB')}</option>
-          </select>
-        </div>
-        <button type="reset" class="reset">Clear</button>
-        <p class="note filters-note on-axis">
-          Filtering changes the table only. The counts above describe all{' '}
-          {records.length.toLocaleString('en-GB')} records held, filtered or not.
-        </p>
-      </form>
+      <section class="find" data-hz-find data-js-only hidden>
+        <h2 id="find" class="section-rule">Find a horse</h2>
+        <form class="findbar" role="search">
+          <label class="sr-only" for="hz-find">Horse name</label>
+          <input
+            id="hz-find"
+            type="search"
+            autocomplete="off"
+            placeholder={`Type a name — searches all ${records.length.toLocaleString('en-GB')}`}
+          />
+        </form>
+        <p class="note" data-hz-find-count aria-live="polite"></p>
+        <ul class="results" data-hz-results></ul>
+      </section>
 
       <section>
-        <h2 class="section-rule">Every horse we hold a record for</h2>
-        <p class="note showing on-axis" data-hz-count aria-live="polite" hidden></p>
-        <table class="dense" data-hz-table>
-          <thead>
-            <tr>
-              <th scope="col">Horse</th>
-              <th scope="col">Last declared</th>
-              <th scope="col" class="num">Runs</th>
-              <th scope="col" class="num">Wins</th>
-              <th scope="col" class="num">Win rate</th>
-              <th scope="col">What we hold</th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((h) => (
-              <tr data-hz-row data-name={h.name} data-course={h.last_declared.venue} data-when={h.last_declared.date} data-state={h.status}>
-                <td data-label="Horse"><a href={`/horse/${h.slug}`}>{h.name}</a></td>
-                <td data-label="Last declared" class="n">
-                  {ukDate(h.last_declared.date)} <span class="muted">{h.last_declared.venue}</span>
-                </td>
-                <td data-label="Runs" class="num">{runsCell(h) === null ? '—' : runsCell(h)}</td>
-                {/*
-                  `debut` mostra 0 e 0 porque é AFIRMAÇÃO: não há corrida
-                  registrada, logo não há vitória. `no_record` mostra travessão
-                  nos três porque é CONFISSÃO: não sabemos quantas foram. Pôr
-                  zero ali seria transformar a nossa lacuna em fato sobre o
-                  cavalo, que é o defeito que esta página existe para não ter.
-                */}
-                <td data-label="Wins" class="num">{h.status === 'no_record' ? '—' : h.career.wins}</td>
-                <td data-label="Win rate" class="num">{rate(h.career.win_pct)}</td>
-                <td data-label="What we hold" class="faint">
-                  {h.status === 'has_history' ? '' : statusLabel(h.status)}
-                </td>
-              </tr>
-            ))}
-            <tr class="nomatch" data-hz-empty hidden>
-              <td colspan="6">No horse here matches the filter.</td>
-            </tr>
-          </tbody>
-        </table>
-
+        <h2 id="letters" class="section-rule">Browse the archive by letter</h2>
+        <LetterNav counts={counts} label="Browse the archive by letter" />
         <p class="note caption on-axis">
-          <strong>Runs</strong> is what our archive holds, not the horse&rsquo;s official
-          career: the two differ by whatever ran after {ukDate(archiveThrough)} and by
-          whatever predates the archive. A dash under Runs means the horse has run before
-          and those races are not in our archive &mdash; which is a statement about us.
-          <strong>No recorded run</strong> is the other thing entirely: it is a statement
-          about the horse, that we hold no earlier race for it.
-          {cardDate === null && ' This file spans more than one card date, so the counts above are read from the records themselves.'}
+          The archive is split by the first letter of the horse&rsquo;s name, and each
+          letter page carries every horse under it. We split this way, and not into
+          numbered pages, because <strong>a horse never moves</strong>: page seven
+          becomes page eight as the archive grows, and a URL whose contents change every
+          day is worth less to a reader, and to a search engine, than a large one.
         </p>
       </section>
+
+      {!cardEmpty && (
+        <>
+          <form class="filters" data-hz-filter data-js-only hidden>
+            <div class="f f-wide">
+              <label for="hz-q">Filter this card</label>
+              <input id="hz-q" type="search" autocomplete="off" placeholder="Horse or course" />
+            </div>
+            <div class="f">
+              <label for="hz-course">Course</label>
+              <select id="hz-course">
+                <option value="">All courses</option>
+                {courses.map((c) => <option value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div class="f">
+              <label for="hz-state">Record</label>
+              <select id="hz-state">
+                <option value="">Any</option>
+                <option value="has_history">Runs held</option>
+                <option value="debut">No recorded run</option>
+                <option value="no_record">Ran before; not held</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="hz-limit">Rows</label>
+              <select id="hz-limit">
+                <option value="50" selected>First 50</option>
+                <option value="100">First 100</option>
+                <option value="0">All {onCard.length.toLocaleString('en-GB')}</option>
+              </select>
+            </div>
+            <button type="reset" class="reset">Clear</button>
+            <p class="note filters-note on-axis">
+              This filters the card below only. The search above covers all{' '}
+              {records.length.toLocaleString('en-GB')} records held, and the counts at the
+              top of the page describe the whole archive, filtered or not.
+            </p>
+          </form>
+
+          <section>
+            <h2 id="card" class="section-rule">Declared on the {ukDate(newest as string)} card</h2>
+            <p class="note showing on-axis" data-hz-count="card" aria-live="polite" hidden></p>
+            <HorseIndexTable rows={onCard} id="card" />
+            <p class="note caption on-axis">
+              <strong>Runs</strong> is what our archive holds, not the horse&rsquo;s official
+              career: the two differ by whatever ran after {ukDate(archiveThrough)} and by
+              whatever predates the archive. A dash under Runs means the horse has run before
+              and those races are not in our archive &mdash; which is a statement about us.{' '}
+              <strong>No recorded run</strong> is the other thing entirely: it is a statement
+              about the horse, that we hold no earlier race for it.
+            </p>
+          </section>
+        </>
+      )}
+
+      {/*
+        O índice de nomes. `application/json` não é executado pelo navegador —
+        é lido do DOM pelo script abaixo. Fica no fim porque é o maior bloco da
+        página e nada acima dele depende dele para renderizar.
+      */}
+      <script type="application/json" data-hz-index set:html={JSON.stringify(searchIndex)} />
     </>
   )}
 </BaseLayout>
@@ -261,11 +287,53 @@ const runsCell = (h: (typeof records)[number]) =>
     gap: var(--sp-6);
   }
   section { margin-top: var(--sp-14); }
-  .empty { border-top: 1px solid var(--rule-med); padding-top: var(--sp-6); }
-  .nomatch { color: var(--ink-faint); }
+  .empty { padding-top: var(--sp-2); }
 
-  /* Mesma barra da /movers: grade, não flex, para que os rótulos partilhem
-     linha de base e os campos partilhem largura. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  /* -- Busca ---------------------------------------------------------------- */
+  .findbar { margin-bottom: var(--sp-3); }
+  .findbar input {
+    font-family: var(--font-body);
+    font-size: var(--fs-lead);
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule-med);
+    border-radius: var(--radius);
+    padding: var(--sp-3);
+    width: 100%;
+    max-width: calc(100% - var(--rail) - var(--gutter));
+  }
+  /* ⚠️ `:global` AQUI NÃO É PREGUIÇA. Os <li> de resultado nascem do script, em
+     tempo de execução, e por isso NÃO recebem o atributo `data-astro-cid-*` que
+     o Astro usa para escopar estilo. Sem o global, as regras abaixo não casam
+     nada: o primeiro teste na tela mostrou "Albertini Starlast declared
+     2026-09-16" — o `gap` do flex simplesmente não estava sendo aplicado. */
+  .results { list-style: none; margin: 0; padding: 0; }
+  .results :global(li) {
+    border-bottom: 1px solid var(--rule);
+    padding: var(--row-y) 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-2) var(--sp-4);
+  }
+  .results :global(a) { font-size: var(--fs-body); }
+  .results :global(.when) {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--ls-label);
+    text-transform: none;
+    color: var(--ink-faint);
+  }
+
+  /* -- Barra de filtro do cartão -------------------------------------------- */
   .filters {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr auto;
@@ -316,83 +384,120 @@ const runsCell = (h: (typeof records)[number]) =>
     .figures { border-left: 0; padding-left: 0; }
     .filters { grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr)); }
     .reset { grid-column: 1 / -1; }
-  }
-
-  /* -- O índice no celular ---------------------------------------------------
-     O modo lista padrão do `.dense` empilha as seis células de cada linha, uma
-     por linha. Numa TABELA DE DADO isso é o certo — são seis grandezas a
-     comparar. Aqui não: a linha é uma ENTRADA DE ÍNDICE, e empilhada ela dava
-     **20.743 px de página** para as primeiras 100 entradas, medido em 390 px de
-     largura. Ninguém rola vinte mil pixels para achar um nome.
-
-     Então, e só nesta tabela, a linha volta a ser uma linha: nome em destaque,
-     declaração embaixo, e os números correndo numa terceira, cada um com o seu
-     rótulo colado. Nada é escondido — as seis células continuam servidas e
-     legíveis, o que muda é a direção em que se leem. */
-  @media (max-width: 720px) {
-    .dense[data-hz-table] tr {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      column-gap: var(--sp-4);
-      row-gap: var(--sp-1);
-    }
-    .dense[data-hz-table] td {
-      display: inline-flex;
-      width: auto;
-      gap: var(--sp-2);
-      padding: 0;
-      justify-content: flex-start;
-    }
-    .dense[data-hz-table] td[data-label='Horse'] { flex: 1 0 100%; font-size: var(--fs-lead); }
-    .dense[data-hz-table] td[data-label='Horse']::before { display: none; }
-    .dense[data-hz-table] td[data-label='Last declared'] { flex: 1 0 100%; }
-    .dense[data-hz-table] td[data-label='What we hold'] { flex: 1 0 100%; }
-    /* Célula vazia não vira rótulo órfão. O `.dense td:empty` do base.css perde
-       para os seletores acima por especificidade, e o resultado era um
-       "WHAT WE HOLD" solto embaixo de 615 das 678 entradas. */
-    .dense[data-hz-table] td:empty { display: none; }
+    .findbar input { max-width: none; }
   }
 </style>
 
 <script is:inline>
   /*
-    Busca e filtro do índice. Esconde linhas que já estão no HTML; não busca
-    nada, não reordena e não inventa número.
+    Duas coisas diferentes, e o código as mantém diferentes de propósito:
 
-    Concatenação de string em vez de template literal, de propósito: a checagem
-    14 recusa abertura de interpolação no HTML servido — inclusive dentro de
-    comentário, que também é servido.
+    1. A BUSCA varre o acervo inteiro, a partir do índice de nomes embutido na
+       página, e leva para a página do cavalo. Não esconde nem mostra nada da
+       tabela abaixo.
+    2. O FILTRO esconde linhas do cartão do dia, que já estão no HTML servido.
+       Não busca nada e não alcança o resto do acervo — e diz isso na tela,
+       porque filtro que mente sobre a amostra é pior que filtro nenhum.
+
+    Concatenação de string em vez de template literal: a checagem 14 recusa
+    abertura de interpolação no HTML servido, inclusive dentro de comentário.
   */
   (function () {
-    var bar = document.querySelector('[data-hz-filter]');
-    var table = document.querySelector('[data-hz-table]');
-    if (!bar || !table) return;
+    // --- 1. busca -----------------------------------------------------------
+    var bloco = document.querySelector('[data-hz-find]');
+    var cru = document.querySelector('[data-hz-index]');
+    if (bloco && cru) {
+      var lista = null;
+      try {
+        lista = JSON.parse(cru.textContent);
+      } catch (e) {
+        lista = null;
+      }
+      // O índice chega como { dates, rows }: a data de cada linha é um índice
+      // na lista curta de datas, não a string repetida três mil vezes.
+      var datas = lista && lista.dates ? lista.dates : [];
+      lista = lista && lista.rows ? lista.rows : null;
+      if (lista && lista.length) {
+        var campo = document.getElementById('hz-find');
+        var saida = document.querySelector('[data-hz-results]');
+        var conta = document.querySelector('[data-hz-find-count]');
+        var TETO = 40;
 
-    var q = document.getElementById('hz-q');
-    var when = document.getElementById('hz-when');
+        bloco.hidden = false;
+
+        var buscar = function () {
+          var q = campo.value.trim().toLowerCase();
+          saida.textContent = '';
+          if (q.length < 2) {
+            conta.textContent =
+              q.length === 1
+                ? 'Two letters or more, please: one letter would match most of the archive.'
+                : 'Type two letters or more. This searches every horse we hold, not just the card below.';
+            return;
+          }
+          var achados = [];
+          for (var i = 0; i < lista.length; i++) {
+            if (lista[i][1].toLowerCase().indexOf(q) >= 0) achados.push(lista[i]);
+          }
+          var frag = document.createDocumentFragment();
+          for (var j = 0; j < achados.length && j < TETO; j++) {
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = '/horse/' + achados[j][0];
+            a.textContent = achados[j][1];
+            var quando = document.createElement('span');
+            quando.className = 'when';
+            quando.textContent = 'last declared ' + (datas[achados[j][2]] || 'date unknown');
+            li.appendChild(a);
+            li.appendChild(quando);
+            frag.appendChild(li);
+          }
+          saida.appendChild(frag);
+          if (achados.length === 0) {
+            conta.textContent =
+              'No horse in the archive has that in its name. We hold ' + lista.length + '.';
+          } else if (achados.length > TETO) {
+            conta.textContent =
+              'Showing the first ' + TETO + ' of ' + achados.length + ' matches. Type more of the name to narrow it.';
+          } else {
+            conta.textContent = achados.length + (achados.length === 1 ? ' match.' : ' matches.');
+          }
+        };
+
+        campo.addEventListener('input', buscar);
+        bloco.querySelector('form').addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          buscar();
+        });
+        buscar();
+      }
+    }
+
+    // --- 2. filtro do cartão ------------------------------------------------
+    var barra = document.querySelector('[data-hz-filter]');
+    var tabela = document.querySelector('[data-hz-table="card"]');
+    if (!barra || !tabela) return;
+
+    var q2 = document.getElementById('hz-q');
+    var course = document.getElementById('hz-course');
     var state = document.getElementById('hz-state');
     var limit = document.getElementById('hz-limit');
-    if (!q || !state || !limit) return;
+    if (!q2 || !course || !state || !limit) return;
 
-    bar.hidden = false;
+    barra.hidden = false;
 
-    var rows = table.querySelectorAll('[data-hz-row]');
-    var empty = table.querySelector('[data-hz-empty]');
-    var label = document.querySelector('[data-hz-count]');
-    var newest = when ? when.options[1].value : '';
+    var linhas = tabela.querySelectorAll('[data-hz-row]');
+    var vazio = tabela.querySelector('[data-hz-empty]');
+    var rotulo = document.querySelector('[data-hz-count="card"]');
 
-    function apply() {
-      var needle = q.value.trim().toLowerCase();
+    function aplicar() {
+      var needle = q2.value.trim().toLowerCase();
       var cap = parseInt(limit.value, 10) || 0;
-      var wantWhen = when ? when.value : '';
-      var wantState = state.value;
-      var on = Boolean(needle || wantWhen || wantState || cap);
-      var shown = 0;
-      var matched = 0;
+      var mostradas = 0;
+      var casadas = 0;
 
-      for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
+      for (var i = 0; i < linhas.length; i++) {
+        var row = linhas[i];
         if (!row.__hz) {
           row.__hz = {
             name: (row.dataset.name || '').toLowerCase(),
@@ -400,36 +505,32 @@ const runsCell = (h: (typeof records)[number]) =>
           };
         }
         var c = row.__hz;
-        var okWhen =
-          !wantWhen ||
-          (wantWhen === 'earlier' ? row.dataset.when !== newest : row.dataset.when === wantWhen);
         var ok =
           (!needle || c.name.indexOf(needle) >= 0 || c.course.indexOf(needle) >= 0) &&
-          okWhen &&
-          (!wantState || row.dataset.state === wantState);
-
-        if (ok) matched++;
-        var visible = ok && (!cap || shown < cap);
-        if (visible) shown++;
-        row.hidden = !visible;
+          (!course.value || row.dataset.course === course.value) &&
+          (!state.value || row.dataset.state === state.value);
+        if (ok) casadas++;
+        var visivel = ok && (!cap || mostradas < cap);
+        if (visivel) mostradas++;
+        row.hidden = !visivel;
       }
 
-      if (empty) empty.hidden = shown !== 0;
-      if (label) {
-        var txt = 'Showing ' + shown + ' of ' + rows.length + ' horses';
-        if (matched > shown) {
-          txt += ' — ' + matched + ' match, and the rest are past the row limit you chose';
+      if (vazio) vazio.hidden = mostradas !== 0;
+      if (rotulo) {
+        var txt = 'Showing ' + mostradas + ' of ' + linhas.length + ' horses on this card';
+        if (casadas > mostradas) {
+          txt += ' — ' + casadas + ' match, and the rest are past the row limit you chose';
         }
-        label.textContent = txt + '. The counts at the top of the page describe every record held.';
-        label.hidden = !on;
+        rotulo.textContent = txt + '. The archive holds more; the search above reaches all of it.';
+        rotulo.hidden = false;
       }
     }
 
-    bar.addEventListener('input', apply);
-    bar.addEventListener('change', apply);
-    bar.addEventListener('reset', function () {
-      setTimeout(apply, 0);
+    barra.addEventListener('input', aplicar);
+    barra.addEventListener('change', aplicar);
+    barra.addEventListener('reset', function () {
+      setTimeout(aplicar, 0);
     });
-    apply();
+    aplicar();
   })();
 </script>

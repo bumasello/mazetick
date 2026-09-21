@@ -1,0 +1,102 @@
+---
+/**
+ * A navegação A–Z do acervo.
+ *
+ * ⚠️ POR QUE A–Z E NÃO PAGINAÇÃO NUMÉRICA, que é o que se faz por reflexo:
+ * é o único corte em que **um cavalo nunca muda de página**. Em "página 7" o
+ * mesmo cavalo escorrega para a 8 quando o acervo cresce, e o conteúdo de uma
+ * URL que já foi indexada troca todo dia — o Google reindexa tudo e nada
+ * estabiliza. Por data seria pior ainda: o mesmo cavalo apareceria em várias.
+ *
+ * A letra vem do SLUG, não do nome exibido. Conferido nos 3.094 registros: a
+ * primeira letra dos dois coincide em 100% dos casos, então não há leitor que
+ * procure "Zimmerman" em Z e o encontre noutro lugar. Se um dia divergirem, é o
+ * slug que manda, porque é ele que define a URL.
+ *
+ * Todas as 26 letras saem sempre, mesmo as que hoje têm dois cavalos (X) e
+ * mesmo as que amanhã podem ter zero: o alfabeto é fixo, logo o conjunto de
+ * URLs é fixo. Link que aparece e some conforme o dia é a mesma doença da
+ * paginação numérica, só que na navegação.
+ */
+interface Props {
+  /** letra → quantos cavalos. Letra ausente do mapa é letra vazia. */
+  counts: Record<string, number>;
+  /** A letra da página atual, se estivermos numa. */
+  current?: string;
+  label?: string;
+}
+const { counts, current, label = 'Browse the archive by letter' } = Astro.props;
+const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+---
+{/*
+  O rótulo vai só no `aria-label`: a seção que envolve esta navegação já traz um
+  <h2> com o mesmo texto, e renderizá-lo de novo punha "THE REST OF THE ARCHIVE"
+  duas vezes, uma embaixo da outra. Visto na tela, não no código.
+*/}
+<nav class="az" aria-label={label}>
+  <ul>
+    {LETTERS.map((l) => {
+      const n = counts[l] ?? 0;
+      const here = l === current;
+      return (
+        <li>
+          <a
+            href={`/horse/letter/${l}`}
+            class:list={['az-item', { here }]}
+            aria-current={here ? 'page' : undefined}
+          >
+            <span class="az-letter">{l.toUpperCase()}</span>
+            <span class="az-count">{n}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</nav>
+
+<style>
+  .az { border-top: 1px solid var(--ink); padding-top: var(--rule-pad); }
+  /* As linhas de grade saem de BORDA nos itens, não de `gap` sobre um fundo.
+     Com o fundo, as células vazias no fim da última fila — 26 letras nunca
+     preenchem a grade inteira — apareciam como um retângulo cinza pendurado,
+     que lê como defeito de renderização. */
+  .az ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+  .az li { margin: 0; }
+  .az-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: var(--sp-2) 0;
+    background: var(--ground);
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .az-item:hover { background: var(--panel); color: var(--accent); }
+  /* A letra da página atual é preenchida, não sublinhada: sublinhado aqui
+     competiria com os vinte e cinco links ao lado. */
+  .az-item.here { background: var(--ink); color: var(--ground); }
+  .az-item.here .az-count { color: var(--ground); }
+  .az-letter {
+    font-family: var(--font-display);
+    font-size: var(--fs-body);
+    line-height: 1;
+  }
+  .az-count {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

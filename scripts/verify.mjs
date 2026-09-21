@@ -68,8 +68,23 @@ check(
     // marcava `Punchestown<span class="faint"> (IE)</span>`, que renderiza
     // "Punchestown (IE)" — o espaço está DENTRO do span. O que denuncia o bug
     // é palavra, tag, e logo em seguida um caractere não-branco.
+    // ⚠️ AMPLIADA EM 2026-09-20, e o motivo apareceu na tela, não no código.
+    //     A /horse servia "…a statement about us.<strong>No recorded run</strong>"
+    //     — o compilador aparou a quebra de linha entre o ponto final e a tag, e
+    //     o texto saiu "us.No recorded run". A versão anterior exigia `\w` ANTES
+    //     da tag, então uma PONTUAÇÃO colada passava batido, que é justamente a
+    //     junção mais provável em prosa: fim de frase, tag inline, palavra.
+    //
+    //     A classe é só de pontuação de frase, e não "qualquer não-espaço": um
+    //     parêntese ou aspa colados a um link — `(<a …>texto</a>)` — são
+    //     legítimos e continuam passando.
     const T = '(?:a|span|strong|em|code|b|i)';
-    const rx = new RegExp(`.{20}(?:\\w<${T}[^>]*>\\S|\\S</${T}>\\w).{20}`, 'g');
+    //     Só o lado de ABERTURA foi ampliado. Pontuação DEPOIS de uma tag que
+    //     fecha — "</a>," ou "</em>." — é inglês normal e aparece em toda página;
+    //     ampliar os dois lados acusou 8.749 ocorrências legítimas na primeira
+    //     tentativa. E `;` fica FORA da classe porque é o fim de toda entidade
+    //     HTML: "&mdash;<em>" é correto e não pode quebrar o build.
+    const rx = new RegExp(`.{20}(?:[\\w.,:!?]<${T}[^>]*>\\S|\\S</${T}>\\w).{20}`, 'g');
     const m = read(f).match(rx);
     return m ? m.map((s) => `${rel(f)}: …${s.replace(/\s+/g, ' ')}…`) : [];
   }),
@@ -572,6 +587,28 @@ check(
   const distData = all.filter((f) => f.endsWith('.json'));
   const dataFiles = [...srcData, ...distData];
 
+  /*
+    ⚠️ E O JSON QUE NÃO É ARQUIVO.
+
+    A /horse embute o índice de nomes num `<script type="application/json">`
+    para a busca alcançar o acervo inteiro. Esse bloco é tão público quanto um
+    `.json` em dist/ — qualquer um lê no fonte da página —, e a varredura por
+    arquivo não o via. Buraco fechado aqui: todo JSON embutido no HTML servido
+    passa pelas MESMAS chaves proibidas.
+
+    Hoje o índice é array de arrays e não tem chave nenhuma, então esta metade
+    passa trivialmente. É exatamente o caso de "olhar o lugar errado" que este
+    projeto já pagou quatro vezes, e o custo de varrer é zero.
+  */
+  const embutidos = [];
+  for (const f of pages) {
+    for (const m of read(f).matchAll(
+      /<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/gi,
+    )) {
+      embutidos.push({ nome: `${rel(f)} (json embutido)`, texto: m[1] });
+    }
+  }
+
   // Uma classe só, e a fronteira é a mesma para todos os termos: começo/fim da
   // chave ou qualquer caractere não alfanumérico — o que INCLUI o sublinhado.
   //
@@ -638,6 +675,39 @@ check(
       return [];
     };
     banned.push(...new Set(walkKeys(json)));
+  }
+
+  // Mesma varredura de chave, agora sobre o JSON que viaja dentro do HTML.
+  for (const { nome, texto } of embutidos) {
+    let json;
+    try {
+      json = JSON.parse(texto);
+    } catch (e) {
+      banned.push(`${nome}: não parseia — ${e.message.slice(0, 50)}`);
+      continue;
+    }
+    const walkEmbutido = (o, at = '') => {
+      if (Array.isArray(o)) return o.flatMap((v, i) => walkEmbutido(v, `${at}[${i}]`));
+      if (o && typeof o === 'object') {
+        return Object.entries(o).flatMap(([k, v]) =>
+          (forbidden(k) ? [`${nome}: campo proibido "${k}" em ${at || 'raiz'}`] : []).concat(
+            walkEmbutido(v, at ? `${at}.${k}` : k),
+          ),
+        );
+      }
+      return [];
+    };
+    banned.push(...new Set(walkEmbutido(json)));
+  }
+
+  for (const f of dataFiles) {
+    const raw = read(f);
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      continue;
+    }
 
     // Só os JSON que ALIMENTAM a página carregam contrato de carimbo. Um .json
     // qualquer em dist/ (manifest, etc.) tem de passar pela 16, não pela 17.
@@ -657,7 +727,9 @@ check(
 
   check('Sem campo proibido nos JSON de dados', banned);
   check('Todo JSON de dados carimbado, cada um com o carimbo do seu contrato', undated);
-  console.log(`    (${srcData.length} em src/data + ${distData.length} em dist/ varridos)`);
+  console.log(
+    `    (${srcData.length} em src/data + ${distData.length} em dist/ + ${embutidos.length} embutidos no HTML)`,
+  );
 }
 
 // 18. Toda URL do sitemap resolve para um arquivo gerado, e nenhuma indexável
@@ -930,6 +1002,11 @@ const horseRecords = fs.existsSync('src/data/horses')
 const horseBySlug = new Map(horseRecords.map((h) => [h.slug, h]));
 const horsePages = pages.filter((f) => /^horse[/\\][^/\\]+\.html$/.test(rel(f)));
 const horseIndexPage = pages.find((f) => rel(f) === 'horse.html');
+// As páginas de letra ficam um nível abaixo (`horse/letter/s.html`), então NÃO
+// caem em `horsePages` — o que é o que se quer: as checagens 25, 26, 27 e 29
+// perguntam de um cavalo, e uma letra não é um cavalo.
+const letterPages = pages.filter((f) => /^horse[/\\]letter[/\\][^/\\]+\.html$/.test(rel(f)));
+const LETTER_SEGMENT = 'letter';
 
 // 24. Acervo e páginas em correspondência 1:1, e o índice servindo todo mundo.
 //
@@ -969,18 +1046,66 @@ const horseIndexPage = pages.find((f) => rel(f) === 'horse.html');
     if (!horseBySlug.has(slug)) problems.push(`dist/horse/${slug}.html não tem registro de origem`);
   }
 
-  // O índice tem de SERVIR uma linha por cavalo. É a metade que a checagem 20
-  // faz para a /movers, e sem ela o corte no cliente poderia virar corte na
-  // geração sem ninguém notar.
-  if (horseIndexPage) {
-    const served = [...read(horseIndexPage).matchAll(/\bdata-hz-row\b/g)].length;
-    if (served < horseBySlug.size) {
-      problems.push(`horse.html serve ${served} linhas para ${horseBySlug.size} registros — o resto ficaria só no cliente`);
+  /*
+    ⚠️ A METADE QUE MUDOU COM A PARTIÇÃO A–Z, e ela ficou MAIS exigente, não
+    menos.
+
+    Antes: a /horse tinha de servir uma linha por registro. Com 3.094 registros
+    isso passou a ser uma página de 2,1 MB, e o acervo foi partido por letra.
+    A exigência não caiu para "alguma página serve" — passou a ser sobre a
+    UNIÃO: cada registro aparece em EXATAMENTE UMA página de letra, e a soma
+    fecha com o acervo. Isso pega três coisas que a versão antiga não pegava:
+    cavalo em nenhuma letra, cavalo em duas, e cavalo na letra errada.
+
+    O alfabeto é fixo em 26, então a contagem de páginas também é: letra que
+    some é link quebrado na navegação de todas as outras.
+  */
+  const vistos = new Map();
+  for (const f of letterPages) {
+    const letra = rel(f).replace(/^horse[/\\]letter[/\\]/, '').replace(/\.html$/, '');
+    for (const m of read(f).matchAll(/<tr\b[^>]*\bdata-hz-row\b[^>]*>/g)) {
+      const slug = m[0].match(/data-slug="([^"]+)"/)?.[1];
+      if (!slug) {
+        problems.push(`${rel(f)}: linha servida sem data-slug — não dá para conferir a cobertura`);
+        continue;
+      }
+      if (vistos.has(slug)) problems.push(`"${slug}" aparece na letra ${vistos.get(slug)} E na ${letra}`);
+      else vistos.set(slug, letra);
+      const esperada = /^[a-z]/.test(slug) ? slug[0] : '#';
+      if (letra !== esperada) problems.push(`"${slug}" está na letra ${letra} e devia estar na ${esperada}`);
+    }
+  }
+  for (const slug of horseBySlug.keys()) {
+    if (!vistos.has(slug)) problems.push(`"${slug}" não aparece em nenhuma página de letra`);
+  }
+  const ALFABETO = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const geradas = new Set(letterPages.map((f) => rel(f).replace(/^horse[/\\]letter[/\\]/, '').replace(/\.html$/, '')));
+  for (const l of ALFABETO) {
+    if (!geradas.has(l)) problems.push(`a letra ${l} não virou página — a navegação A–Z aponta para ela em toda página`);
+  }
+  for (const l of geradas) {
+    if (!ALFABETO.includes(l)) problems.push(`página de letra "${l}" fora do alfabeto`);
+  }
+
+  // A palavra reservada da rota. O conflito seria só conceitual (profundidades
+  // diferentes de caminho), mas seria confuso de depurar, e custa uma linha.
+  if (horseBySlug.has(LETTER_SEGMENT)) {
+    problems.push(`existe um cavalo de slug "${LETTER_SEGMENT}", que é o segmento reservado das páginas de letra`);
+  }
+
+  // E a porta continua servindo, inteiro, o cartão de que ela fala.
+  if (horseIndexPage && fs.existsSync('src/data/horses.json')) {
+    const naCarta = JSON.parse(read('src/data/horses.json')).horses.length;
+    const servidas = [...read(horseIndexPage).matchAll(/\bdata-hz-row\b/g)].length;
+    if (servidas < naCarta) {
+      problems.push(`horse.html serve ${servidas} linhas para ${naCarta} declarados no cartão — o resto ficaria só no cliente`);
     }
   }
 
   check('Acervo, índice e páginas de cavalo em correspondência 1:1', problems);
-  console.log(`    (${horseBySlug.size} registros, ${horsePages.length} páginas de cavalo)`);
+  console.log(
+    `    (${horseBySlug.size} registros, ${horsePages.length} páginas de cavalo, ${letterPages.length} páginas de letra, ${vistos.size} linhas servidas)`,
+  );
 }
 
 // 25. Os três estados, e a palavra que cada um exige.
