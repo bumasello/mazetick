@@ -228,7 +228,7 @@ quebrar. Vinte e três checagens:
 | checagem | por quê |
 |---|---|
 | sem Betfair/BSP no HTML | regra 2 — nenhum preço deles vira campo na tela |
-| espaçamento em volta de `<a>` inline | o compilador apara a quebra de linha em vez de virar espaço, e o texto gruda |
+| espaçamento em volta de tag inline | o compilador apara a quebra de linha em vez de virar espaço, e o texto gruda. ⚠️ Ampliada em 20/09: exigia `\w` ANTES da tag, então **pontuação** colada passava — e fim de frase é a junção mais provável em prosa (`us.<strong>No recorded run`) |
 | tema não fixado no HTML, e aplicado antes da pintura | `data-theme` no artefato forçaria um tema para todo mundo; o aplicador fora do `<head>` dá lampejo do tema errado |
 | `lang="en-GB"` | o site é britânico |
 | canônica sem `.html` | tem de casar com o sitemap |
@@ -257,6 +257,18 @@ quebrar. Vinte e três checagens:
 | título e descrição por cavalo distintos de verdade | páginas de cavalo aos milhares de uma vez; gabarito com o nome trocado é como se erra isso |
 | toda faixa de distância publicada com a fronteira que a define | "27% em staying" é ilegível sem saber o que é staying; e a chave tem de existir em `distance_bands`, senão uma faixa nova aparece sem definição |
 | a idade da COLETA aparece em toda página de dado | a 17 exige o campo no arquivo; a distância entre as duas é por onde a regra 4 cai calada |
+
+⚠️ Duas dessas mudaram de alvo com a partição A–Z do acervo, e as duas ficaram
+mais exigentes:
+
+- **acervo ↔ páginas** deixou de perguntar "a porta serve tudo?" e passou a
+  perguntar da **união das 26 páginas de letra**: cada registro aparece em
+  exatamente uma, na letra certa, e nenhuma letra do alfabeto falta. Pega o
+  cavalo em nenhuma letra, o em duas e o na letra errada — nada disso a versão
+  anterior via.
+- **campo proibido** passou a varrer também o **JSON embutido no HTML**
+  (`<script type="application/json">`), que é tão público quanto um arquivo e
+  que a varredura por arquivo não alcançava.
 
 Duas regras governam este arquivo:
 
