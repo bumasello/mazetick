@@ -1403,6 +1403,85 @@ const LETTER_SEGMENT = 'letter';
   check('A idade da COLETA aparece em toda página de dado', problems);
 }
 
+// 31. O `lastmod` do sitemap diz a verdade sobre CADA URL.
+//
+//     Ele era `new Date()` carimbado nas 3.888 URLs. Com ~4 builds por dia,
+//     isso avisava o Google quatro vezes ao dia de que /cookies, /privacy e
+//     3.847 páginas de cavalo tinham mudado juntas. O Google só usa `lastmod`
+//     de quem se mostra confiável — e é `lastmod` o mecanismo que traz o
+//     rastreio de volta sozinho, sem reenvio manual de sitemap. Mentir ali é
+//     desligar exatamente a peça que se quer usar.
+//
+//     Três perguntas, e a terceira é a que não é circular:
+//       (a) as datas não são todas iguais, e nenhuma está no futuro;
+//       (b) cada página de cavalo leva o `last_declared` DELE no índice;
+//       (c) cada página de letra leva o maior `lastmod` entre os cavalos que
+//           ela REALMENTE lista no HTML — lido da página, não da regra de
+//           partição. Se o config e `letterOf` se separarem, esta acusa.
+{
+  const problems = [];
+  const xml = sitemapFile ? read(sitemapFile) : '';
+  const entradas = [...xml.matchAll(/<url>\s*<loc>([^<]+)<\/loc>(?:\s*<lastmod>([^<]+)<\/lastmod>)?/g)]
+    .map((m) => ({ loc: m[1].replace(/\/$/, ''), lastmod: m[2] ?? null }));
+
+  if (!entradas.length) {
+    problems.push('sitemap sem nenhuma entrada legível');
+  } else {
+    // (a)
+    const datas = entradas.map((e) => e.lastmod).filter(Boolean);
+    const distintas = new Set(datas);
+    if (distintas.size <= 1) {
+      problems.push(
+        `sitemap com ${distintas.size} lastmod distinto em ${entradas.length} URLs — ` +
+        'é a assinatura do carimbo de build, não de mudança real',
+      );
+    }
+    const agora = Date.now();
+    for (const e of entradas) {
+      if (e.lastmod && Date.parse(e.lastmod) > agora + 60_000) {
+        problems.push(`${e.loc}: lastmod ${e.lastmod} está no futuro`);
+      }
+    }
+
+    // (b)
+    //
+    // O `@astrojs/sitemap` normaliza `2026-09-22` para ISO completo, então a
+    // comparação é por DIA: é a granularidade de `last_declared`, e exigir a
+    // string crua faria a checagem falhar por formatação em vez de por dado.
+    const soODia = (d) => (d ?? '').slice(0, 10);
+    const idx = JSON.parse(read('src/data/horses-index.json'));
+    const esperado = new Map(idx.horses.map((h) => [h.slug, h.last_declared]));
+    const porLoc = new Map(entradas.map((e) => [e.loc, e.lastmod]));
+    for (const [slug, d] of esperado) {
+      if (!d) continue;
+      const loc = `https://mazetick.com/horse/${slug}`;
+      if (!porLoc.has(loc)) continue;
+      if (soODia(porLoc.get(loc)) !== d) {
+        problems.push(`${loc}: lastmod ${porLoc.get(loc)} ≠ last_declared ${d}`);
+      }
+    }
+
+    // (c)
+    for (const f of pages.filter((f) => /^horse[/\\]letter[/\\]/.test(rel(f)))) {
+      const loc = `https://mazetick.com/horse/letter/${rel(f).replace(/.*[/\\]/, '').replace(/\.html$/, '')}`;
+      const declarado = porLoc.get(loc);
+      const listados = [...new Set(
+        [...read(f).matchAll(/href="\/horse\/([a-z0-9-]+)"/g)].map((m) => m[1]),
+      )].map((sl) => esperado.get(sl)).filter(Boolean);
+      if (!listados.length) continue;
+      const maiorListado = listados.reduce((a, b) => (a > b ? a : b));
+      if (soODia(declarado) !== maiorListado) {
+        problems.push(
+          `${loc}: lastmod ${declarado} ≠ ${maiorListado}, que é o mais recente ` +
+          `entre os ${listados.length} cavalos que a página lista`,
+        );
+      }
+    }
+  }
+
+  check('O lastmod do sitemap diz a verdade sobre cada URL', problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);
