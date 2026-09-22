@@ -140,7 +140,19 @@ const jsonLd = {
   license: 'https://creativecommons.org/licenses/by/4.0/',
   creator: { '@id': 'https://mazetick.com/#org' },
   publisher: { '@id': 'https://mazetick.com/#org' },
-  isPartOf: { '@id': 'https://mazetick.com/#website' },
+  // `isPartOf` aqui apontava para o WebSite, e o Search Console recusou em
+  // 21/09/2026: num Dataset esse campo tem de apontar para outro Dataset. O
+  // jeito certo de dizer "este conjunto mora num acervo maior" é
+  // `includedInDataCatalog`, que é o campo que o Google documenta para Dataset.
+  // O catálogo vai inteiro, e não por @id: a página de cavalo não define o nó
+  // do catálogo, e referência que a própria página não resolve o Google não
+  // resolve também.
+  includedInDataCatalog: {
+    '@type': 'DataCatalog',
+    '@id': 'https://mazetick.com/horse#catalog',
+    name: 'mazetick horse records',
+    url: 'https://mazetick.com/horse',
+  },
   dateModified: h.as_of,
   temporalCoverage: `../${h.history_through}`,
   ...(measured.length ? { variableMeasured: measured } : {}),
