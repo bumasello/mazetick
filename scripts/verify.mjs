@@ -500,6 +500,32 @@ check(
         problems.push(`${rel(f)}: JSON-LD url ${o.url} não está no sitemap`);
       }
     }
+
+    // (d) `isPartOf` de um Dataset tem de apontar para outro Dataset.
+    //
+    //     O Search Console reclamou disto em 21/09/2026 ("o tipo de objeto do
+    //     campo isPartOf não é válido"): as páginas de cavalo declaravam
+    //     `isPartOf: {@id: #website}`, e `#website` é um WebSite. O schema.org
+    //     aceita (WebSite é CreativeWork), mas o validador de Dataset do Google
+    //     é mais estreito e exige Dataset. Quem quer dizer "este conjunto mora
+    //     num acervo maior" usa `includedInDataCatalog`, não `isPartOf`.
+    //
+    //     A referência é resolvida DENTRO da página, que é tudo o que o Google
+    //     enxerga: @id que a página não define não é verificável, e isso conta
+    //     como defeito — senão trocar o alvo por um @id inexistente calaria a
+    //     checagem sem consertar nada.
+    const porId = new Map(flat.filter((o) => o['@id']).map((o) => [o['@id'], o['@type']]));
+    for (const o of flat) {
+      if (o['@type'] !== 'Dataset' || !o.isPartOf) continue;
+      const alvo = o.isPartOf['@id'];
+      if (!alvo) {
+        problems.push(`${rel(f)}: Dataset.isPartOf sem @id`);
+      } else if (!porId.has(alvo)) {
+        problems.push(`${rel(f)}: Dataset.isPartOf aponta para ${alvo}, que a página não define`);
+      } else if (porId.get(alvo) !== 'Dataset') {
+        problems.push(`${rel(f)}: Dataset.isPartOf aponta para ${alvo}, que é ${porId.get(alvo)} e não Dataset`);
+      }
+    }
   }
 
   check('Sem sintaxe de template; JSON-LD parseável e coerente com a canônica', problems);
