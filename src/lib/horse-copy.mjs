@@ -82,3 +82,75 @@ export const STATUS_COPY = {
 
 /** Os três estados que o contrato admite. Qualquer outro para o build. */
 export const STATUSES = /** @type {const} */ (['has_history', 'debut', 'no_record']);
+
+/**
+ * As frases das PARCERIAS — o que o contrato v2 passou a entregar.
+ *
+ * Até 2026-09-24 esta página gastava dois parágrafos avisando o que ela NÃO
+ * dizia: "not their record with this horse", "not conditioned on the going or
+ * the course above". Os avisos existiam porque o dado faltava. Agora existe, e
+ * a página responde a leitura natural em vez de pedir desculpa por não
+ * responder.
+ *
+ * Regra que estas frases herdam da tabela: **nenhuma taxa sem a amostra na
+ * mesma frase**. A checagem 27 só varre tabela, então aqui a disciplina é
+ * nossa — "12,5%" sozinho é o número que alguém usaria para apostar.
+ */
+
+/**
+ * "a" ou "an" antes de um número, pelo SOM da palavra que ele vira.
+ *
+ * Terceira vez que esta família de defeito aparece aqui: primeiro o substantivo
+ * ("1 horse" com "runs"), resolvido com `plural`; depois o verbo ("1 horse …
+ * share a name"), resolvido com `verb`; agora o artigo — "a 18.5%" onde o
+ * inglês quer "an eighteen point five". O gerador não ouve o que escreve, então
+ * a concordância tem de ser função, nunca literal na frase.
+ *
+ * Decide pela PARTE INTEIRA: 8 e 80–89 ("eight", "eighty"), 11 e 18 ("eleven",
+ * "eighteen"). Olhar a string toda cairia na armadilha de 1.8, que é "one point
+ * eight" e pede "a".
+ */
+export const artigo = (n) => {
+  const inteiro = String(Math.trunc(Math.abs(Number(n))));
+  return inteiro.startsWith('8') || inteiro.startsWith('11') || inteiro.startsWith('18')
+    ? 'an'
+    : 'a';
+};
+
+/** 1785 -> "1,785". Contagem grande sem separador se lê errado de relance. */
+const num = (n) => n.toLocaleString('en-GB');
+
+/** "once" / "3 times". Em inglês o 1 quer a palavra, não o dígito. */
+const vezes = (n) => (n === 1 ? 'once' : `${n} times`);
+
+/** "no win" / "1 win" / "2 wins". "0 wins" numa frase lê-se como lapso. */
+const vitorias = (n) => (n === 0 ? 'no win' : `${n} ${n === 1 ? 'win' : 'wins'}`);
+
+/** @param {{name: string, runs: number, wins: number} | undefined} b */
+export const rideWithHorse = (b) =>
+  b ? `${b.name} has ridden this horse ${vezes(b.runs)} in our archive, for ${vitorias(b.wins)}` : null;
+
+/** @param {{name: string, runs: number, wins: number} | undefined} b */
+export const yardWithHorse = (b) =>
+  b ? `${b.name} has saddled it ${vezes(b.runs)}, for ${vitorias(b.wins)}` : null;
+
+/**
+ * A DUPLA, que não é a média dos dois: jóquei de 12% montando para treinador de
+ * 7% pode render 20% ou 3%.
+ * @param {{jockey: string, trainer: string, runs: number, wins: number, win_pct: number | null} | undefined} b
+ */
+export const pairingLine = (b) =>
+  b
+    ? `The pairing itself — ${b.jockey} riding for ${b.trainer} — is ${num(b.wins)} from ${num(b.runs)} in our archive, ${artigo(b.win_pct)} ${b.win_pct}% strike rate.`
+    : null;
+
+/**
+ * A progênie do garanhão NA FAIXA de hoje. Condiciona só a distância: terreno e
+ * pista continuam de fora, e a legenda tem de continuar dizendo isso.
+ * @param {{key: string, runs: number, wins: number, win_pct: number | null} | undefined} b
+ * @param {string | null} label a fronteira publicada pela origem, ex. "up to 6f"
+ */
+export const sireAtDistanceLine = (b, label) =>
+  b
+    ? `Narrowed to the distance of this race — ${label ?? b.key} — that same progeny record is ${num(b.wins)} from ${num(b.runs)}, ${artigo(b.win_pct)} ${b.win_pct}% strike rate.`
+    : null;
