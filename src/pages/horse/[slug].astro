@@ -34,7 +34,7 @@ import {
   loadRecords, loadCard, horseMeta, statusSentence, statusLabel, plural, bandLabel,
   type HorseRecord, type DistanceBand,
 } from '../../lib/horses';
-import { archiveLine, ukDate } from '../../lib/horse-copy.mjs';
+import { archiveLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine } from '../../lib/horse-copy.mjs';
 import { raceTime, raceZone } from '../../lib/time';
 import { canonicalUrl } from '../../lib/canonical';
 
@@ -88,6 +88,20 @@ const connections = [
   h.jockey ? { label: 'Jockey', sub: h.jockey.name, group: h.jockey } : null,
   h.trainer ? { label: 'Trainer', sub: h.trainer.name, group: h.trainer } : null,
 ].filter((x) => x !== null);
+
+/**
+ * As parcerias do contrato v2. Cada frase é null quando a origem não emitiu o
+ * bloco — e ela só emite acima do piso de amostra —, então a página nunca
+ * escolhe entre publicar ruído e mentir por omissão: a frase simplesmente não
+ * aparece, que é o mesmo contrato de `not held` do resto daqui.
+ */
+const withHorse = [rideWithHorse(h.jockey_here), yardWithHorse(h.trainer_here)]
+  .filter((x) => x !== null);
+const pairing = pairingLine(h.jockey_trainer);
+const sireDistance = sireAtDistanceLine(
+  h.sire_at_distance,
+  h.sire_at_distance ? (bandLabel(stamp.bands, h.sire_at_distance.key) ?? null) : null,
+);
 
 /**
  * As seções, definidas UMA vez e usadas nos dois lugares: no índice da margem e
@@ -169,12 +183,27 @@ const jsonLd = {
       <p class="lead">{statusSentence(h)}</p>
 
       {/*
-        Identificação. Só o que o registro traz — idade, sexo, mãe e dono não
-        estão neste contrato, e uma linha vazia é melhor que um campo inventado.
-        Onde o bloco do produtor não existe, a resposta é "not held", nunca zero:
-        ausência significa que não temos amostra, e nunca que a amostra é nula.
+        Identificação. Idade, sexo, dono e mãe entraram no contrato v2 em
+        2026-09-24 e vêm do CARTÃO, nunca inferidos do histórico: idade muda
+        todo ano, e deduzi-la da corrida mais recente do arquivo publicaria a
+        idade de então como se fosse a de hoje.
+
+        `colour` chega no dado e NÃO vai para a tela: vem como código (`b`,
+        `ch`, `gr`), e expandir exigiria uma tabela que ninguém publica.
+        Expandir errado é pior que omitir.
+
+        Onde o campo não existe, a resposta é "not held", nunca zero: ausência
+        significa que não temos amostra, e nunca que a amostra é nula.
       */}
       <dl class="ident">
+        <div>
+          <dt>Age</dt>
+          <dd>{h.ident?.age ? `${h.ident.age}yo` : <span class="faint">not held</span>}</dd>
+        </div>
+        <div>
+          <dt>Sex</dt>
+          <dd>{h.ident?.sex ?? <span class="faint">not held</span>}</dd>
+        </div>
         <div>
           <dt>Last declared</dt>
           <dd>
@@ -207,12 +236,20 @@ const jsonLd = {
           <dd>{h.trainer ? h.trainer.name : <span class="faint">not held</span>}</dd>
         </div>
         <div>
+          <dt>Owner</dt>
+          <dd>{h.ident?.owner ?? <span class="faint">not held</span>}</dd>
+        </div>
+        <div>
           <dt>Jockey that day</dt>
           <dd>{h.jockey ? h.jockey.name : <span class="faint">not held</span>}</dd>
         </div>
         <div>
           <dt>Sire</dt>
           <dd>{h.sire ? h.sire.name : <span class="faint">not held</span>}</dd>
+        </div>
+        <div>
+          <dt>Dam</dt>
+          <dd>{h.ident?.dam ?? <span class="faint">not held</span>}</dd>
         </div>
       </dl>
     </div>
@@ -342,13 +379,25 @@ const jsonLd = {
     <section>
       <h2 id="connections" class="section-rule">Jockey and trainer</h2>
       <HorseStatTable firstCol="Connection" rows={connections} />
+      {/*
+        Até v2 esta legenda gastava um parágrafo avisando o que a página NÃO
+        dizia — "not their record with this horse". O aviso existia porque o
+        dado faltava. Agora existe, e a página responde a leitura natural em
+        vez de pedir desculpa por não responder. O que sobra do aviso é o que
+        continua verdade: a TABELA é de arquivo inteiro.
+      */}
       <p class="note caption on-axis">
-        <strong>These are whole-archive records, not this pairing.</strong> The figures are
-        the rider&rsquo;s across every ride we hold and the yard&rsquo;s across every
-        runner we hold, to {ukDate(h.history_through)} &mdash; not their record with
-        this horse, and not their record in conditions like these. We say so because
-        the natural reading is the other one.
+        <strong>The table above is the whole-archive record, not this pairing.</strong>{' '}
+        Those figures are the rider&rsquo;s across every ride we hold and the
+        yard&rsquo;s across every runner we hold, to {ukDate(h.history_through)}.
+        {(withHorse.length > 0 || pairing) && ' What follows is narrower.'}
       </p>
+      {withHorse.length > 0 && (
+        <p class="on-axis">
+          {withHorse.join(', and ')}.
+        </p>
+      )}
+      {pairing && <p class="on-axis">{pairing}</p>}
     </section>
   )}
 
@@ -359,8 +408,18 @@ const jsonLd = {
       <p class="note caption on-axis">
         The sire&rsquo;s progeny across every run we hold to {ukDate(h.history_through)}.
         It is a statement about the stallion&rsquo;s stock in general, not about this
-        horse, and not conditioned on the going or the course above.
+        horse{sireDistance ? '' : ', and not conditioned on the going, the course or the distance above'}.
       </p>
+      {/*
+        `sire_at_distance` condiciona SÓ a distância. Terreno e pista continuam
+        de fora, e a frase tem de continuar dizendo isso — senão a página teria
+        trocado uma ressalva honesta por uma implicação falsa.
+      */}
+      {sireDistance && (
+        <p class="on-axis">
+          {sireDistance} Going and course are not held constant here.
+        </p>
+      )}
     </section>
   )}
 

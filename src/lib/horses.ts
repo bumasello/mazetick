@@ -56,6 +56,36 @@ export interface HorseRecord {
   jockey?: Connection;
   trainer?: Connection;
   sire?: Connection;
+
+  /**
+   * v2 (2026-09-24) — as quatro derivações de PARCERIA, que respondem a leitura
+   * natural que os três blocos acima não respondiam.
+   *
+   * Cada uma chega com um piso de amostra garantido pela origem e conferido na
+   * chegada por `fetch-data.mjs`: dupla 10, com-o-cavalo 2, garanhão por faixa
+   * 20. Ausente continua significando "não temos amostra", nunca zero.
+   */
+  jockey_trainer?: { jockey: string; trainer: string } & Group;
+  /** Este jóquei NESTE cavalo — não a carreira dele. */
+  jockey_here?: Connection;
+  /** Este treinador NESTE cavalo. */
+  trainer_here?: Connection;
+  /** A progênie do garanhão na faixa de distância de hoje. Só distância:
+   *  terreno e pista continuam de fora, e a legenda tem de dizer isso. */
+  sire_at_distance?: Connection & { key: string };
+
+  /**
+   * Cadastro, vindo do CARTÃO e nunca inferido do histórico — idade muda todo
+   * ano. Campo ausente não vem como string vazia: não vem.
+   *
+   * `colour` chega como código (`b`, `ch`, `gr`) e NÃO vai para a tela:
+   * expandir exigiria uma tabela que ninguém publica, e expandir errado é pior
+   * que omitir.
+   */
+  ident?: {
+    age?: string; sex?: string; colour?: string;
+    owner?: string; dam?: string; damsire?: string;
+  };
 }
 
 export interface IndexEntry {

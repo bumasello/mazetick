@@ -14,7 +14,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { inlineScripts, NON_EXECUTABLE_TYPES, sha256 } from './headers.mjs';
 import { stampProblems } from './data-contract.mjs';
-import { STATUS_COPY, ARCHIVE_PREFIX, ukDate } from '../src/lib/horse-copy.mjs';
+import { STATUS_COPY, ARCHIVE_PREFIX, ukDate, artigo } from '../src/lib/horse-copy.mjs';
 
 const DIST = 'dist';
 const fail = [];
@@ -1175,8 +1175,27 @@ const LETTER_SEGMENT = 'letter';
       problems.push(`${rel(f)} (${h.status}): falta a frase do estado — "${required.slice(0, 60)}…"`);
     }
 
-    let scrubbed = html;
+    // ⚠️ ESTA LISTA CRESCE COM A PÁGINA. Todo nome próprio novo que a página
+    //    publicar tem de entrar aqui, senão o build quebra por um motivo que
+    //    não é o defeito. Já aconteceu em 2026-09-24, quando o contrato v2
+    //    trouxe `dam` e a égua "Debutante's Ball" apareceu numa página
+    //    `has_history`: a palavra proibida era o nome da mãe, não uma
+    //    afirmação nossa sobre o cavalo.
+    // O HTML servido traz as entidades escapadas — "Debutante's Ball" chega
+    // como `Debutante&#39;s Ball` —, então raspar pelo nome cru não casa nada.
+    // Desescapa ANTES de raspar: conserta de uma vez todo nome com apóstrofo ou
+    // e-comercial, e não só o que quebrou hoje.
+    let scrubbed = html
+      .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
     for (const n of [h.name, h.jockey?.name, h.trainer?.name, h.sire?.name, h.last_declared?.venue,
+                     h.ident?.dam, h.ident?.damsire, h.ident?.owner,
+                     h.jockey_here?.name, h.trainer_here?.name,
+                     h.jockey_trainer?.jockey, h.jockey_trainer?.trainer,
                      ...(h.by_course || []).map((g) => g.key)]) {
       if (n) scrubbed = scrubbed.split(n).join('·');
     }
@@ -1480,6 +1499,29 @@ const LETTER_SEGMENT = 'letter';
   }
 
   check('O lastmod do sitemap diz a verdade sobre cada URL', problems);
+}
+
+// 32. "a" ou "an" antes de porcentagem, pelo SOM do número.
+//
+//     Terceira aparição desta família no projeto: o substantivo ("1 horse" com
+//     "runs") virou `plural`, o verbo ("1 horse … share a name") virou `verb`,
+//     e em 2026-09-24 saiu "a 18.5% strike rate" — o inglês quer "an eighteen
+//     point five". O gerador não ouve o que escreve.
+//
+//     Confere nos DOIS sentidos: "a" onde cabia "an" e "an" onde cabia "a".
+//     Só um dos lados deixaria o erro inverso passar sorrindo.
+{
+  const problems = [];
+  for (const f of pages) {
+    const texto = read(f).replace(/<[^>]+>/g, ' ');
+    for (const m of texto.matchAll(/\b(an?) (\d[\d.,]*)%/g)) {
+      const certo = artigo(m[2].replace(/,/g, ''));
+      if (m[1] !== certo) {
+        problems.push(`${rel(f)}: "${m[1]} ${m[2]}%" — o certo é "${certo}"`);
+      }
+    }
+  }
+  check('Artigo concorda com o som do número', [...new Set(problems)]);
 }
 
 console.log();

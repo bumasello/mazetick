@@ -123,7 +123,7 @@ for (const src of SOURCES) {
     ...stampProblems('src/data/horses.json', card),
     ...stampProblems('src/data/horses-index.json', index),
   ];
-  if (card.schema !== 'horses_v1') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v1"`);
+  if (card.schema !== 'horses_v2') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v2"`);
   if (index.schema !== 'horses_index_v1') problems.push(`horses-index.json: schema "${index.schema}", esperado "horses_index_v1"`);
   if (!Array.isArray(card.horses)) problems.push('horses.json: horses não é lista');
   if (!Array.isArray(index.horses)) problems.push('horses-index.json: horses não é lista');
@@ -140,6 +140,39 @@ for (const src of SOURCES) {
         problems.push(`horses.json: ${field} diz ${card[field]} e a lista traz ${n} com status "${status}"`);
       }
     }
+  }
+
+  // v2 (2026-09-24): os quatro blocos de relação chegam com PISO de amostra
+  // prometido pela origem — dupla 10, jóquei/treinador-com-o-cavalo 2, garanhão
+  // por faixa 20. O piso não é enfeite: uma dupla com 3 montarias e 33% é ruído
+  // com cara de achado, e é o número que um leitor usaria para apostar. Se a
+  // origem regredir, a página publicaria a taxa sem ninguém notar — então o
+  // piso se confere na CHEGADA, não se confia na promessa.
+  //
+  // E `runs: 0` em bloco derivado é proibido pelo mesmo motivo de sempre:
+  // "0 de 0" na tela lê-se como medição e é ausência de dado.
+  if (Array.isArray(card.horses)) {
+    const PISOS = { jockey_trainer: 10, jockey_here: 2, trainer_here: 2, sire_at_distance: 20 };
+    const violados = [];
+    const zerados = [];
+    const maiores = [];
+    for (const h of card.horses) {
+      for (const [campo, piso] of Object.entries(PISOS)) {
+        const b = h[campo];
+        if (!b) continue;
+        if (b.runs === 0) zerados.push(`${h.slug}.${campo}`);
+        else if (b.runs < piso) violados.push(`${h.slug}.${campo}=${b.runs}<${piso}`);
+      }
+      // O cavalo não pode ter corrido MAIS vezes com um jóquei do que no total.
+      for (const campo of ['jockey_here', 'trainer_here']) {
+        if (h[campo] && h.career && h[campo].runs > h.career.runs) {
+          maiores.push(`${h.slug}.${campo}=${h[campo].runs}>career=${h.career.runs}`);
+        }
+      }
+    }
+    if (violados.length) problems.push(`horses.json: ${violados.length} bloco(s) abaixo do piso — ${violados.slice(0, 3).join(', ')}`);
+    if (zerados.length) problems.push(`horses.json: ${zerados.length} bloco(s) derivado(s) com runs=0 — ${zerados.slice(0, 3).join(', ')}`);
+    if (maiores.length) problems.push(`horses.json: ${maiores.length} parceria(s) maior que a carreira — ${maiores.slice(0, 3).join(', ')}`);
   }
 
   if (problems.length) die(['\n✗ horses: contrato violado', ...problems.map((p) => `  - ${p}`)]);
