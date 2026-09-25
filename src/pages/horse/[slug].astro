@@ -34,7 +34,7 @@ import {
   loadRecords, loadCard, horseMeta, statusSentence, statusLabel, plural, bandLabel,
   type HorseRecord, type DistanceBand,
 } from '../../lib/horses';
-import { archiveLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine } from '../../lib/horse-copy.mjs';
+import { archiveLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine, atCourse, atDistance, recentLine, daysSince } from '../../lib/horse-copy.mjs';
 import { raceTime, raceZone } from '../../lib/time';
 import { canonicalUrl } from '../../lib/canonical';
 
@@ -98,6 +98,26 @@ const connections = [
 const withHorse = [rideWithHorse(h.jockey_here), yardWithHorse(h.trainer_here)]
   .filter((x) => x !== null);
 const pairing = pairingLine(h.jockey_trainer);
+
+/**
+ * v3 — as condições de HOJE, e a atividade recente.
+ *
+ * `hereToday` junta os quatro recortes numa frase só por pessoa: quatro
+ * parágrafos de uma linha cada seriam uma tabela disfarçada de prosa, e a
+ * decisão da grade editorial foi o contrário disso.
+ */
+const condicoes = [
+  { papel: 'Jockey', partes: [atCourse(h.jockey_at_course),
+      atDistance(h.jockey_at_distance, bandLabel(stamp.bands, h.jockey_at_distance?.key ?? '') ?? null)],
+    nome: h.jockey_at_course?.name ?? h.jockey_at_distance?.name },
+  { papel: 'Trainer', partes: [atCourse(h.trainer_at_course),
+      atDistance(h.trainer_at_distance, bandLabel(stamp.bands, h.trainer_at_distance?.key ?? '') ?? null)],
+    nome: h.trainer_at_course?.name ?? h.trainer_at_distance?.name },
+].map((x) => ({ ...x, partes: x.partes.filter((p) => p !== null) }))
+ .filter((x) => x.partes.length > 0);
+
+const atividade = [recentLine(h.recent_30d), recentLine(h.recent_90d)].filter((x) => x !== null);
+const desde = daysSince(h.days_since_last_run);
 const sireDistance = sireAtDistanceLine(
   h.sire_at_distance,
   h.sire_at_distance ? (bandLabel(stamp.bands, h.sire_at_distance.key) ?? null) : null,
@@ -111,6 +131,7 @@ const sireDistance = sireAtDistanceLine(
 const sections = [
   { id: 'record', title: 'The record we hold' },
   ...(h.status === 'has_history' ? [{ id: 'conditions', title: 'By going, course and distance' }] : []),
+  ...(h.days_since_last_run !== undefined || h.recent_90d ? [{ id: 'recent', title: 'Recent activity' }] : []),
   ...(connections.length ? [{ id: 'connections', title: 'Jockey and trainer' }] : []),
   ...(h.sire ? [{ id: 'sire', title: 'Sire' }] : []),
 ];
@@ -375,6 +396,20 @@ const jsonLd = {
     </section>
   )}
 
+  {(atividade.length > 0 || desde) && (
+    <section>
+      <h2 id="recent" class="section-rule">Recent activity</h2>
+      <p class="on-axis">
+        {desde && `${desde}. `}
+        {atividade.length > 0 && `It had run ${atividade.join(', and ')}.`}
+      </p>
+      <p class="note caption on-axis">
+        Counts, not rates &mdash; one win from two runs is not a fifty per cent
+        strike rate, it is two runs. Everything here is cut at {ukDate(h.as_of)}.
+      </p>
+    </section>
+  )}
+
   {connections.length > 0 && (
     <section>
       <h2 id="connections" class="section-rule">Jockey and trainer</h2>
@@ -398,6 +433,14 @@ const jsonLd = {
         </p>
       )}
       {pairing && <p class="on-axis">{pairing}</p>}
+      {condicoes.length > 0 && (
+        <p class="on-axis">
+          {/* O prefixo sai UMA vez: repeti-lo por pessoa lia como gerador. */}
+          Under today&rsquo;s conditions,{' '}
+          {condicoes.map((c) => c.partes.join(', and ')).join('; ')}.{' '}
+          <span class="faint">Course and distance are taken one at a time, not together.</span>
+        </p>
+      )}
     </section>
   )}
 

@@ -82,6 +82,24 @@ export interface HorseRecord {
    * expandir exigiria uma tabela que ninguém publica, e expandir errado é pior
    * que omitir.
    */
+  /**
+   * v3 (2026-09-25) — as condições de HOJE e a atividade recente. Respondem o
+   * que o bloco de carreira do jóquei não responde: ele vai bem AQUI, e este
+   * cavalo vem correndo?
+   *
+   * Só campos com cobertura 100% nas duas fontes entraram — classe, OR e
+   * criação ficaram de fora por decisão, até um backfill pago. Ausente
+   * continua significando "não temos amostra", nunca zero.
+   */
+  jockey_at_course?: Connection & { key: string };
+  jockey_at_distance?: Connection & { key: string };
+  trainer_at_course?: Connection & { key: string };
+  trainer_at_distance?: Connection & { key: string };
+  /** A CONTAGEM é a informação; a página nunca mostra isto como taxa. */
+  recent_30d?: Group & { days: number };
+  recent_90d?: Group & { days: number };
+  days_since_last_run?: number;
+
   ident?: {
     age?: string; sex?: string; colour?: string;
     owner?: string; dam?: string; damsire?: string;
