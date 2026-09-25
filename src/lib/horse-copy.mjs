@@ -154,3 +154,45 @@ export const sireAtDistanceLine = (b, label) =>
   b
     ? `Narrowed to the distance of this race — ${label ?? b.key} — that same progeny record is ${num(b.wins)} from ${num(b.runs)}, ${artigo(b.win_pct)} ${b.win_pct}% strike rate.`
     : null;
+
+/**
+ * v3 — as condições de HOJE, e a atividade recente.
+ *
+ * O recorte por pista e por faixa responde a pergunta que o bloco de carreira
+ * do jóquei não responde: ele vai bem AQUI? Piso de 10 garantido pela origem e
+ * conferido na chegada, porque "50% em Ascot" sobre 4 montarias é ruído.
+ */
+
+/** @param {{name: string, key: string, runs: number, wins: number, win_pct: number|null}|undefined} b */
+export const atCourse = (b) =>
+  b ? `at ${b.key}, ${b.name} is ${num(b.wins)} from ${num(b.runs)} — ${artigo(b.win_pct)} ${b.win_pct}%` : null;
+
+/** @param {{key: string, runs: number, wins: number, win_pct: number|null}|undefined} b @param {string|null} label */
+export const atDistance = (b, label) =>
+  b ? `over ${label ?? b.key}, ${num(b.wins)} from ${num(b.runs)} — ${artigo(b.win_pct)} ${b.win_pct}%` : null;
+
+/**
+ * Atividade recente. NUNCA em porcentagem: a contagem é a informação, e 1 de 2
+ * não é 50% de coisa nenhuma. É o mesmo motivo do piso 2 em `por_chave`, só que
+ * aqui a resposta foi manter o dado e mudar a forma de dizer.
+ * @param {{days: number, runs: number, wins: number}|undefined} b
+ */
+export const recentLine = (b) =>
+  b ? `${vezes(b.runs)} in the last ${b.days} days${b.wins ? `, winning ${vezes(b.wins)}` : ', without a win'}` : null;
+
+/**
+ * Dias desde a última corrida. Escrito por extenso e sem remendo: a primeira
+ * versão reaproveitava `vezes()` e desfazia com regex, o que quebraria no dia
+ * em que `vezes` mudasse.
+ * @param {number|undefined} d
+ */
+export const daysSince = (d) => {
+  if (typeof d !== 'number') return null;
+  // d === 0 é inalcançável: `historico_ate` corta em `< data`, então a última
+  // corrida é sempre anterior. Ramo morto com frase confusa é pior que ramo
+  // nenhum, então não existe.
+  if (d === 1) return 'It had run the day before';
+  if (d < 14) return `It had run ${d} days before`;
+  if (d < 60) return `It had not run for ${d} days`;
+  return `It had not run for ${Math.round(d / 30)} months`;
+};

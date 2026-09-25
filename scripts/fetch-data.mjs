@@ -123,7 +123,7 @@ for (const src of SOURCES) {
     ...stampProblems('src/data/horses.json', card),
     ...stampProblems('src/data/horses-index.json', index),
   ];
-  if (card.schema !== 'horses_v2') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v2"`);
+  if (card.schema !== 'horses_v3') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v3"`);
   if (index.schema !== 'horses_index_v1') problems.push(`horses-index.json: schema "${index.schema}", esperado "horses_index_v1"`);
   if (!Array.isArray(card.horses)) problems.push('horses.json: horses não é lista');
   if (!Array.isArray(index.horses)) problems.push('horses-index.json: horses não é lista');
@@ -152,7 +152,16 @@ for (const src of SOURCES) {
   // E `runs: 0` em bloco derivado é proibido pelo mesmo motivo de sempre:
   // "0 de 0" na tela lê-se como medição e é ausência de dado.
   if (Array.isArray(card.horses)) {
-    const PISOS = { jockey_trainer: 10, jockey_here: 2, trainer_here: 2, sire_at_distance: 20 };
+    const PISOS = {
+      jockey_trainer: 10, jockey_here: 2, trainer_here: 2, sire_at_distance: 20,
+      // v3: recortar por pista/faixa afina a amostra, então o piso é o da dupla.
+      jockey_at_course: 10, jockey_at_distance: 10,
+      trainer_at_course: 10, trainer_at_distance: 10,
+      // Nos recentes a CONTAGEM é a informação, então o piso é 1 — mas zero
+      // continua proibido: "0 corridas em 30 dias" é um bloco que não devia
+      // existir, e a ausência já diz isso.
+      recent_30d: 1, recent_90d: 1,
+    };
     const violados = [];
     const zerados = [];
     const maiores = [];
@@ -163,8 +172,17 @@ for (const src of SOURCES) {
         if (b.runs === 0) zerados.push(`${h.slug}.${campo}`);
         else if (b.runs < piso) violados.push(`${h.slug}.${campo}=${b.runs}<${piso}`);
       }
+      // 30 dias não pode trazer mais corridas que 90, e nenhum recorte pode
+      // exceder a carreira. São contradições aritméticas: se aparecerem, o
+      // número está errado e a página publicaria a contradição.
+      if (h.recent_30d && h.recent_90d && h.recent_30d.runs > h.recent_90d.runs) {
+        maiores.push(`${h.slug}.recent_30d=${h.recent_30d.runs}>90d=${h.recent_90d.runs}`);
+      }
+      if (typeof h.days_since_last_run === 'number' && h.days_since_last_run < 0) {
+        maiores.push(`${h.slug}.days_since_last_run=${h.days_since_last_run}`);
+      }
       // O cavalo não pode ter corrido MAIS vezes com um jóquei do que no total.
-      for (const campo of ['jockey_here', 'trainer_here']) {
+      for (const campo of ['jockey_here', 'trainer_here', 'recent_30d', 'recent_90d']) {
         if (h[campo] && h.career && h[campo].runs > h.career.runs) {
           maiores.push(`${h.slug}.${campo}=${h[campo].runs}>career=${h.career.runs}`);
         }
