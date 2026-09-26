@@ -34,7 +34,7 @@ import {
   loadRecords, loadCard, horseMeta, statusSentence, statusLabel, plural, bandLabel,
   type HorseRecord, type DistanceBand,
 } from '../../lib/horses';
-import { archiveLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine, atCourse, atDistance, recentLine, daysSince } from '../../lib/horse-copy.mjs';
+import { archiveLine, breedingLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine, atCourse, atDistance, recentLine, daysSince } from '../../lib/horse-copy.mjs';
 import { raceTime, raceZone } from '../../lib/time';
 import { canonicalUrl } from '../../lib/canonical';
 
@@ -47,6 +47,7 @@ export function getStaticPaths() {
     generatedAt: card.generated_at,
     cardDate: card.horses[0]?.as_of ?? null,
     bands: card.distance_bands ?? [],
+    breeding: card.breeding_coverage ?? null,
   };
   return loadRecords().map((h) => ({ params: { slug: h.slug }, props: { h, stamp } }));
 }
@@ -58,6 +59,8 @@ interface Props {
     generatedAt: string;
     cardDate: string | null;
     bands: DistanceBand[];
+    breeding: { complete_through: string; partial_from: string;
+                runners_in_window: number; with_breeding: number; pct: number } | null;
   };
 }
 const { h, stamp } = Astro.props;
@@ -118,6 +121,7 @@ const condicoes = [
 
 const atividade = [recentLine(h.recent_30d), recentLine(h.recent_90d)].filter((x) => x !== null);
 const desde = daysSince(h.days_since_last_run);
+const breeding = breedingLine(stamp.breeding);
 const sireDistance = sireAtDistanceLine(
   h.sire_at_distance,
   h.sire_at_distance ? (bandLabel(stamp.bands, h.sire_at_distance.key) ?? null) : null,
@@ -447,12 +451,20 @@ const jsonLd = {
   {h.sire && (
     <section>
       <h2 id="sire" class="section-rule">Sire</h2>
-      <HorseStatTable firstCol="Sire" rows={[{ label: h.sire.name, sub: 'all progeny in our archive', group: h.sire }]} />
+      <HorseStatTable firstCol="Sire" rows={[{ label: h.sire.name, sub: 'progeny we hold \u2014 see the note below', group: h.sire }]} />
       <p class="note caption on-axis">
         The sire&rsquo;s progeny across every run we hold to {ukDate(h.history_through)}.
         It is a statement about the stallion&rsquo;s stock in general, not about this
         horse{sireDistance ? '' : ', and not conditioned on the going, the course or the distance above'}.
       </p>
+      {/*
+        ⚠️ A JANELA, DECLARADA. Até 2026-07-22 a criação está completa; depois
+        disso a fonte viva traz metade e o resto é remendado do próprio cavalo
+        em outras corridas, sem chegar a 100%. A legenda da tabela dizia "all
+        progeny in our archive" — verdade literal que enganava, porque o
+        arquivo ficou fino de um lado só. O número sai do contrato.
+      */}
+      {breeding && <p class="note caption on-axis">{breeding}</p>}
       {/*
         `sire_at_distance` condiciona SÓ a distância. Terreno e pista continuam
         de fora, e a frase tem de continuar dizendo isso — senão a página teria

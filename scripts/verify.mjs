@@ -1524,6 +1524,45 @@ const LETTER_SEGMENT = 'letter';
   check('Artigo concorda com o som do número', [...new Set(problems)]);
 }
 
+// 33. Toda página com bloco de garanhão DECLARA a janela da criação.
+//
+//     O total do garanhão sub-contava metade das corridas de 23/07 em diante,
+//     e a legenda dizia "all progeny in our archive" — verdade literal que
+//     engana, porque o arquivo ficou fino de um lado só. O conserto levou a
+//     cobertura a 90,9%, e 90,9% não é 100%: a página tem de dizer.
+//
+//     Confere as duas metades, porque só uma deixaria o erro passar:
+//     a frase nova PRESENTE onde há garanhão, e a frase velha AUSENTE em todo
+//     lugar. Varre todas as páginas, nunca amostra (regra 4).
+{
+  const problems = [];
+  const semDeclaracao = [];
+  let comSire = 0;
+  for (const f of pages) {
+    const html = read(f);
+    if (!/id="sire"/.test(html)) continue;
+    comSire += 1;
+    if (!/Breeding is complete for races up to /.test(html)) {
+      semDeclaracao.push(rel(f));
+    }
+  }
+  for (const f of pages) {
+    if (/all progeny in our archive/.test(read(f))) {
+      problems.push(`${rel(f)}: ainda diz "all progeny in our archive"`);
+    }
+  }
+  if (semDeclaracao.length) {
+    problems.push(`${semDeclaracao.length} página(s) com bloco de garanhão sem a declaração da janela: ${semDeclaracao.slice(0, 3).join(', ')}`);
+  }
+  // Contagem zero não é prova: se NENHUMA página tem garanhão, o teste acima
+  // passa vazio e não conferiu nada. É o mesmo modo de falha do índice de
+  // criação que entrou zerado hoje.
+  if (comSire === 0) {
+    problems.push('nenhuma página tem bloco de garanhão — o teste não conferiu nada');
+  }
+  check(`Janela da criação declarada (${comSire} páginas com garanhão)`, problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

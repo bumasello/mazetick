@@ -158,6 +158,22 @@ export interface Card {
    *  foram REMOVIDAS por causa disso. É uma lacuna conhecida do acervo, e o
    *  índice a publica: carreira curta por ambiguidade não é carreira curta. */
   name_collisions: { horses: number; runs_removed: number };
+  /** A janela em que a criação é INCOMPLETA, declarada pela origem.
+   *  Até `complete_through` o arquivo profundo traz garanhão em 100%; depois
+   *  disso a fonte viva traz metade e o índice cavalo→garanhão remenda o resto
+   *  sem chegar a 100%. A página é obrigada a dizer isso ao lado do total do
+   *  garanhão — ver o portão em `scripts/fetch-data.mjs`. */
+  breeding_coverage: {
+    complete_through: string;
+    partial_from: string;
+    runners_in_window: number;
+    with_breeding: number;
+    pct: number;
+    from_source: number;
+    backfilled: number;
+    still_missing: number;
+    note: string;
+  } | null;
   horses: { slug: string; as_of: string; status: Status }[];
 }
 

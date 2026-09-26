@@ -196,3 +196,23 @@ export const daysSince = (d) => {
   if (d < 60) return `It had not run for ${d} days`;
   return `It had not run for ${Math.round(d / 30)} months`;
 };
+
+/**
+ * A janela em que a criação é incompleta, dita em inglês.
+ *
+ * ⚠️ O NÚMERO VEM DO CONTRATO, nunca de constante escrita aqui. Foi por não
+ * declarar nada que o bloco do garanhão passou meses sub-contando as corridas
+ * recentes enquanto a página dizia "all progeny in our archive" — frase
+ * literalmente verdadeira, e enganosa, porque o arquivo ficou sistematicamente
+ * mais fino de um lado só.
+ */
+export const breedingLine = (cov) => {
+  if (!cov || !cov.complete_through || typeof cov.pct !== 'number') return null;
+  return (
+    `Breeding is complete for races up to ${ukDate(cov.complete_through)}. ` +
+    `For races since, we hold the sire for ${cov.pct}% of runners ` +
+    `(${cov.with_breeding.toLocaleString('en-GB')} of ` +
+    `${cov.runners_in_window.toLocaleString('en-GB')}), so progeny totals ` +
+    `under-count recent runs.`
+  );
+};

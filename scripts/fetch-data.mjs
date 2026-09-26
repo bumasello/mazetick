@@ -123,7 +123,33 @@ for (const src of SOURCES) {
     ...stampProblems('src/data/horses.json', card),
     ...stampProblems('src/data/horses-index.json', index),
   ];
-  if (card.schema !== 'horses_v3') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v3"`);
+  if (card.schema !== 'horses_v4') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v4"`);
+
+  // A DECLARAÇÃO DA JANELA É OBRIGATÓRIA, e é conferida na chegada.
+  // Sem ela a página volta a dizer "all progeny in our archive" sobre um
+  // arquivo fino de um lado só. Prometida pela origem não basta — a origem
+  // já prometia criação e entregava metade.
+  const cov = card.breeding_coverage;
+  if (!cov) {
+    problems.push('horses.json: falta `breeding_coverage` — a janela da criação tem de ser declarada');
+  } else {
+    for (const campo of ['complete_through', 'partial_from', 'runners_in_window',
+                         'with_breeding', 'pct']) {
+      if (cov[campo] === undefined || cov[campo] === null) {
+        problems.push(`breeding_coverage: falta \`${campo}\``);
+      }
+    }
+    if (cov.with_breeding > cov.runners_in_window) {
+      problems.push(`breeding_coverage: with_breeding ${cov.with_breeding} > runners_in_window ${cov.runners_in_window}`);
+    }
+    const esperado = Math.round((100 * cov.with_breeding) / cov.runners_in_window * 10) / 10;
+    if (Math.abs(esperado - cov.pct) > 0.05) {
+      problems.push(`breeding_coverage: pct ${cov.pct} não bate com ${cov.with_breeding}/${cov.runners_in_window} = ${esperado}`);
+    }
+    if (cov.pct >= 100) {
+      problems.push('breeding_coverage: pct 100 — se a fonte consertou, a declaração sai da página; confira antes');
+    }
+  }
   if (index.schema !== 'horses_index_v1') problems.push(`horses-index.json: schema "${index.schema}", esperado "horses_index_v1"`);
   if (!Array.isArray(card.horses)) problems.push('horses.json: horses não é lista');
   if (!Array.isArray(index.horses)) problems.push('horses-index.json: horses não é lista');
