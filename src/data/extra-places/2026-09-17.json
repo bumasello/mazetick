@@ -1,0 +1,1831 @@
+{
+ "schema": "extra_places_edition_v1",
+ "source": "Paddy Power public race pages",
+ "note": "'extra_place' compares the bookmaker's offer with the bookmaker's own ladder, derived from our collection — not with the classic each-way table, which it does not follow.",
+ "ladder_days": 12,
+ "collected_through": "2026-09-17T21:00:01Z",
+ "races": [
+  {
+   "slug": "ayr-2026-09-17-1230",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T12:30:00Z",
+   "name": "1m Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T12:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1250",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T12:50:00Z",
+   "name": "6f Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 23,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 23,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1300",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T13:00:00Z",
+   "name": "5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 22,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 4,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 23,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 23,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T07:00:02Z",
+     "field_size": 22,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1308",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T13:08:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1315",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T13:15:00Z",
+   "name": "1m Nursery",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-16T18:00:01Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-16T21:00:02Z",
+     "field_size": 12,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T07:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1322",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T13:22:00Z",
+   "name": "6f Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1330",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T13:30:00Z",
+   "name": "1m2f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 9,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1338",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T13:38:00Z",
+   "name": "6f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1345",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T13:45:00Z",
+   "name": "1m1f Mdn Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1352",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T13:52:00Z",
+   "name": "5f Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1400",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T14:00:00Z",
+   "name": "1m2f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1408",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T14:08:00Z",
+   "name": "1m4f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 7,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 7,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1415",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T14:15:00Z",
+   "name": "6f Nursery",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-16T11:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T07:00:02Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1422",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T14:22:00Z",
+   "name": "5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1430",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T14:30:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T10:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1438",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T14:38:00Z",
+   "name": "1m Mdn Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-17T10:00:01Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1445",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T14:45:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-16T12:00:02Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-16T21:00:02Z",
+     "field_size": 12,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T06:00:01Z",
+     "field_size": 11,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T07:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1452",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T14:52:00Z",
+   "name": "1m Mdn Claim Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1500",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:00:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1508",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:08:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1515",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:15:00Z",
+   "name": "1m6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1520",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:20:00Z",
+   "name": "6f Nursery",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T06:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1525",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T15:25:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T10:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1530",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:30:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1538",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:38:00Z",
+   "name": "2m1f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-17T07:00:02Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1545",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:45:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1550",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T15:50:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-16T11:00:02Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1556",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T15:56:00Z",
+   "name": "7f Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 17,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 18,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T09:00:01Z",
+     "field_size": 17,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-17-1601",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-17T16:01:00Z",
+   "name": "1m5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pontefract-2026-09-17-1608",
+   "venue": "Pontefract",
+   "country": "GB",
+   "off_utc": "2026-09-17T16:08:00Z",
+   "name": "1m2f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T16:00:02Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "yarmouth-2026-09-17-1615",
+   "venue": "Yarmouth",
+   "country": "GB",
+   "off_utc": "2026-09-17T16:15:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 17,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 17,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T15:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1625",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T16:25:00Z",
+   "name": "2m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 6,
+   "terms": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 6,
+     "places": 1,
+     "fraction": [
+      1,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "naas-2026-09-17-1632",
+   "venue": "Naas",
+   "country": "IE",
+   "off_utc": "2026-09-17T16:32:00Z",
+   "name": "7f Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T10:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1700",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T17:00:00Z",
+   "name": "7f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1730",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T17:30:00Z",
+   "name": "7f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T08:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1800",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T18:00:00Z",
+   "name": "1m Sell Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 7,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-17T08:00:01Z",
+     "field_size": 7,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1830",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T18:30:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T08:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-17T09:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1900",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T19:00:00Z",
+   "name": "5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-16T09:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "southwell-2026-09-17-1930",
+   "venue": "Southwell",
+   "country": "GB",
+   "off_utc": "2026-09-17T19:30:00Z",
+   "name": "1m3f Nov Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-16T06:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  }
+ ],
+ "edition": "2026-09-17"
+}

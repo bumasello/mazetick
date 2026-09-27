@@ -1,0 +1,1630 @@
+{
+ "schema": "extra_places_edition_v1",
+ "source": "Paddy Power public race pages",
+ "note": "'extra_place' compares the bookmaker's offer with the bookmaker's own ladder, derived from our collection — not with the classic each-way table, which it does not follow.",
+ "ladder_days": 18,
+ "collected_through": "2026-09-23T21:00:01Z",
+ "races": [
+  {
+   "slug": "goodwood-2026-09-23-1230",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T12:30:00Z",
+   "name": "1m2f Mdn Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1247",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T12:47:00Z",
+   "name": "1m Nursery",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T09:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1255",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T12:55:00Z",
+   "name": "2m Mdn Hrd",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 22,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T08:00:01Z",
+     "field_size": 20,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T11:00:02Z",
+     "field_size": 18,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "goodwood-2026-09-23-1305",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T13:05:00Z",
+   "name": "1m2f Class Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 6,
+   "terms": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 6,
+     "places": 1,
+     "fraction": [
+      1,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "perth-2026-09-23-1312",
+   "venue": "Perth",
+   "country": "GB",
+   "off_utc": "2026-09-23T13:12:00Z",
+   "name": "2m Nov Hrd",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1322",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T13:22:00Z",
+   "name": "6f Nursery",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T07:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1330",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T13:30:00Z",
+   "name": "2m Nov Hrd",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 6,
+   "terms": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 7,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-23T09:00:01Z",
+     "field_size": 6,
+     "places": 1,
+     "fraction": [
+      1,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "goodwood-2026-09-23-1340",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T13:40:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 9,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T12:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "perth-2026-09-23-1347",
+   "venue": "Perth",
+   "country": "GB",
+   "off_utc": "2026-09-23T13:47:00Z",
+   "name": "2m4f Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1357",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T13:57:00Z",
+   "name": "7f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1405",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T14:05:00Z",
+   "name": "2m3f Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 20,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 23,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 23,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T10:00:01Z",
+     "field_size": 22,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T11:00:02Z",
+     "field_size": 20,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "goodwood-2026-09-23-1415",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T14:15:00Z",
+   "name": "1m2f Listed",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 7,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T21:00:02Z",
+     "field_size": 7,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "perth-2026-09-23-1422",
+   "venue": "Perth",
+   "country": "GB",
+   "off_utc": "2026-09-23T14:22:00Z",
+   "name": "2m Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1432",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T14:32:00Z",
+   "name": "7f Nov Stks (now due off at 16:07)",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1440",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T14:40:00Z",
+   "name": "3m Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "goodwood-2026-09-23-1450",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T14:50:00Z",
+   "name": "7f Cond Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 18,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-22T10:00:01Z",
+     "field_size": 17,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T08:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "perth-2026-09-23-1457",
+   "venue": "Perth",
+   "country": "GB",
+   "off_utc": "2026-09-23T14:57:00Z",
+   "name": "3m Hcap Chs",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1507",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T15:07:00Z",
+   "name": "1m2f Hcap (now due off at 16:41)",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1515",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T15:15:00Z",
+   "name": "3m Grd3 Hcap Chs",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 20,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 23,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T08:00:01Z",
+     "field_size": 22,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T11:00:02Z",
+     "field_size": 20,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1520",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T15:20:00Z",
+   "name": "1m Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "goodwood-2026-09-23-1525",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T15:25:00Z",
+   "name": "1m6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T07:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "perth-2026-09-23-1532",
+   "venue": "Perth",
+   "country": "GB",
+   "off_utc": "2026-09-23T15:32:00Z",
+   "name": "2m4f Hcap Chs",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1541",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T15:41:00Z",
+   "name": "5f Hcap (now due off at 17:17)",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1547",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T15:47:00Z",
+   "name": "2m3f Nov Chs",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-23T10:00:01Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1555",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T15:55:00Z",
+   "name": "1m Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "goodwood-2026-09-23-1600",
+   "venue": "Goodwood",
+   "country": "GB",
+   "off_utc": "2026-09-23T16:00:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 17,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 19,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 19,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-22T10:00:01Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T09:00:01Z",
+     "field_size": 17,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "perth-2026-09-23-1607",
+   "venue": "Perth",
+   "country": "GB",
+   "off_utc": "2026-09-23T16:07:00Z",
+   "name": "3m Nov Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "redcar-2026-09-23-1617",
+   "venue": "Redcar",
+   "country": "GB",
+   "off_utc": "2026-09-23T16:17:00Z",
+   "name": "7f Nov Hcap (now due off at 17:47)",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "listowel-2026-09-23-1622",
+   "venue": "Listowel",
+   "country": "IE",
+   "off_utc": "2026-09-23T16:22:00Z",
+   "name": "2m4f INHF",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T09:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T10:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1630",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T16:30:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1700",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T17:00:00Z",
+   "name": "6f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1730",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T17:30:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1800",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T18:00:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T06:00:02Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1830",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T18:30:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-22T10:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1900",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T19:00:00Z",
+   "name": "1m3f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-23T19:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "kempton-2026-09-23-1930",
+   "venue": "Kempton",
+   "country": "GB",
+   "off_utc": "2026-09-23T19:30:00Z",
+   "name": "1m3f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-22T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-22T09:00:02Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  }
+ ],
+ "edition": "2026-09-23"
+}

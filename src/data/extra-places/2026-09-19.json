@@ -1,0 +1,2718 @@
+{
+ "schema": "extra_places_edition_v1",
+ "source": "Paddy Power public race pages",
+ "note": "'extra_place' compares the bookmaker's offer with the bookmaker's own ladder, derived from our collection — not with the classic each-way table, which it does not follow.",
+ "ladder_days": 14,
+ "collected_through": "2026-09-19T21:00:02Z",
+ "races": [
+  {
+   "slug": "newbury-2026-09-19-1202",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T12:02:00Z",
+   "name": "5f Grp 3",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1207",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T12:07:00Z",
+   "name": "2m Mdn Hrd",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 21,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 18,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1215",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T12:15:00Z",
+   "name": "1m Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 9,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1220",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T12:20:00Z",
+   "name": "1m Hcap (Due off 16:15)",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newbury-2026-09-19-1237",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T12:37:00Z",
+   "name": "1m5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T08:00:01Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 12,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T12:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1242",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T12:42:00Z",
+   "name": "2m Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 17,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 17,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T10:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1250",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T12:50:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1255",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T12:55:00Z",
+   "name": "1m2f Listed Stks (Due off 16:50)",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1300",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T13:00:00Z",
+   "name": "6f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1306",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T13:06:00Z",
+   "name": "7f Cond Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newbury-2026-09-19-1312",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T13:12:00Z",
+   "name": "6f Grp 2",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1317",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T13:17:00Z",
+   "name": "2m3f Mdn Hrd",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 21,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 18,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1325",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T13:25:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 17,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 17,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T07:00:02Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1330",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T13:30:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 25,
+   "terms": {
+    "places": 6,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 27,
+     "places": 6,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T08:00:01Z",
+     "field_size": 26,
+     "places": 6,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T12:00:01Z",
+     "field_size": 25,
+     "places": 6,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1335",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T13:35:00Z",
+   "name": "7f Nursery",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1341",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T13:41:00Z",
+   "name": "1m Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 9,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T08:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newbury-2026-09-19-1347",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T13:47:00Z",
+   "name": "1m2f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1352",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T13:52:00Z",
+   "name": "2m3f Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 21,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 21,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1400",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:00:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1405",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:05:00Z",
+   "name": "6f Grp 3",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 7,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T07:00:02Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 7,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1410",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:10:00Z",
+   "name": "1m2f Sell Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T10:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1415",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T14:15:00Z",
+   "name": "1m Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T10:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newbury-2026-09-19-1420",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:20:00Z",
+   "name": "7f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 19,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T20:00:01Z",
+     "field_size": 18,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T08:00:01Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T12:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1426",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T14:26:00Z",
+   "name": "2m3f Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 21,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 21,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1440",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:40:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 26,
+   "terms": {
+    "places": 6,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 27,
+     "places": 6,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 26,
+     "places": 6,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1445",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:45:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1446",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:46:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T20:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T06:00:02Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1450",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T14:50:00Z",
+   "name": "1m1f Cond Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 14,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newbury-2026-09-19-1455",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T14:55:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 22,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 22,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T20:00:01Z",
+     "field_size": 21,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T08:00:01Z",
+     "field_size": 20,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 19,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1502",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T15:02:00Z",
+   "name": "2m5f Mdn Hrd",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 17,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 20,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 18,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 17,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1510",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:10:00Z",
+   "name": "1m2f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T19:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T06:00:02Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T15:00:01Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1515",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:15:00Z",
+   "name": "7f Nov Stks (Due off 17:20)",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 7,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-19T15:00:01Z",
+     "field_size": 7,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1517",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:17:00Z",
+   "name": "5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T07:00:02Z",
+     "field_size": 13,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1520",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:20:00Z",
+   "name": "2m2f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-19T07:00:02Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1525",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T15:25:00Z",
+   "name": "1m1f Mdn",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newbury-2026-09-19-1530",
+   "venue": "Newbury",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:30:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 5,
+   "terms": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 1,
+    "fraction": [
+     1,
+     1
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T07:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 9,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 6,
+     "places": 1,
+     "fraction": [
+      1,
+      1
+     ]
+    },
+    {
+     "at": "2026-09-19T15:00:01Z",
+     "field_size": 5,
+     "places": 1,
+     "fraction": [
+      1,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1535",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T15:35:00Z",
+   "name": "2m5f Hcap Hrd",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 17,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 21,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 21,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T10:00:02Z",
+     "field_size": 21,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 17,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1545",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:45:00Z",
+   "name": "1m4f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 13,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ayr-2026-09-19-1550",
+   "venue": "Ayr",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:50:00Z",
+   "name": "7f Hcap (Due off 17:50)",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T10:00:02Z",
+     "field_size": 15,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T17:00:01Z",
+     "field_size": 14,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T15:00:01Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1552",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:52:00Z",
+   "name": "7f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 10,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T07:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T15:00:01Z",
+     "field_size": 10,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1555",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T15:55:00Z",
+   "name": "1m2f Nov Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1602",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T16:02:00Z",
+   "name": "1m1f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 18,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T10:00:01Z",
+     "field_size": 17,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T14:00:01Z",
+     "field_size": 16,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T15:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "navan-2026-09-19-1612",
+   "venue": "Navan",
+   "country": "IE",
+   "off_utc": "2026-09-19T16:12:00Z",
+   "name": "2m INHF",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 15,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 17,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 15,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1620",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T16:20:00Z",
+   "name": "6f Mdn Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "chester-2026-09-19-1625",
+   "venue": "Chester",
+   "country": "GB",
+   "off_utc": "2026-09-19T16:25:00Z",
+   "name": "1m6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 14,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-19T10:00:01Z",
+     "field_size": 13,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T13:00:02Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newmarket-2026-09-19-1630",
+   "venue": "Newmarket",
+   "country": "GB",
+   "off_utc": "2026-09-19T16:30:00Z",
+   "name": "1m1f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 16,
+   "terms": {
+    "places": 4,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 16,
+     "places": 3,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 16,
+     "places": 4,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "gowran-park-2026-09-19-1637",
+   "venue": "Gowran Park",
+   "country": "IE",
+   "off_utc": "2026-09-19T16:37:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 18,
+   "terms": {
+    "places": 5,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": true,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 21,
+     "places": 4,
+     "fraction": [
+      1,
+      4
+     ]
+    },
+    {
+     "at": "2026-09-18T09:00:01Z",
+     "field_size": 21,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T09:00:01Z",
+     "field_size": 19,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 18,
+     "places": 5,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1655",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T16:55:00Z",
+   "name": "7f Mdn Stks",
+   "handicap": false,
+   "each_way": true,
+   "field_size": 8,
+   "terms": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 2,
+    "fraction": [
+     1,
+     4
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 8,
+     "places": 2,
+     "fraction": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1730",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T17:30:00Z",
+   "name": "5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1800",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T18:00:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1830",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T18:30:00Z",
+   "name": "6f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 11,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": true
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    },
+    {
+     "at": "2026-09-19T11:00:02Z",
+     "field_size": 11,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1900",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T19:00:00Z",
+   "name": "5f Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "newcastle-2026-09-19-1930",
+   "venue": "Newcastle",
+   "country": "GB",
+   "off_utc": "2026-09-19T19:30:00Z",
+   "name": "1m Hcap",
+   "handicap": true,
+   "each_way": true,
+   "field_size": 12,
+   "terms": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ],
+    "bog": false
+   },
+   "house_standard": {
+    "places": 3,
+    "fraction": [
+     1,
+     5
+    ]
+   },
+   "extra_place": false,
+   "history": [
+    {
+     "at": "2026-09-18T06:00:01Z",
+     "field_size": 12,
+     "places": 3,
+     "fraction": [
+      1,
+      5
+     ]
+    }
+   ]
+  }
+ ],
+ "edition": "2026-09-19"
+}

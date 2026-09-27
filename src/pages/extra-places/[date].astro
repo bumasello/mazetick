@@ -1,0 +1,276 @@
+---
+/**
+ * A edição de um dia: o que se sabia, hora a hora, sobre os termos each-way.
+ *
+ * Isto NÃO é a página de hoje com outra data. A de hoje responde "onde há vaga
+ * extra agora"; uma edição fechada responde "o que a casa fez naquele dia e a
+ * que horas". A primeira é oferta, a segunda é registro — e é a segunda que
+ * ninguém mais publica.
+ *
+ * ⚠️ NENHUM NÚMERO AQUI VEM DE FORA DESTA EDIÇÃO. Misturar populações foi o
+ * erro de 26/09: uma cobertura de 85,5% que somava duas faixas diferentes e
+ * descrevia nenhuma. `resumoDe` só olha `e.races`.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StatFigure from '../../components/StatFigure.astro';
+import { carregarEdicoes, mudancasDe, resumoDe } from '../../lib/edicoes';
+import type { Edicao, CorridaEdicao } from '../../lib/edicoes';
+import { raceTime, raceZone, raceDate } from '../../lib/time';
+
+export function getStaticPaths() {
+  const todas = carregarEdicoes();
+  return todas.map((e, i) => ({
+    params: { date: e.edition },
+    props: {
+      e,
+      // Mais nova primeiro, então o "anterior" no tempo está DEPOIS na lista.
+      maisNova: todas[i - 1]?.edition ?? null,
+      maisVelha: todas[i + 1]?.edition ?? null,
+      total: todas.length,
+    },
+  }));
+}
+
+interface Props {
+  e: Edicao;
+  maisNova: string | null;
+  maisVelha: string | null;
+  total: number;
+}
+
+const { e, maisNova, maisVelha, total } = Astro.props;
+const r = resumoDe(e);
+// ⚠️ SÓ as que mexeram no TERMO. Os outros pontos do histórico são saída de
+// não-corredor, e chamá-los de mudança de termo inflou a manchete em 3,5×
+// antes de subir — 83 pontos onde havia 24 mudanças.
+const mudancas = mudancasDe(e).filter((m) => m.termo);
+
+const frac = (f: [number, number]) => (f[0] === 1 && f[1] === 1 ? 'win only' : `${f[0]}/${f[1]}`);
+const hora = (iso: string) => `${iso.slice(11, 16)} UTC`;
+const rotulo = raceDate(`${e.edition}T12:00:00Z`);
+const zone = e.races.length ? raceZone(e.races[0].off_utc) : 'UK time';
+
+const corridas = [...e.races].sort((a, b) => a.off_utc.localeCompare(b.off_utc));
+const comTermoMovido = new Set(mudancas.map((m) => m.corrida.slug));
+const mudou = (c: CorridaEdicao) => comTermoMovido.has(c.slug);
+
+/**
+ * JSON-LD. `Dataset` pelo mesmo motivo da /horse: schema.org não tem tipo para
+ * isto, e um `Thing` vazio não descreve nada.
+ * ⛔ Sem `distribution` — é o campo que apontaria para arquivo baixável, e
+ * despejo em massa é o que o ToS do fornecedor proíbe.
+ */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: `Each-way terms, ${rotulo}`,
+  description:
+    `Hourly record of Paddy Power each-way place terms for ${r.corridas} UK and Irish ` +
+    `races run on ${rotulo}, with the time of every change.`,
+  temporalCoverage: e.edition,
+  dateModified: e.collected_through,
+  isAccessibleForFree: true,
+  creator: { '@type': 'Organization', name: 'mazetick' },
+  includedInDataCatalog: {
+    '@type': 'DataCatalog',
+    name: 'mazetick each-way term archive',
+    url: 'https://mazetick.com/extra-places',
+  },
+};
+---
+
+<BaseLayout
+  title={`Each-way terms, ${rotulo} — mazetick`}
+  description={`What Paddy Power's each-way place terms were on ${rotulo}, hour by hour, across ${r.corridas} UK and Irish races.`}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <header class="mast">
+    <p class="mono kicker">Each-way terms &middot; edition of {e.edition}</p>
+    <h1 class="display title">
+      {r.corridasQueMudaram === 0
+        ? `No race changed its each-way terms on ${rotulo}`
+        : `${r.corridasQueMudaram} of ${r.corridas} races changed terms on ${rotulo}`}
+    </h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      <p class="lead">
+        We read Paddy Power&rsquo;s published each-way terms once an hour. This is the
+        record for {rotulo}: {r.corridas} UK and Irish races, {r.mudancas}{' '}
+        {r.mudancas === 1 ? 'change' : 'changes'} to the place terms, and {r.acimaDaEscada}{' '}
+        {r.acimaDaEscada === 1 ? 'race' : 'races'} paying above the bookmaker&rsquo;s own ladder.
+        {r.soCampo > 0 && (
+          <>
+            {' '}A further {r.soCampo} {r.soCampo === 1 ? 'reading' : 'readings'} recorded only
+            a change in field size, which is a non-runner rather than the book moving.
+          </>
+        )}
+      </p>
+
+      {/*
+        ⚠️ Perda de vaga com o campo JÁ ENCOLHIDO é ajuste a não-corredor, e
+        não a casa recolhendo oferta. Chamar as duas coisas pelo mesmo nome foi
+        o erro de 26/09: 13 "remoções silenciosas" que eram todas atraso.
+      */}
+      {r.perdas > 0 && (
+        <p>
+          {r.perdas} {r.perdas === 1 ? 'race lost' : 'races lost'} a place.{' '}
+          {r.perdasSemExplicacao === 0
+            ? 'Every one of them followed a field that had already shrunk through non-runners, so they are mechanical adjustments rather than an offer being withdrawn.'
+            : `${r.perdasSemExplicacao} of those happened with the field at its largest observed size, which a non-runner does not explain.`}
+        </p>
+      )}
+
+      {/*
+        ⚠️ OS NÚMEROS TÊM DE FECHAR. ganhos + perdas + só-fração = mudanças de
+        termo. Sem a terceira parcela o leitor soma 13+9 e não chega às 24 da
+        frase acima, e um número que não reconcilia é um número que ele deixa
+        de acreditar — na sala onde isto vai circular, com razão.
+      */}
+      <div class="figures">
+        <StatFigure value={String(r.corridas)} label="races" />
+        <StatFigure value={String(r.acimaDaEscada)} label="above the house ladder" />
+        <StatFigure value={String(r.ganhos)} label="places added" />
+        <StatFigure value={String(r.perdas)} label="places taken away" />
+        {r.fracaoSo > 0 && (
+          <StatFigure value={String(r.fracaoSo)} label="fraction only" />
+        )}
+      </div>
+
+      {mudancas.length > 0 && (
+        <section>
+          <h2 class="section-rule">When the place terms moved</h2>
+          <table class="dense">
+            <thead>
+              <tr>
+                <th scope="col">Seen at</th>
+                <th scope="col">Race</th>
+                <th scope="col">Places</th>
+                <th scope="col">Fraction</th>
+                <th scope="col">Field</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mudancas.map((m) => (
+                <tr>
+                  <td class="num">{hora(m.para.at)}</td>
+                  <td>
+                    {m.corrida.venue} {raceTime(m.corrida.off_utc)}
+                  </td>
+                  <td class="num">
+                    {m.de.places === m.para.places
+                      ? m.para.places
+                      : <>{m.de.places} &rarr; <strong>{m.para.places}</strong></>}
+                  </td>
+                  <td class="num">
+                    {frac(m.de.fraction) === frac(m.para.fraction)
+                      ? frac(m.para.fraction)
+                      : `${frac(m.de.fraction)} → ${frac(m.para.fraction)}`}
+                  </td>
+                  <td class="num">
+                    {m.de.field_size === m.para.field_size
+                      ? m.para.field_size
+                      : `${m.de.field_size} → ${m.para.field_size}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="note caption">
+            The hour is when we <em>saw</em> the change, not when it was made: we read on
+            the hour, so a change shown at 10:00 happened some time after 09:00.
+          </p>
+        </section>
+      )}
+
+      <section>
+        <h2 class="section-rule">Every race that day</h2>
+        <table class="dense">
+          <thead>
+            <tr>
+              <th scope="col">Race</th>
+              <th scope="col">Field</th>
+              <th scope="col">Places</th>
+              <th scope="col">Fraction</th>
+              <th scope="col">House ladder</th>
+            </tr>
+          </thead>
+          <tbody>
+            {corridas.map((c) => (
+              <tr>
+                <td>
+                  {c.venue} {raceTime(c.off_utc)}
+                  {c.extra_place && <span class="above"> above ladder</span>}
+                  {mudou(c) && <span class="note"> · moved</span>}
+                </td>
+                <td class="num">{c.field_size}</td>
+                <td class="num">{c.terms.places}</td>
+                <td class="num">{frac(c.terms.fraction)}</td>
+                <td class="num">{c.house_standard.places}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="note caption">
+          Race times are {zone}. &ldquo;House ladder&rdquo; is the fewest places we have
+          ever seen this bookmaker pay for a field of that size in a race of that type,
+          derived from our own collection and cut at this edition&rsquo;s date &mdash; not
+          the classic each-way table, which they do not follow.
+        </p>
+      </section>
+
+      <nav class="edicoes">
+        {maisVelha && <a href={`/extra-places/${maisVelha}`}>&larr; {maisVelha}</a>}
+        <a href="/extra-places">All editions</a>
+        {maisNova && <a href={`/extra-places/${maisNova}`}>{maisNova} &rarr;</a>}
+      </nav>
+    </div>
+
+    <aside class="rail">
+      {/*
+        ⚠️ Sem `<br>` aqui. A checagem de espaçamento pegou: com as tags
+        removidas, "23:57 UTC" e "House ladder" viram uma palavra só — e é
+        assim que um leitor de tela e um extrator de texto recebem a página.
+      */}
+      <p class="note"><strong>Edition {e.edition}</strong></p>
+      <p class="note">Frozen. This page does not change once the day closes.</p>
+      <ul class="note proveniencia">
+        <li>Last read that day: {hora(e.collected_through)}</li>
+        <li>House ladder from {e.ladder_days} {e.ladder_days === 1 ? 'day' : 'days'} of collection</li>
+        <li>One of {total} editions</li>
+      </ul>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  /*
+    ⚠️ NADA de estilo para `.dense` aqui. Ela já é global em base.css, e lá
+    inclui o comportamento abaixo de 720px (`.dense tr { display: block }`).
+    Redeclarar `border-collapse` e padding local brigaria com isso e quebraria
+    a tabela no celular — sem erro nenhum, só torta.
+    Aqui fica só o que é desta página.
+  */
+  .figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-6);
+    margin: var(--sp-6) 0;
+  }
+  .proveniencia {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-3) 0 0;
+  }
+  .proveniencia li + li { margin-top: var(--sp-1); }
+  .edicoes {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    margin-top: var(--sp-8);
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--rule);
+  }
+</style>

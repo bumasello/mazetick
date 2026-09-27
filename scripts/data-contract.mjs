@@ -83,6 +83,19 @@ export const DATA_CONTRACT = [
     stamps: ['as_of', 'history_through'],
     nullable: [],
   },
+  {
+    // Uma edição por dia FECHADO da camada de mercado.
+    //
+    // ⚠️ AQUI O CARIMBO NÃO INCLUI `generated_at`, e é de propósito: edição
+    // congelada não pode ter relógio de geração, senão ela nunca sai byte a
+    // byte igual e o guarda da origem não distingue "o dado mudou" de "o
+    // relógio andou". O carimbo que resta é o da COLETA daquele dia, que é
+    // fato do dia e não muda — e `edition` é a própria data.
+    name: 'extra-places (edição congelada)',
+    match: (p) => /^src\/data\/extra-places\/\d{4}-\d{2}-\d{2}\.json$/.test(p),
+    stamps: ['edition', 'collected_through'],
+    nullable: [],
+  },
 ];
 
 export const contractFor = (relPath) =>

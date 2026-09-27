@@ -69,6 +69,27 @@ for (const arq of fs.readdirSync('src/content/research')) {
 }
 const ultimoArtigo = [...dataPorArtigo.values()].reduce(maior, null);
 
+// As edições da camada de mercado são CONGELADAS: o `lastmod` delas é o
+// carimbo da coleta daquele dia, e não muda nunca mais. É o caso em que o
+// lastmod honesto vale mais — o rastreador aprende que não precisa voltar.
+/** @type {Map<string,string>} */
+const dataPorEdicao = new Map();
+{
+  const dir = 'src/data/extra-places';
+  const arquivos = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
+    : [];
+  // Contar zero não é prova: se a pasta sumir, o sitemap perderia 21 lastmod
+  // em silêncio. O build para antes disso.
+  if (arquivos.length === 0) {
+    throw new Error(`${dir} vazio ou ausente — rode \`npm run data\` antes do build.`);
+  }
+  for (const arq of arquivos) {
+    const d = JSON.parse(fs.readFileSync(`${dir}/${arq}`, 'utf8'));
+    if (d.collected_through) dataPorEdicao.set(d.edition, d.collected_through);
+  }
+}
+
 // A home mostra movers e o acervo, então ela muda com os dois.
 const dataDaHome = maior(movers.generated_at, indiceCavalos.generated_at);
 
@@ -84,6 +105,9 @@ function lastmodDe(url) {
 
   const artigo = rota.match(/^\/research\/([^/]+)$/)?.[1];
   if (artigo) return dataPorArtigo.get(artigo) ?? null;
+
+  const edicao = rota.match(/^\/extra-places\/(\d{4}-\d{2}-\d{2})$/)?.[1];
+  if (edicao) return dataPorEdicao.get(edicao) ?? null;
 
   switch (rota) {
     case '/': return dataDaHome;

@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { untarGz } from './untar.mjs';
 import { stampProblems } from './data-contract.mjs';
+import { conferirEdicoes } from './edicoes-contrato.mjs';
 
 const REPO = 'bumasello/mazetick-data';
 const RAW = `https://raw.githubusercontent.com/${REPO}/main/data`;
@@ -119,9 +120,29 @@ for (const src of SOURCES) {
     die([`\n✗ horses: JSON do tarball não parseia — ${e.message}`]);
   }
 
+  // ---------------------------------------------------------------------
+  // As EDIÇÕES da camada de mercado vêm no MESMO tarball, de graça.
+  //
+  // Um GET por edição seria 21 pedidos hoje e +1 por dia para sempre; e, pior,
+  // índice e edições poderiam vir de commits diferentes — o mesmo motivo pelo
+  // qual os registros de cavalo já vêm por tarball.
+  // ---------------------------------------------------------------------
+  const edicoes = new Map();
+  for (const [nome, buf] of entries) {
+    const m = nome.match(/\/data\/extra-places\/(\d{4}-\d{2}-\d{2})\.json$/);
+    if (m) edicoes.set(m[1], buf.toString('utf8'));
+  }
+  const edProblems = conferirEdicoes(edicoes);
+  // ⚠️ DIZER QUANTAS. Um portão silencioso que passa é indistinguível de um
+  // portão que não achou nada para conferir — foi assim que o índice de
+  // criação entrou zerado em 26/09 e o guarda aprovou.
+  const nCorridas = [...edicoes.values()]
+    .reduce((t, txt) => t + (JSON.parse(txt).races?.length ?? 0), 0);
+
   const problems = [
     ...stampProblems('src/data/horses.json', card),
     ...stampProblems('src/data/horses-index.json', index),
+    ...edProblems,
   ];
   if (card.schema !== 'horses_v4') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v4"`);
 
@@ -280,5 +301,21 @@ for (const src of SOURCES) {
 
   console.log(
     `✓ horses: ${written.size} registros no acervo, ${card.horses.length} declarados no cartão, arquivo histórico até ${card.history_depth.through}, derivado ${card.generated_at}, ${((bytes + cardRaw.length + indexRaw.length) / 1024).toFixed(0)}KB`,
+  );
+
+  // As edições, já conferidas acima. Gravadas em arquivo por dia, do mesmo
+  // jeito que chegam — a página as lê pelo nome, que é a chave estável.
+  const DIR_ED = 'src/data/extra-places';
+  fs.rmSync(DIR_ED, { recursive: true, force: true });
+  fs.mkdirSync(DIR_ED, { recursive: true });
+  let bytesEd = 0;
+  for (const [dia, texto] of edicoes) {
+    fs.writeFileSync(path.join(DIR_ED, `${dia}.json`), texto);
+    bytesEd += texto.length;
+  }
+  const dias = [...edicoes.keys()].sort();
+  console.log(
+    `✓ edições: ${edicoes.size} dias (${dias[0]} → ${dias[dias.length - 1]}), ` +
+      `${nCorridas} corridas, ${(bytesEd / 1024).toFixed(0)}KB`,
   );
 }

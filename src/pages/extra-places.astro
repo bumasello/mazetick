@@ -4,6 +4,7 @@ import StatFigure from '../components/StatFigure.astro';
 import DataAge from '../components/DataAge.astro';
 import { raceTime, raceZone, raceDate, raceDay } from '../lib/time';
 import data from '../data/extra-places.json';
+import { carregarEdicoes, resumoDe } from '../lib/edicoes';
 
 type Term = { places: number; fraction: [number, number]; bog?: boolean };
 type Point = { at: string; field_size: number; places: number; fraction: [number, number] };
@@ -119,6 +120,14 @@ const neverBetter = placeAdds.length > 0 && betterFraction.length === 0;
 // ordem do arquivo — que era ordem de corrida e não queria dizer nada.
 const cards = [...placeAdds].sort((a, b) => b.to.at.localeCompare(a.to.at)).slice(0, 3);
 const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
+
+/**
+ * As edições anteriores. Até 26/09 o site publicava hoje e jogava o resto
+ * fora: 718 de 771 corridas já observadas não estavam em lugar nenhum. Um
+ * diário oficial sem edições anteriores não é um diário oficial.
+ */
+const edicoes = carregarEdicoes().map((e) => ({ dia: e.edition, r: resumoDe(e) }));
+const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
 ---
 <BaseLayout
   title="Extra places — mazetick"
@@ -415,6 +424,37 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
       )}
     </>
   )}
+
+  <section id="editions">
+    <h2 class="section-rule">Earlier editions</h2>
+    <p>
+      Every closed day is kept as it stood, with the hour of each change. {edicoes.length}{' '}
+      {edicoes.length === 1 ? 'edition' : 'editions'}, {totalArquivado} races.
+    </p>
+    <table class="dense">
+      <thead>
+        <tr>
+          <th scope="col">Edition</th>
+          <th scope="col">Races</th>
+          <th scope="col">Changed terms</th>
+          <th scope="col">Above ladder</th>
+        </tr>
+      </thead>
+      <tbody>
+        {edicoes.map(({ dia, r }) => (
+          <tr>
+            <td><a href={`/extra-places/${dia}`}>{dia}</a></td>
+            <td class="num">{r.corridas}</td>
+            <td class="num">{r.corridasQueMudaram}</td>
+            <td class="num">{r.acimaDaEscada}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p class="note caption">
+      An edition does not change once its day closes.
+    </p>
+  </section>
 
   <p class="note foot caption on-axis">
     Terms are the last the bookmaker advertised before our final collection; for a race that

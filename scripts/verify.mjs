@@ -854,7 +854,14 @@ check(
       }
     }
     for (const m of html.matchAll(/<tr\b[^>]*\bdata-mv-row\b[^>]*>/gi)) {
-      if (/\shidden(\s|=|>)/i.test(m[0])) {
+      // ⚠️ TESTAR O ATRIBUTO, NÃO A SUBSTRING. Em 2026-09-27 o cartão trouxe
+      // um cavalo chamado "The Hidden Garden", e ` Hidden ` dentro do VALOR de
+      // `data-runner` casava a regex antiga como se fosse o atributo `hidden`.
+      // É a terceira vez que nome próprio derruba um scanner nosso — antes
+      // foram "Debutante's Ball" na checagem 25 e os nomes com "bonus"/"banker"
+      // na auditoria do CAP 16. Nome de cavalo é texto adversário.
+      const semValores = m[0].replace(/="[^"]*"/g, '=""').replace(/='[^']*'/g, "=''");
+      if (/\shidden(\s|=|>)/i.test(semValores)) {
         problems.push(`${rel(f)}: linha de dado servida oculta — ${m[0].slice(0, 60)}…`);
       }
     }
@@ -1561,6 +1568,80 @@ const LETTER_SEGMENT = 'letter';
     problems.push('nenhuma página tem bloco de garanhão — o teste não conferiu nada');
   }
   check(`Janela da criação declarada (${comSire} páginas com garanhão)`, problems);
+}
+
+// 34. O arquivo de edições: 1:1 com os dados, e o índice não mente.
+//
+//     O modo de falha que isto existe para pegar é o mesmo que fez os
+//     registros de cavalo virem por tarball: índice que lista o que não tem
+//     página, ou página que o índice não alcança. Nos dois casos o site parece
+//     inteiro e não está.
+//
+//     E a edição é CONGELADA, então ela tem de dizer a data dela e o carimbo
+//     da coleta daquele dia — sem o carimbo não se distingue "não houve
+//     corrida" de "o coletor quebrou".
+{
+  const problems = [];
+  const dir = 'src/data/extra-places';
+  const dias = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort()
+    : [];
+  const paginas = pages
+    .map((f) => rel(f).match(/^extra-places\/(\d{4}-\d{2}-\d{2})\.html$/)?.[1])
+    .filter(Boolean)
+    .sort();
+
+  // Contar zero não é prova. Sem edição nenhuma, tudo abaixo passa vazio.
+  if (dias.length === 0) problems.push('nenhuma edição em src/data/extra-places — o arquivo sumiu');
+  if (paginas.length === 0) problems.push('nenhuma página de edição construída');
+
+  for (const d of dias) if (!paginas.includes(d)) problems.push(`edição ${d} tem dado e NÃO tem página`);
+  for (const d of paginas) if (!dias.includes(d)) problems.push(`página ${d} existe e NÃO tem dado`);
+
+  // O índice alcança todas, e não aponta para o que não existe.
+  const idx = pages.find((f) => rel(f) === 'extra-places.html');
+  if (!idx) problems.push('extra-places.html não foi construída');
+  else {
+    const html = read(idx);
+    const linkadas = [...html.matchAll(/href="\/extra-places\/(\d{4}-\d{2}-\d{2})"/g)]
+      .map((m) => m[1]);
+    for (const d of dias) {
+      if (!linkadas.includes(d)) problems.push(`o índice não linka a edição ${d}`);
+    }
+    for (const d of linkadas) {
+      if (!dias.includes(d)) problems.push(`o índice linka ${d}, que não existe`);
+    }
+  }
+
+  // Cada página diz a data dela e o carimbo daquele dia.
+  for (const f of pages) {
+    const d = rel(f).match(/^extra-places\/(\d{4}-\d{2}-\d{2})\.html$/)?.[1];
+    if (!d) continue;
+    const html = read(f);
+    if (!html.includes(`edition of ${d}`)) {
+      problems.push(`${rel(f)}: não se identifica como a edição de ${d}`);
+    }
+    if (!/Last read that day: \d{2}:\d{2} UTC/.test(html)) {
+      problems.push(`${rel(f)}: sem o carimbo da coleta daquele dia`);
+    }
+    // A afirmação acusatória só pode aparecer quando há caso. Em 26/09 ela
+    // quase foi publicada com 13 falsos positivos.
+    if (/does not explain/.test(html) && !/\d+ of those happened/.test(html)) {
+      problems.push(`${rel(f)}: fala de perda inexplicada sem o número ao lado`);
+    }
+    // AS PARCELAS SOMAM. Um número que não reconcilia é um número que o
+    // leitor deixa de acreditar — e na sala onde isto circula, com razão.
+    const txt = html.replace(/<[^>]+>/g, ' ');
+    const nMud = Number(txt.match(/, (\d+) changes? to the place terms/)?.[1] ?? NaN);
+    const fig = (rot) => Number(txt.match(new RegExp(`(\\d+)\\s+${rot}`))?.[1] ?? 0);
+    if (!Number.isNaN(nMud)) {
+      const soma = fig('places added') + fig('places taken away') + fig('fraction only');
+      if (soma !== nMud) {
+        problems.push(`${rel(f)}: a frase diz ${nMud} mudanças de termo e as parcelas somam ${soma}`);
+      }
+    }
+  }
+  check(`Arquivo de edições íntegro (${dias.length} edições, ${paginas.length} páginas)`, problems);
 }
 
 console.log();
