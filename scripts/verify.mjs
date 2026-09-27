@@ -1603,6 +1603,13 @@ const LETTER_SEGMENT = 'letter';
   if (!idx) problems.push('extra-places.html não foi construída');
   else {
     const html = read(idx);
+    // ⚠️ Testar no TEXTO, não no HTML cru: `&ldquo;` são sete caracteres, e um
+    // `.` na regex casa um só. Mesma armadilha da checagem 25, que scrubava
+    // nome cru contra HTML escapado.
+    const txtIdx = html.replace(/&[a-z]+;/g, '"').replace(/<[^>]+>/g, ' ');
+    if (!/Do not read the "above ladder" column as a trend/.test(txtIdx)) {
+      problems.push('extra-places.html: o índice compara "above ladder" entre edições sem avisar que a métrica não é comparável');
+    }
     const linkadas = [...html.matchAll(/href="\/extra-places\/(\d{4}-\d{2}-\d{2})"/g)]
       .map((m) => m[1]);
     for (const d of dias) {
@@ -1628,6 +1635,14 @@ const LETTER_SEGMENT = 'letter';
     // quase foi publicada com 13 falsos positivos.
     if (/does not explain/.test(html) && !/\d+ of those happened/.test(html)) {
       problems.push(`${rel(f)}: fala de perda inexplicada sem o número ao lado`);
+    }
+    // ⚠️ A NÃO-COMPARABILIDADE TEM DE ESTAR DITA. A escada é um mínimo sobre
+    // o observado, logo só desce, e "acima da escada" sobe por construção:
+    // 17,2% nas sete primeiras edições contra 27,3% nas sete últimas. Sem a
+    // frase, a tabela convida a ler como tendência do mercado o que é
+    // calibração nossa. Achado pelo reprodutor em 27/09.
+    if (!/not comparable with a later edition/.test(html.replace(/<[^>]+>/g, ' '))) {
+      problems.push(`${rel(f)}: sem a ressalva de que a contagem não é comparável entre edições`);
     }
     // AS PARCELAS SOMAM. Um número que não reconcilia é um número que o
     // leitor deixa de acreditar — e na sala onde isto circula, com razão.

@@ -150,5 +150,12 @@ export function resumoDe(e: Edicao) {
     ).length,
     corridasQueMudaram: new Set(mudancas.map((m) => m.corrida.slug)).size,
     fracaoSo: mudancas.filter((m) => m.para.places === m.de.places).length,
+    /**
+     * Mudança de termo em que o CAMPO também mexeu no mesmo instante. Achado
+     * pelo reprodutor em 27/09: 6 das 19 de 19/09 são o campo cruzando um
+     * degrau da escada, não a casa mexendo na oferta. O termo mudou de
+     * verdade; a causa é outra, e a página tem de poder dizer as duas.
+     */
+    comCampoMexendo: mudancas.filter((m) => m.de.field_size !== m.para.field_size).length,
   };
 }

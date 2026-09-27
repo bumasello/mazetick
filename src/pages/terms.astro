@@ -1,0 +1,144 @@
+---
+/**
+ * Termos de uso.
+ *
+ * ⚠️ POR QUE ESTA PÁGINA EXISTE AGORA. O plano de afiliado (pendência 12) lista
+ * quatro coisas que têm de existir ANTES do primeiro link, não antes da
+ * inscrição: mecanismo de `#ad`, página de termos, `/about` dizendo quem opera,
+ * e meio de recebimento. Esta é a segunda. As outras três seguem abertas, e a
+ * terceira é decisão do Bruno porque publica dado pessoal dele.
+ *
+ * ⚠️ E O QUE ELA NÃO FAZ. Não inventa entidade, jurisdição nem CNPJ. Onde o
+ * fato depende dele, a página diz o que é verdade hoje e nada além — inventar
+ * "operated by X Ltd" seria exatamente a fabricação que o resto do site existe
+ * para não fazer.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RailIndex from '../components/RailIndex.astro';
+
+const reviewed = '27 September 2026';
+
+// Os títulos têm de bater LITERALMENTE com os <h2> do corpo — checagem 22.
+const sections = [
+  { id: 'what', title: 'What this site is' },
+  { id: 'not-advice', title: 'Not advice, and not a tip' },
+  { id: 'accuracy', title: 'Accuracy, and what to do when we are wrong' },
+  { id: 'reuse', title: 'Using our figures elsewhere' },
+  { id: 'links', title: 'Links to bookmakers' },
+  { id: 'age', title: 'Age and responsible gambling' },
+  { id: 'changes', title: 'Changes to these terms' },
+];
+---
+<BaseLayout
+  title="Terms of use — mazetick"
+  description="The terms on which mazetick publishes: what the figures are, what they are not, how corrections work, and how our measurements may be reused."
+>
+  <header class="mast">
+    <p class="mono kicker">Notice</p>
+    <h1 class="display title">Terms of use</h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      <div class="prose">
+        <p>
+          <strong>Reviewed {reviewed}.</strong> Plain terms for a site that publishes
+          measurements. If something here reads as though it were written to protect us
+          rather than to inform you, tell us and it will be rewritten.
+        </p>
+
+        <h2 id="what">What this site is</h2>
+        <p>
+          mazetick publishes recorded observations of UK and Irish racing markets, and
+          statistics derived from published race records. Every figure carries the
+          instant it was true. Nothing here is a live feed: pages are built at a point
+          in time and say so.
+        </p>
+        <p>
+          The site is published by an individual, not a company, and is not affiliated
+          with any bookmaker, exchange, racecourse or regulator.
+        </p>
+
+        <h2 id="not-advice">Not advice, and not a tip</h2>
+        <p>
+          <strong>Nothing on this site is a recommendation to bet</strong>, a prediction
+          of any outcome, or financial advice. We do not sell selections, and we do not
+          publish a figure because we think it will make you money.
+        </p>
+        <p>
+          Several of our own published findings are negative &mdash; that is, they
+          record strategies that lost money under honest measurement. Those are in{' '}
+          <a href="/research">Research</a>, with their sample sizes. Read them before
+          assuming any number here supports a bet.
+        </p>
+
+        <h2 id="accuracy">Accuracy, and what to do when we are wrong</h2>
+        <p>
+          The figures are our own count over data we collect and over published race
+          records. We check them, we publish the method, and we still get things wrong.
+          When we find an error we correct it in public and say what changed, rather
+          than editing quietly.
+        </p>
+        <p>
+          <strong>The site is provided as it is, with no warranty that any figure is
+          accurate, complete or current.</strong> Collection can fail, a source can
+          change its shape without telling us, and an archive can be thinner in one
+          period than another &mdash; where we know that, the page says so. Decisions
+          you take on the basis of these numbers are yours.
+        </p>
+        <p>
+          If a number here looks wrong, <a href="/contact">tell us</a>. Corrections to
+          measurements are the most useful thing anyone can send.
+        </p>
+
+        <h2 id="reuse">Using our figures elsewhere</h2>
+        <p>
+          The <strong>content</strong> of this site &mdash; the measurements, the
+          articles and the derived statistics &mdash; is published under{' '}
+          <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener"
+             target="_blank">CC BY 4.0</a>. Quote it, chart it, argue with it, in public
+          or in print, as long as you say where it came from and link back.
+        </p>
+        <p>
+          The <strong>code</strong> that builds the site is MIT-licensed and public.
+        </p>
+        <p>
+          Two limits, and both are about the sources rather than about us. We are
+          licensed to publish our own derived figures, not to redistribute the
+          underlying feeds: <strong>please do not scrape these pages to reconstitute a
+          bulk dataset or to run a feed of your own.</strong> And prices shown by a
+          bookmaker or an exchange belong to them, which is why you will not find a
+          price on this site.
+        </p>
+
+        <h2 id="links">Links to bookmakers</h2>
+        <p>
+          <strong>At the time of writing this site carries no paid links of any
+          kind</strong> &mdash; no affiliate links, no advertising, no sponsored
+          content. If that changes, every paid link will be labelled{' '}
+          <code>#ad</code> where you can see it before you click, and this section will
+          say so with the date it changed. A label buried in a footer is not a label.
+        </p>
+
+        <h2 id="age">Age and responsible gambling</h2>
+        <p>
+          This site is intended for people aged <strong>18 or over</strong>. It
+          discusses betting markets, and betting can cause harm. If gambling is costing
+          you more than money, <a href="/responsible-gambling">the help is here</a>:
+          BeGambleAware, GamCare, and the National Gambling Helpline on 0808 8020 133,
+          free and open at any hour.
+        </p>
+
+        <h2 id="changes">Changes to these terms</h2>
+        <p>
+          This page carries the date it was last reviewed, at the top. Changes that
+          matter &mdash; a paid link appearing, the licence changing, a new source
+          &mdash; will be stated here rather than slipped in, because a terms page that
+          rewrites itself silently is worth nothing.
+        </p>
+      </div>
+    </div>
+
+    <RailIndex items={sections} />
+  </div>
+</BaseLayout>

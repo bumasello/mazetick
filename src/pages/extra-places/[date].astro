@@ -107,6 +107,13 @@ const jsonLd = {
             a change in field size, which is a non-runner rather than the book moving.
           </>
         )}
+        {r.comCampoMexendo > 0 && (
+          <>
+            {' '}Of the {r.mudancas} term changes, {r.comCampoMexendo} happened at the same
+            moment the field changed, so those may be the field crossing a step of the
+            ladder rather than a decision about the offer.
+          </>
+        )}
       </p>
 
       {/*
@@ -131,7 +138,7 @@ const jsonLd = {
       */}
       <div class="figures">
         <StatFigure value={String(r.corridas)} label="races" />
-        <StatFigure value={String(r.acimaDaEscada)} label="above the house ladder" />
+        <StatFigure value={String(r.acimaDaEscada)} label={`above the ladder as known after ${e.ladder_days} ${e.ladder_days === 1 ? 'day' : 'days'}`} />
         <StatFigure value={String(r.ganhos)} label="places added" />
         <StatFigure value={String(r.perdas)} label="places taken away" />
         {r.fracaoSo > 0 && (
@@ -218,6 +225,23 @@ const jsonLd = {
           ever seen this bookmaker pay for a field of that size in a race of that type,
           derived from our own collection and cut at this edition&rsquo;s date &mdash; not
           the classic each-way table, which they do not follow.
+        </p>
+        {/*
+          ⚠️ A RESSALVA QUE O REPRODUTOR EXIGIU (27/09). A escada é um MÍNIMO
+          sobre o que já observamos, então ela só pode DESCER conforme o acervo
+          cresce — e "acima da escada" sobe por construção, não por a casa ter
+          mudado. Medido: 17,2% nas sete primeiras edições contra 27,3% nas
+          sete últimas, com a escada indo de 1 para 21 dias.
+          Sem esta frase, a tabela de edições convida a ler uma tendência que
+          é nossa, não do mercado.
+        */}
+        <p class="note caption">
+          <strong>This count is not comparable with a later edition&rsquo;s.</strong> The
+          ladder is the fewest places we have ever seen, so it can only fall as we
+          collect more, and &ldquo;above the ladder&rdquo; rises with it. This edition
+          was judged against {e.ladder_days} {e.ladder_days === 1 ? 'day' : 'days'} of
+          collection; a later one is judged against more, and will look more generous
+          for that reason alone.
         </p>
       </section>
 

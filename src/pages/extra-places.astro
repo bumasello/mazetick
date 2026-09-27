@@ -126,7 +126,7 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
  * fora: 718 de 771 corridas já observadas não estavam em lugar nenhum. Um
  * diário oficial sem edições anteriores não é um diário oficial.
  */
-const edicoes = carregarEdicoes().map((e) => ({ dia: e.edition, r: resumoDe(e) }));
+const edicoes = carregarEdicoes().map((e) => ({ dia: e.edition, dias: e.ladder_days, r: resumoDe(e) }));
 const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
 ---
 <BaseLayout
@@ -438,21 +438,29 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
           <th scope="col">Races</th>
           <th scope="col">Changed terms</th>
           <th scope="col">Above ladder</th>
+          <th scope="col">Ladder from</th>
         </tr>
       </thead>
       <tbody>
-        {edicoes.map(({ dia, r }) => (
+        {edicoes.map(({ dia, dias, r }) => (
           <tr>
             <td><a href={`/extra-places/${dia}`}>{dia}</a></td>
             <td class="num">{r.corridas}</td>
             <td class="num">{r.corridasQueMudaram}</td>
             <td class="num">{r.acimaDaEscada}</td>
+            <td class="num">{dias}d</td>
           </tr>
         ))}
       </tbody>
     </table>
     <p class="note caption">
-      An edition does not change once its day closes.
+      An edition does not change once its day closes.{' '}
+      <strong>Do not read the &ldquo;above ladder&rdquo; column as a trend.</strong> The
+      ladder is the fewest places we have ever seen for a field of that size, so it can
+      only fall as we collect more, and the count rises with it: the first seven
+      editions averaged 17% against 27% for the last seven, judged against 1 day of
+      collection at the start and 21 at the end. That movement is ours, not the
+      bookmaker&rsquo;s. The last column says what each edition was judged against.
     </p>
   </section>
 
