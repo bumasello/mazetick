@@ -19,6 +19,14 @@ const runners: Runner[] = data.runners as Runner[];
 const bands: Band[] = data.baseline.bands as Band[];
 const notable = runners.filter((r) => r.notable);
 const zone = runners.length ? raceZone(runners[0].off_utc) : 'UK time';
+
+// ⚠️ Mesma razão da /extra-places: o título trazia só a etiqueta da categoria
+// e a página teve 2 impressões de busca em toda a janela, contra 91,5% do site
+// indo para páginas de cavalo cujo título carrega um fato. A DATA entra, a
+// contagem não — ela muda a cada build do dia e título instável não é frescor.
+const hojeRotulo = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/London', day: 'numeric', month: 'long',
+}).format(runners.length ? new Date(runners[0].off_utc) : new Date(data.generated_at));
 const courses = [...new Set(runners.map((r) => r.venue))].sort();
 
 const pc = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
@@ -125,8 +133,8 @@ const widest = bands[bands.length - 1];
 const tightest = bands[0];
 ---
 <BaseLayout
-  title="Movers — mazetick"
-  description="Which UK and Irish runners moved today, and whether the move was unusual for that price. Every price stamped against the off, never against your clock."
+  title={`Market movers today, ${hojeRotulo} — mazetick`}
+  description={`${notable.length} of ${runners.length} UK and Irish runners moved further than usual for their price on ${hojeRotulo}. Every price stamped against the off, never against your clock.`}
 >
   <header class="mast">
     <p class="mono kicker">Order book &middot; Smarkets</p>

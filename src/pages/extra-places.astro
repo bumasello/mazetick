@@ -127,11 +127,32 @@ const zone = races.length ? raceZone(races[0].off_utc) : 'UK time';
  * diário oficial sem edições anteriores não é um diário oficial.
  */
 const edicoes = carregarEdicoes().map((e) => ({ dia: e.edition, dias: e.ladder_days, r: resumoDe(e) }));
+
+/**
+ * ⚠️ O TÍTULO CARREGA A DATA, e a razão é medida.
+ *
+ * Search Console até 26/09: as páginas de cavalo levam **91,5%** das
+ * impressões do site e os títulos delas trazem um FATO ("Sir Jeremy: 9 runs,
+ * 2 wins to 27 Sept 2026"). Esta página trazia só a etiqueta da categoria
+ * ("Extra places — mazetick") e teve **zero** impressão de busca.
+ *
+ * A data, e não a contagem: a contagem muda a cada build do dia (corrida entra,
+ * corrida corre), e título que oscila quatro vezes por dia é instabilidade, não
+ * frescor. A contagem vai na descrição, que é onde ela não custa nada.
+ *
+ * ⛔ E isto é HIPÓTESE com mecanismo, não conserto garantido. O Oddschecker é
+ * o incumbente dessas consultas; título que casa a busca é pré-requisito para
+ * ranquear, nunca causa de ranquear. A medição é o próximo export.
+ */
+const hojeRotulo = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/London', day: 'numeric', month: 'long',
+}).format(races.length ? new Date(races[0].off_utc) : new Date(data.generated_at));
+const acimaHoje = races.filter((r) => r.extra_place).length;
 const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
 ---
 <BaseLayout
-  title="Extra places — mazetick"
-  description="Which UK and Irish races are paying above the bookmaker's own each-way ladder, with the hour every change was made and whether the race has run."
+  title={`Extra places today, ${hojeRotulo} — mazetick`}
+  description={`${acimaHoje} of ${races.length} UK and Irish races are paying above Paddy Power's own each-way ladder on ${hojeRotulo}, with the hour of every change. Plus ${edicoes.length} earlier editions, each frozen as it stood.`}
 >
   <header class="mast">
     <p class="mono kicker">Each-way terms &middot; Paddy Power</p>
