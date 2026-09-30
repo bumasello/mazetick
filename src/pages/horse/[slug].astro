@@ -199,7 +199,7 @@ const jsonLd = {
 ---
 <BaseLayout title={meta.title} description={meta.description} jsonLd={jsonLd}>
   <header class="mast">
-    <p class="mono kicker">Horse record &middot; UK &amp; Irish racing</p>
+    <p class="mono kicker">Horse record. UK and Irish racing.</p>
     <h1 class="display title">{h.name}</h1>
   </header>
 
@@ -281,37 +281,54 @@ const jsonLd = {
 
     <aside class="rail">
       <RailIndex items={sections} />
-      <div class="rail-block">
-        <span class="rail-label">As at</span>
-        <dl class="stamp-list">
-          <div><dt>Figures as at</dt><dd>{ukDate(h.as_of)}</dd></div>
-          <div><dt>Archive through</dt><dd>{ukDate(h.history_through)}</dd></div>
-          <div>
-            <dt>Sample held</dt>
-            <dd>{h.status === 'has_history' ? plural(h.career.runs, 'run') : 'none'}</dd>
-          </div>
-          <div><dt>State</dt><dd>{statusLabel(h.status)}</dd></div>
-        </dl>
-      </div>
-      <div class="rail-block">
-        <span class="rail-label">Collection</span>
-        <p class="rail-note">
-          {!collectionKnown
-            ? 'This file carries no collection timestamp, so we cannot say when the card was last read, nor whether this horse has been declared since.'
-            : onLatestCard
-              ? 'This horse was declared on the card we last read.'
-              : 'This horse was not on the card we last read. The figures above are carried forward from the day it was, and nothing about it has changed since.'}
-        </p>
-        <DataAge collectedThrough={stamp.collectedThrough} generatedAt={stamp.generatedAt} />
-      </div>
-      <div class="rail-block">
-        <span class="rail-label">No look-ahead</span>
-        <p class="rail-note">
-          Every figure below uses only races run before the date above. Nothing here
-          is a prediction, and nothing here is a price.
-        </p>
-      </div>
     </aside>
+  </div>
+
+  {/*
+    ⚠️ BANDA DE PARTICULARES — 2026-09-29, e é o movimento principal da sessão.
+
+    Estes três blocos viviam na margem, ao lado da ficha. Medido antes de
+    mexer: o `.spread` tinha 751px e continha só a ficha, com 347px de corpo —
+    **404px de margem vazia** —, e as cinco seções de verdade corriam abaixo
+    em largura cheia, com aparato NENHUM ao lado. Encurtar a ficha para 148px
+    piorou: a margem ficou com 600px de nada.
+
+    Num aviso de diário oficial os particulares não ficam numa barra lateral;
+    ficam numa banda sob o título, em colunas, antes do corpo. Aqui é isso: as
+    três réguas lado a lado leem como o cabeçalho de um registro, e a margem
+    fica só com a navegação, que é o único conteúdo curto que pertence lá.
+  */}
+  <div class="particulars">
+      <div class="rail-block">
+      <span class="rail-label">As at</span>
+      <dl class="stamp-list">
+        <div><dt>Figures as at</dt><dd>{ukDate(h.as_of)}</dd></div>
+        <div><dt>Archive through</dt><dd>{ukDate(h.history_through)}</dd></div>
+        <div>
+          <dt>Sample held</dt>
+          <dd>{h.status === 'has_history' ? plural(h.career.runs, 'run') : 'none'}</dd>
+        </div>
+        <div><dt>State</dt><dd>{statusLabel(h.status)}</dd></div>
+      </dl>
+    </div>
+    <div class="rail-block">
+      <span class="rail-label">Collection</span>
+      <p class="rail-note">
+        {!collectionKnown
+          ? 'This file carries no collection timestamp, so we cannot say when the card was last read, nor whether this horse has been declared since.'
+          : onLatestCard
+            ? 'This horse was declared on the card we last read.'
+            : 'This horse was not on the card we last read. The figures above are carried forward from the day it was, and nothing about it has changed since.'}
+      </p>
+      <DataAge collectedThrough={stamp.collectedThrough} generatedAt={stamp.generatedAt} />
+    </div>
+    <div class="rail-block">
+      <span class="rail-label">No look-ahead</span>
+      <p class="rail-note">
+        Every figure below uses only races run before the date above. Nothing here
+        is a prediction, and nothing here is a price.
+      </p>
+    </div>
   </div>
 
   <section>
@@ -488,6 +505,17 @@ const jsonLd = {
 </BaseLayout>
 
 <style>
+  /* A banda de particulares: três colunas de largura igual, réguas alinhadas.
+     Abaixo do ponto de virada vira empilhamento, como qualquer bloco. */
+  .particulars {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-8);
+    margin: var(--sp-8) 0 var(--sp-14);
+  }
+  @media (max-width: 900px) {
+    .particulars { grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
+  }
   .mast .title { max-width: 20ch; }
   .lead { margin-bottom: var(--sp-5); }
   section { margin-top: var(--sp-14); }
@@ -498,44 +526,48 @@ const jsonLd = {
   /* Identificação: rótulo mono sobre valor, em colunas que quebram sozinhas.
      Não é tabela porque não há amostra nem taxa — é ficha, e tabelar ficha
      sugeriria que há números a comparar. */
+  /* ⚠️ PREÂMBULO CORRIDO, não grade — 2026-09-29.
+     Era `grid auto-fit minmax(180px)`: dez itens em três colunas, rótulo
+     empilhado sobre o valor, **313px medidos** num corpo de 624px.
+     O aparelho do diário oficial para isto é a abertura de aviso: rótulo e
+     valor na mesma linha, correndo, com ponto final entre os pares. Ficou em
+     **148px**. Continua sendo um `<dl>` no HTML — é descrição, e trocar a
+     semântica para caber num layout seria mentir para quem lê por leitor de
+     tela. Só a renderização muda. */
   .ident {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(var(--col-min), 1fr));
-    gap: var(--sp-5) var(--sp-6);
+    display: block;
     border-top: 1px solid var(--rule-med);
     padding-top: var(--sp-5);
+    font-size: var(--fs-text);
+    line-height: 1.65;
   }
+  .ident > div { display: inline; }
   .ident dt {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
+    display: inline;
+    font-family: var(--font-apparatus);
     color: var(--ink-faint);
-    margin-bottom: var(--sp-1);
   }
-  .ident dd {
-    margin: 0;
-    font-size: var(--fs-body);
-    color: var(--ink);
-  }
+  .ident dt::after { content: "\00a0"; }
+  .ident dd { display: inline; margin: 0; color: var(--ink); }
+  /* O ponto final é o que faz o bloco ler como aviso e não como lista de
+     campos. Vai no CSS: é pontuação de apresentação, e no texto extraído o
+     `<dd>` já encerra o par. */
+  .ident dd::after { content: ". "; color: var(--ink-faint); }
   .ident .faint { color: var(--ink-faint); }
   /* O intervalo da faixa, colado à chave: "staying" sozinho não é conferível. */
-  .ident .band {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    letter-spacing: var(--ls-label);
-    color: var(--ink-faint);
-    margin-top: var(--sp-1);
-  }
+  /* O intervalo da faixa entre parênteses, na mesma linha. Em bloco ele
+     quebrava o preâmbulo em três e deixava o ponto final órfão. Num aviso, a
+     qualificação vem entre parênteses. */
+  .ident .band { display: inline; color: var(--ink-faint); white-space: nowrap; }
+  .ident .band::before { content: " ("; }
+  .ident .band::after  { content: ")"; }
   /* Na margem o carimbo empilha: 300px não comportam a linha do .age em fila. */
   .rail-block :global(.age) { flex-direction: column; gap: var(--sp-1); margin-top: var(--sp-2); }
 
   .stamp-list dt {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
   }
   .stamp-list dd {

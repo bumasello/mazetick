@@ -24,7 +24,12 @@
 
   --ground:       #FCFBF8;  /* fundo da página */
   --panel:        #F3F5F0;  /* preenchimento único: cartão, bloco de método */
-  --ink:          #171A19;  /* texto principal, régua pesada de seção */
+  /* ⚠️ PRETO DE VERDADE desde 29/09. Era #171A19, um near-black ESVERDEADO —
+     o padrão #5 da lista de marcas de página gerada, e o tipo de escolha que
+     todo gerador faz porque "preto puro é duro demais".
+     Num diário oficial a tinta é preta. Fazer isso de propósito, sobre um
+     papel levemente quente (--ground #FCFBF8), é o oposto do default. */
+  --ink:          #000000;  /* texto principal, régua pesada de seção */
   --ink-muted:    #4B534C;  /* texto de apoio, coluna de tipo de corrida */
   --ink-faint:    #7C867F;  /* rótulos, unidades, carimbo de hora */
   --ink-ghost:    #ADB3A9;  /* valor antigo riscado (4 → 5) */
@@ -50,13 +55,36 @@
      interface — navegação, rótulo, tabela, nota —, onde a serifa atrapalharia
      em corpo pequeno e em coluna estreita.
 
-     As três famílias continuam self-hosted por @fontsource: nenhuma requisição
-     a terceiro, e a CSP segue com `font-src 'self'`. Nenhuma fonte nova entrou
-     na repaginação, então não há host novo a autorizar. */
+     ⚠️ DUAS famílias baixadas desde 29/09, não três: Newsreader e Archivo.
+     A monoespaçada saiu do download junto com o rótulo em caixa alta — ver
+     `--font-mono` abaixo. Self-hosted por @fontsource, nenhuma requisição a
+     terceiro, CSP segue com `font-src 'self'`. */
   --font-display: "Newsreader Variable", "Newsreader", Georgia, serif;
   --font-text:    "Newsreader Variable", "Newsreader", Georgia, serif;
   --font-body:    "Archivo Variable", "Archivo", system-ui, sans-serif;
-  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  /* ⚠️ A IBM Plex Mono DEIXOU DE SER BAIXADA em 2026-09-29. Depois que o
+     rótulo saiu da monoespaçada, ela servia só `.prose code`, em duas páginas
+     de apoio — e custava **182 KB dos 364 KB** de fonte do site, metade do
+     peso, em duas pesagens e muitos subconjuntos. A pilha do sistema desenha
+     código tão bem quanto, e é o que o leitor já tem. */
+  --font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* -- 2026-09-29, sessão de UI ------------------------------------------
+     A monoespaçada em CAIXA ALTA espaçada é o padrão #5 da lista de marcas de
+     página gerada, e estava em 31 lugares — todo rótulo do site. Ela recuou
+     para os DOIS usos em que é mono de verdade: `code` e `pre code`.
+
+     No lugar dela, duas faces por FUNÇÃO, que é a distinção da London Gazette:
+
+       --font-apparatus  o que é DOCUMENTO: eyebrow, rótulo da margem, ficha
+                         de identificação. Serifa, caixa de frase, porque faz
+                         parte do registro e não da interface.
+       --font-label      o que é INTERFACE: cabeçalho de tabela, navegação,
+                         controle. Sans, caixa de frase — serifa em 12px numa
+                         tabela densa atrapalha a varredura, e varrer é o que
+                         a tabela existe para permitir. */
+  --font-apparatus: var(--font-text);
+  --font-label:     var(--font-body);
 
   --fs-display-xl:  52px;   /* numeral da margem */
   --fs-display-l:   44px;   /* manchete */
@@ -69,8 +97,11 @@
   --fs-lead:        16.5px; /* abertura em sans (páginas de dado) */
   --fs-body:        14.5px; /* tabela, interface */
   --fs-caption:     12.5px; /* nota de rodapé, rótulo de coluna */
-  --fs-label:       10.5px; /* mono em caixa alta */
-  --ls-label:       .11em;  /* letter-spacing do rótulo mono */
+  /* 10,5px só se lia porque era caixa alta espaçada. Em caixa de frase o
+     mesmo corpo fica ilegível, então sobe — e o espaçamento cai para quase
+     nada, que é o que caixa de frase pede. */
+  --fs-label:       12px;
+  --ls-label:       .005em;
 
   /* -- §3 Espaçamento ------------------------------------------------------ */
   --sp-1:  4px;   --sp-2:  8px;   --sp-3: 12px;  --sp-4: 16px;
@@ -145,7 +176,7 @@
 
     --ground:       #101311;
     --panel:        #1A1F1B;
-    --ink:          #ECEEE8;
+    --ink:          #F5F5F3;
     --ink-muted:    #B8C0B7;
     --ink-faint:    #8B948A;
     --ink-ghost:    #5C655C;
@@ -161,7 +192,7 @@
 
   --ground:       #101311;
   --panel:        #1A1F1B;
-  --ink:          #ECEEE8;
+  --ink:          #F5F5F3;
   --ink-muted:    #B8C0B7;
   --ink-faint:    #8B948A;
   --ink-ghost:    #5C655C;

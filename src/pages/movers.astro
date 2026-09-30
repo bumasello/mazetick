@@ -88,14 +88,14 @@ const sections = splitKnown
   ? [
       {
         id: 'to-come',
-        heading: `Had not run when we last looked · ${lastLookStamp}`,
+        heading: `Had not run when we last looked, ${lastLookStamp}`,
         note:
           'These races were still ahead of us at the final sample, so the market went on moving after the price shown. The record here is incomplete by construction.',
         rows: runners.filter((r) => !ranByLastLook(r)),
       },
       {
         id: 'ran',
-        heading: 'Already run by then · complete record',
+        heading: 'Already run by then. The complete record',
         note:
           'We watched these to the off. None of it is actionable any more, and that is the point: it is the finished record of what the market did, which is the only version that is ever complete.',
         rows: runners.filter(ranByLastLook),
@@ -137,7 +137,7 @@ const tightest = bands[0];
   description={`${notable.length} of ${runners.length} UK and Irish runners moved further than usual for their price on ${hojeRotulo}. Every price stamped against the off, never against your clock.`}
 >
   <header class="mast">
-    <p class="mono kicker">Order book &middot; Smarkets</p>
+    <p class="mono kicker">Order book. Smarkets.</p>
     <h1 class="display title">
       {runners.length === 0
         ? 'Nothing collected for today yet'
@@ -301,7 +301,7 @@ const tightest = bands[0];
         <summary>
           <span class="sum-main">All {runners.length} runners, grouped by race</span>{' '}
           <span class="sum-sub">
-            {sections.reduce((n, s) => n + s.groups.length, 0)} races &middot; {courses.length} courses
+            {sections.reduce((n, s) => n + s.groups.length, 0)} races at {courses.length} courses
           </span>
         </summary>
 
@@ -333,7 +333,7 @@ const tightest = bands[0];
                     <span class="rh-time n">{raceTime(g.off_utc)}</span>
                     <span class="rh-venue">{g.venue}</span>
                     <span class="rh-meta">
-                      {g.runners.length} runners &middot; last look {beforeOff(g.lastLook)} before the off
+                      {g.runners.length} runners, last look {beforeOff(g.lastLook)} before the off
                     </span>
                     {g.notable > 0 && (
                       <span class="rh-flag">{g.notable} outside the usual range</span>
@@ -469,10 +469,9 @@ const tightest = bands[0];
   .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
   .f-wide { grid-column: auto; }
   .f label {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
   }
   .f input, .f select {
@@ -486,10 +485,9 @@ const tightest = bands[0];
     width: 100%;
   }
   .reset {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
     background: transparent;
     border: 1px solid var(--rule-med);
@@ -522,10 +520,9 @@ const tightest = bands[0];
   }
   .all[open] > summary .sum-main { color: var(--ink); }
   .sum-sub {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
   }
 
@@ -563,18 +560,16 @@ const tightest = bands[0];
     color: var(--ink);
   }
   .rh-meta {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
     margin-left: auto;
   }
   .rh-flag {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--accent);
   }
   /* Dentro do bloco o cabeçalho de coluna é sussurro: a faixa acima já disse

@@ -155,7 +155,7 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
   description={`${acimaHoje} of ${races.length} UK and Irish races are paying above Paddy Power's own each-way ladder on ${hojeRotulo}, with the hour of every change. Plus ${edicoes.length} earlier editions, each frozen as it stood.`}
 >
   <header class="mast">
-    <p class="mono kicker">Each-way terms &middot; Paddy Power</p>
+    <p class="mono kicker">Each-way terms. Paddy Power.</p>
     {/*
       Três manchetes, porque três estados. Confundir "nenhuma corrida mudou"
       com "não temos corrida nenhuma" é o erro fácil aqui: o primeiro é um
@@ -259,7 +259,7 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
             {cards.map((c) => (
               <article class="card">
                 <div class="stamp">
-                  {c.race.venue} &middot; {raceDate(c.race.off_utc)} {raceTime(c.race.off_utc)}
+                  {c.race.venue}, {raceDate(c.race.off_utc)} {raceTime(c.race.off_utc)}
                 </div>
                 <div class="card-race">{c.race.name}</div>
                 <div class="swap n">
@@ -353,8 +353,8 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
         <section>
           <h2 class="section-rule">
             {splitKnown
-              ? `Not yet run at our last look, ${lastLookStamp} · ${d.label}`
-              : `Race day · ${d.label}`}
+              ? `Not yet run at our last look, ${lastLookStamp}. ${d.label}`
+              : `Race day. ${d.label}`}
           </h2>
           <p class="note section-note on-axis">
             {d.races.length} races, {d.above} of them paying above the house ladder. Terms are
@@ -397,7 +397,7 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
 
       {finishedDays.length > 0 && (
         <section>
-          <h2 class="section-rule">Already run by our last look &middot; the finished record</h2>
+          <h2 class="section-rule">Already run by our last look. The finished record</h2>
           <p class="note section-note on-axis">
             These races had started before our final collection at {lastLookStamp}, so the
             terms are final and no place can be taken now. They stay on the page because a
@@ -406,7 +406,7 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
           </p>
           {finishedDays.map((d) => (
             <>
-              <h3 class="day">{d.label} &middot; {d.races.length} races, {d.above} above the ladder</h3>
+              <h3 class="day">{d.label}. {d.races.length} races, {d.above} above the ladder</h3>
               <table class="dense">
                 <thead>
                   <tr>
@@ -547,7 +547,7 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
 
   .dense .above { color: var(--accent); }
   .bog {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
     color: var(--ink-faint);
@@ -557,10 +557,9 @@ const totalArquivado = edicoes.reduce((t, x) => t + x.r.corridas, 0);
   .section-note { margin-bottom: var(--sp-5); }
   .peak { margin: var(--sp-8) 0; }
   .day {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
     font-weight: 400;
     margin: var(--sp-8) 0 var(--sp-3);

@@ -50,7 +50,7 @@ const verdictLabel: Record<typeof d.verdict, string> = {
   <article>
     <header class="mast">
       <p class="mono kicker">
-        Research &middot; {verdictLabel[d.verdict]}
+        Research. {verdictLabel[d.verdict]}.
       </p>
       <h1 class="display title">{d.title}</h1>
       <p class="dek">{d.dek}</p>
@@ -71,7 +71,7 @@ const verdictLabel: Record<typeof d.verdict, string> = {
 
         <p class="note foot-note">
           Published {human(d.published)}
-          {d.updated && <> &middot; updated {human(d.updated)}</>}.
+          {d.updated && <> Updated {human(d.updated)}</>}.
           mazetick publishes measurements, not tips. Figures describe what happened in
           the window stated above and are not a forecast.
         </p>

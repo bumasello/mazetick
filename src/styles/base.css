@@ -56,15 +56,14 @@ table,
 
 /* -- Primitivos de tipografia --------------------------------------------- */
 .mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-apparatus);
   font-size: var(--fs-label);
   letter-spacing: var(--ls-label);
-  text-transform: uppercase;
   color: var(--ink-faint);
 }
 
 .stamp {                      /* carimbo de hora: mono, mas sem caixa alta */
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--fs-caption);
   letter-spacing: 0;
   text-transform: none;
@@ -92,10 +91,9 @@ table,
    inteira da página. É o divisor que dá ritmo de jornal, e por isso mora no
    nível da página e nunca dentro da coluna de leitura. */
 .section-rule {
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--fs-label);
   letter-spacing: var(--ls-label);
-  text-transform: uppercase;
   color: var(--ink-faint);
   font-weight: 400;
   border-bottom: 1px solid var(--ink);
@@ -168,10 +166,9 @@ table,
   padding-top: var(--rule-pad);
 }
 .rail-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-apparatus);
   font-size: var(--fs-label);
   letter-spacing: var(--ls-label);
-  text-transform: uppercase;
   color: var(--ink-faint);
   display: block;
   margin-bottom: var(--sp-3);
@@ -195,7 +192,7 @@ table,
   position: absolute;
   left: 0;
   top: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--fs-label);
   color: var(--ink-faint);
 }
@@ -244,6 +241,45 @@ table,
   margin-top: var(--sp-4);
 }
 
+/* -- A FOLHA DO REGISTRO — 2026-09-29 ---------------------------------------
+   O movimento principal da sessão de UI.
+
+   ⚠️ O DEFEITO QUE ELA CORRIGE, medido antes de mexer: numa página de cavalo o
+   `.spread` (grade de duas colunas) tinha 751px e continha SÓ a ficha de
+   identificação, com 347px de corpo — **404px de margem vazia**. As cinco
+   seções de verdade, 2.320px somados, corriam em largura cheia com aparato
+   NENHUM ao lado, porque `.on-axis` reserva a largura da margem e a deixa em
+   branco.
+
+   Num diário oficial a margem carrega a citação DO TRECHO AO LADO. Aqui cada
+   seção vira uma folha: o conteúdo na coluna de leitura, a nota de método na
+   coluna do aparato, na mesma altura da seção que ela descreve.
+
+   A régua de seção continua atravessando as duas colunas — é ela que dá o
+   ritmo da página, e encolhê-la para a coluna de leitura tiraria o divisor que
+   a grade veio criar.
+
+   O template de coluna é o MESMO do `.spread`, de propósito: com corpo em 1fr
+   e margem fixa o eixo de leitura não se desloca entre uma seção e outra, nem
+   entre uma página e outra. É a razão de `--rail` ser fixo. */
+.leaf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail);
+  column-gap: var(--gutter);
+  align-items: start;
+}
+.leaf > * { grid-column: 1; }
+.leaf > .section-rule { grid-column: 1 / -1; }
+.leaf > .note {
+  grid-column: 2;
+  /* Na coluna do aparato a nota deixa de ser rodapé e passa a ser margem: a
+     régua de cima é a do bloco de margem, não a da legenda sob a tabela. */
+  border-top: 1px solid var(--ink);
+  padding-top: var(--rule-pad);
+  margin-top: 0;
+  max-width: none;
+}
+
 /* Uma coluna quando a margem não cabe mais. A margem vira bloco ACIMA do corpo:
    é carimbo e amostra, que é contexto de leitura e não apêndice. */
 @media (max-width: 900px) {
@@ -251,6 +287,15 @@ table,
   .spread { grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-6); }
   .spread > .rail { order: -1; position: static; }
   .spread > .rail:empty { display: none; }
+
+  /* A folha desmonta junto, e a nota volta para DEPOIS do conteúdo — em uma
+     coluna, aparato antes do que ele descreve não é contexto, é obstáculo. */
+  .leaf { display: block; }
+  .leaf > .note {
+    border-top: 1px solid var(--rule-med);
+    margin-top: var(--sp-4);
+    padding-top: var(--sp-3);
+  }
 }
 
 /* -- Tabela densa --------------------------------------------------------- */
@@ -260,10 +305,9 @@ table,
   font-size: var(--fs-body);
 }
 .dense th {
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--fs-label);
   letter-spacing: var(--ls-label);
-  text-transform: uppercase;
   color: var(--ink-faint);
   font-weight: 400;
   text-align: left;
@@ -300,10 +344,9 @@ table,
   .dense td.num { text-align: left; }
   .dense td::before {
     content: attr(data-label);
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
     flex: none;
   }
@@ -349,7 +392,6 @@ table,
   font-weight: 600;
   font-size: var(--fs-body);
   letter-spacing: .02em;
-  text-transform: uppercase;
   color: var(--ink);
   margin-top: var(--sp-8);
 }
@@ -380,10 +422,9 @@ table,
    padrão para cima"; aqui o sentido é "bate", que é o mesmo eixo: melhor do que
    se esperava. Nunca "aposte aqui". */
 .prose .agree {
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--fs-label);
   letter-spacing: var(--ls-label);
-  text-transform: uppercase;
   color: var(--accent);
 }
 
@@ -395,6 +436,9 @@ table,
 }
 
 .prose code {
+  /* A monoespaçada sobrevive AQUI e só aqui: código é o único texto do site em
+     que a largura fixa carrega significado (alinhamento de caractere). Em
+     rótulo ela era decoração, e saiu em 29/09. */
   font-family: var(--font-mono);
   font-size: var(--fs-caption);
   color: var(--ink);

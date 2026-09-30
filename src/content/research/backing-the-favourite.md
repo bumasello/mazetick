@@ -2,7 +2,7 @@
 title: "Backing the favourite wins one race in three and loses money"
 dek: "Across 33,508 races, the morning favourite won 32.8% of the time and returned −3.90% after commission. The place favourite, where it started at 1.5 or shorter, won 78.8% of its bets and still returned −1.22%. Strike rate and profit are different quantities."
 description: "33,508 UK and Irish races measured: the favourite wins 32.8% of the time and loses 3.90% per bet after commission. Why strike rate is not profit."
-sample: "33,508 races · UK & Ireland · 6.5% commission applied"
+sample: "33,508 races, UK & Ireland, 6.5% commission applied"
 window: "1 January 2024 – 5 September 2026"
 windowShort: "Jan 2024 – Sep 2026"
 method: "Selection at the morning price; every bet settled at the exchange starting price. No filters, no staking plan."

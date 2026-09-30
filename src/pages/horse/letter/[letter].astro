@@ -90,7 +90,7 @@ const jsonLd = {
 ---
 <BaseLayout title={title} description={description} jsonLd={jsonLd}>
   <header class="mast">
-    <p class="mono kicker">Horse records &middot; the archive, by letter</p>
+    <p class="mono kicker">Horse records. The archive, by letter.</p>
     <h1 class="display title">
       {rows.length
         ? `${plural(rows.length, 'horse')} beginning with ${upper}`
@@ -207,10 +207,9 @@ const jsonLd = {
   }
   .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
   .f label {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
   }
   .f input, .f select {
@@ -224,10 +223,9 @@ const jsonLd = {
     width: 100%;
   }
   .reset {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
     background: transparent;
     border: 1px solid var(--rule-med);

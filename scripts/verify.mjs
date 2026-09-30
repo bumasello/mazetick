@@ -218,9 +218,24 @@ check(
 //     nem a 9 nem uma checagem só de HTML a veriam. A lista de permitidas é
 //     derivada de tokens.css — a única fonte de cor do sistema.
 {
+  /**
+   * ⚠️ COMPARAR COR, NÃO STRING. Em 29/09 o token `--ink` virou `#000000`, o
+   * minificador o escreveu `#000` no CSS servido, e a checagem acusou uma cor
+   * "fora dos tokens" que era o token. Vale para todo hex de três pares
+   * iguais: `#FFFFFF`→`#fff`, `#EEEEEE`→`#eee`.
+   *
+   * Um checador que acusa o certo custa o mesmo que um que deixa passar o
+   * errado: nos dois casos se aprende a ignorá-lo.
+   */
+  const canon = (c) => {
+    const h = c.slice(1).toLowerCase();
+    return '#' + (h.length === 3 || h.length === 4
+      ? [...h].map((x) => x + x).join('')
+      : h);
+  };
   const allowed = new Set(
     (fs.readFileSync('src/styles/tokens.css', 'utf8').match(/#[0-9A-Fa-f]{3,8}\b/g) || [])
-      .map((c) => c.toLowerCase()),
+      .map(canon),
   );
   const problems = [];
 
@@ -230,9 +245,7 @@ check(
   }
 
   for (const f of all.filter((x) => x.endsWith('.css'))) {
-    const found = new Set(
-      (read(f).match(/#[0-9A-Fa-f]{3,8}\b/g) || []).map((c) => c.toLowerCase()),
-    );
+    const found = new Set((read(f).match(/#[0-9A-Fa-f]{3,8}\b/g) || []).map(canon));
     for (const c of found) {
       if (!allowed.has(c)) problems.push(`${rel(f)}: ${c} não está em tokens.css`);
     }
@@ -1625,7 +1638,7 @@ const LETTER_SEGMENT = 'letter';
     const d = rel(f).match(/^extra-places\/(\d{4}-\d{2}-\d{2})\.html$/)?.[1];
     if (!d) continue;
     const html = read(f);
-    if (!html.includes(`edition of ${d}`)) {
+    if (!html.toLowerCase().includes(`edition of ${d}`)) {
       problems.push(`${rel(f)}: não se identifica como a edição de ${d}`);
     }
     if (!/Last read that day: \d{2}:\d{2} UTC/.test(html)) {
@@ -1657,6 +1670,55 @@ const LETTER_SEGMENT = 'letter';
     }
   }
   check(`Arquivo de edições íntegro (${dias.length} edições, ${paginas.length} páginas)`, problems);
+}
+
+// 35. As decisões da sessão de UI, para não regredirem em silêncio.
+//
+//     A sessão de 2026-09-29 tirou da página quatro marcas que a skill
+//     `frontend-design` lista como assinatura de página gerada, e cada uma
+//     volta sozinha no primeiro componente novo que copiar o padrão antigo:
+//     rótulo em CAIXA ALTA espaçada, ponto médio unindo meta, near-black
+//     tingido, e monoespaçada em rótulo.
+//
+//     ⛔ NÃO confere estilo por gosto. Confere as quatro coisas que foram
+//     DECIDIDAS com medição, e nada além.
+{
+  const problems = [];
+  const css = all.filter((f) => f.endsWith('.css'));
+
+  // (a) caixa alta: era o padrão #5, em 24 lugares.
+  for (const f of css) {
+    const n = (read(f).match(/text-transform:\s*uppercase/g) || []).length;
+    if (n) problems.push(`${rel(f)}: ${n}× text-transform: uppercase — o rótulo saiu da caixa alta em 29/09`);
+  }
+
+  // (b) ponto médio unindo meta. O caractere pode aparecer em NOME (pista,
+  //     cavalo), então só acusa onde ele une duas frases com espaço dos dois
+  //     lados, que é a forma de eyebrow.
+  for (const f of pages) {
+    const txt = read(f).replace(/<[^>]+>/g, ' ');
+    if (/\w\s+·\s+\w/.test(txt)) {
+      problems.push(`${rel(f)}: ainda une meta com ponto médio`);
+    }
+  }
+
+  // (c) o preto é preto. Vale a normalização da checagem 10.
+  const tk = fs.readFileSync('src/styles/tokens.css', 'utf8');
+  if (!/--ink:\s*#000000/.test(tk)) {
+    problems.push('tokens.css: --ink deixou de ser preto puro — era #171A19, um near-black esverdeado');
+  }
+
+  // (d) a monoespaçada não volta a ser baixada. Ela custava 182 KB dos 364 KB
+  //     de fonte do site para servir `code` em duas páginas.
+  const fontes = all.filter((f) => /\.woff2?$/.test(f));
+  const mono = fontes.filter((f) => /plex|mono/i.test(rel(f)));
+  if (mono.length) {
+    problems.push(`${mono.length} arquivo(s) de fonte monoespaçada no build — ela saiu do download em 29/09`);
+  }
+  // Contagem zero não é prova: se NENHUMA fonte for servida, (d) passa vazio.
+  if (fontes.length === 0) problems.push('nenhuma fonte no build — a checagem (d) não conferiu nada');
+
+  check(`Marcas de página gerada, removidas em 29/09 (${fontes.length} fontes servidas)`, problems);
 }
 
 console.log();

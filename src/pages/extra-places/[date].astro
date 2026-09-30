@@ -86,7 +86,7 @@ const jsonLd = {
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
   <header class="mast">
-    <p class="mono kicker">Each-way terms &middot; edition of {e.edition}</p>
+    <p class="mono kicker">Each-way terms. Edition of {e.edition}.</p>
     <h1 class="display title">
       {r.corridasQueMudaram === 0
         ? `No race changed its each-way terms on ${rotulo}`
@@ -210,7 +210,7 @@ const jsonLd = {
                 <td>
                   {c.venue} {raceTime(c.off_utc)}
                   {c.extra_place && <span class="above"> above ladder</span>}
-                  {mudou(c) && <span class="note"> · moved</span>}
+                  {mudou(c) && <span class="note"> (terms moved)</span>}
                 </td>
                 <td class="num">{c.field_size}</td>
                 <td class="num">{c.terms.places}</td>

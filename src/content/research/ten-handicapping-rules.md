@@ -2,7 +2,7 @@
 title: "Ten handicapping rules against 180,000 runners"
 dek: "Every rule a form student applies — never won, out of form, long layoff, weak jockey, top weight, first-time headgear — was tested against what the market price already implied. All ten were already in the price, to within half a percentage point."
 description: "179,990 runners: ten classic handicapping rules tested against the market's own implied loss rate. Each was already priced, to within 0.5pp."
-sample: "179,990 runners · 662,000 historical results · ~55 test cells"
+sample: "179,990 runners, 662,000 historical results · ~55 test cells"
 window: "Results from 2019 to July 2026; runners matched to settled markets"
 windowShort: "2019 – Jul 2026"
 method: "Point-in-time features — each rule uses only races run before the day in question. Flagged runners' actual loss rate compared with the loss rate implied by their price. Random 30% flag as control."

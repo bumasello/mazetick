@@ -104,7 +104,7 @@ const searchIndex = {
   description="Every horse we have seen declared in UK and Irish racing, with its record by going, course and distance band — the whole of what we hold, cut at the archive date, with the sample beside every rate."
 >
   <header class="mast">
-    <p class="mono kicker">Horse records &middot; UK &amp; Irish racing</p>
+    <p class="mono kicker">Horse records. UK and Irish racing.</p>
     <h1 class="display title">{headline}</h1>
   </header>
 
@@ -326,7 +326,7 @@ const searchIndex = {
   }
   .results :global(a) { font-size: var(--fs-body); }
   .results :global(.when) {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
     text-transform: none;
@@ -347,10 +347,9 @@ const searchIndex = {
   }
   .f { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
   .f label {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
   }
   .f input, .f select {
@@ -364,10 +363,9 @@ const searchIndex = {
     width: 100%;
   }
   .reset {
-    font-family: var(--font-mono);
+    font-family: var(--font-label);
     font-size: var(--fs-label);
     letter-spacing: var(--ls-label);
-    text-transform: uppercase;
     color: var(--ink-faint);
     background: transparent;
     border: 1px solid var(--rule-med);

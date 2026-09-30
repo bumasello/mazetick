@@ -2,7 +2,7 @@
 title: "Crossing the spread costs 3.5%, and our first measurement was wrong"
 dek: "We measured the cost of trading a race market, published the figure internally, and abandoned a strategy partly because of it. Then we found the bug: one line of our filter read the year out of a URL instead of the course, so a third of the quotes were not British or Irish racing at all."
 description: "212,373 order-book quotes over 26 days: crossing the spread costs 3.53%. Our first figure was inflated by a filter that never filtered."
-sample: "212,373 quotes · 1,089 races · 26 consecutive days · UK & Ireland"
+sample: "212,373 quotes, 1,089 races, 26 consecutive days, UK & Ireland"
 window: "20 August – 13 September 2026"
 windowShort: "26 days, Aug–Sep 2026"
 method: "Best available prices on both sides of the exchange book, sampled every 15 minutes, expressed as a percentage of the mid price and in exchange ticks."

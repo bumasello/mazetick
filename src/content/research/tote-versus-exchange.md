@@ -2,7 +2,7 @@
 title: "The tote paid less than the exchange in all three products"
 dek: "Across 343 matched races, the tote win dividend came to 0.94 of the exchange return, the place dividend to 0.85, and the exacta to 0.81. There was no odds band in which the pool paid more."
 description: "343 matched races: tote win dividends returned 0.94 of the exchange, place 0.85, exacta 0.81. No odds band favoured the pool."
-sample: "343 races · 269 winners · 701 placed runners · 270 exactas"
+sample: "343 races, 269 winners, 701 placed runners, 270 exactas"
 window: "Backfill to 5 September 2026; matched subset of a 120-day collection"
 windowShort: "To Sep 2026, partial"
 method: "Declared tote dividends per £1 compared with the net exchange return on the same runner, after 6.5% commission. Medians by odds band."

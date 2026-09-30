@@ -57,7 +57,7 @@ const known = Boolean(collectedThrough && !Number.isNaN(Date.parse(collectedThro
 
 <style>
   .age { margin: 0; display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: baseline; }
-  .rel, .derived { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .rel, .derived { font-family: var(--font-label); font-size: var(--fs-caption); color: var(--ink-faint); }
   /* Envelhecer é visível, não uma nota de rodapé. */
   .age[data-state='ageing'] .rel { color: var(--ink); }
   .age[data-state='stale'] .rel,

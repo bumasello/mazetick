@@ -2,7 +2,7 @@
 title: "The classic each-way terms table is not wrong. It has no date."
 dek: "It describes the opening of the market, and it is right almost everywhere the terms never move. Where it looks wrong is where the bookmaker promotes during the day — one more place, a worse fraction. In 54 promotions across nine days, the fraction never once improved."
 description: "324 races, 81 term changes: the classic each-way table describes the market's opening. What nobody publishes is what happens after."
-sample: "324 races · 81 term changes · UK & Ireland"
+sample: "324 races, 81 term changes, UK & Ireland"
 window: "6–14 September 2026, nine consecutive days"
 windowShort: "9 days, Sep 2026"
 method: "Each-way terms read hourly from one bookmaker's own public race pages, 06:00–21:00 UTC, with every change time-stamped. Opening and closing terms compared separately."
