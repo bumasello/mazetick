@@ -1721,6 +1721,84 @@ const LETTER_SEGMENT = 'letter';
   check(`Marcas de página gerada, removidas em 29/09 (${fontes.length} fontes servidas)`, problems);
 }
 
+// 36. Piso, "Placed" e non-runner: o que a /horse diz tem de vir definido.
+//
+//     Achado pela medição independente de 2026-10-02, e nenhuma das 35 acima
+//     pegaria: a página escrevia "good" e "soft" sem dizer que "good" junta o
+//     standard do all-weather; "Placed" sem dizer que é 1º a 3º qualquer que
+//     seja o campo, num site cujo produto é justamente o each-way; e mostrava
+//     como declarado um cavalo que tinha saído da corrida.
+//
+//     (a) toda chave de piso usada existe em `going_bands`, com rótulo;
+//     (b) toda linha da tabela "Going" traz o rótulo ao lado, como a 29 exige
+//         da distância;
+//     (c) toda página com coluna "Placed" traz a regra do payload — e não só
+//         as que têm registro: estreante também tem tabela de jóquei;
+//     (d) todo non-runner e reserva diz isso na página — e nenhum corredor diz.
+{
+  const problems = [];
+  const cardFile = 'src/data/horses.json';
+  const card = fs.existsSync(cardFile) ? JSON.parse(read(cardFile)) : {};
+  const going = card.going_bands;
+  const placed = card.placed?.label;
+  const cellText = (x) => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  if (!Array.isArray(going) || !going.length) {
+    problems.push(`${cardFile}: sem going_bands`);
+  } else {
+    const known = new Set(going.map((b) => b.key));
+    for (const h of horseRecords) {
+      for (const g of h.by_going || []) {
+        if (!known.has(g.key)) problems.push(`${h.slug}: piso "${g.key}" não está em going_bands`);
+      }
+      const d = h.last_declared?.going;
+      if (d && !known.has(d)) problems.push(`${h.slug}: piso declarado "${d}" não está em going_bands`);
+    }
+  }
+  if (!placed) problems.push(`${cardFile}: sem placed.label`);
+
+  const porSlug = new Map(horseRecords.map((h) => [h.slug, h]));
+  let comRegistro = 0, fora = 0;
+  for (const f of horsePages) {
+    const html = read(f);
+    const slug = rel(f).replace(/^horse[/\\]/, '').replace(/\.html$/, '');
+    const h = porSlug.get(slug);
+    if (!h) continue;
+
+    // (b)
+    for (const tb of html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const first = tb[1].match(/<th\b[^>]*>([\s\S]*?)<\/th>/i);
+      if (!first || cellText(first[1]) !== 'Going') continue;
+      for (const r of tb[1].matchAll(/<td\b[^>]*data-label="Going"[^>]*>([\s\S]*?)<\/td>/gi)) {
+        if (!/class="[^"]*\bsub\b[^"]*"/.test(r[1])) {
+          problems.push(`${rel(f)}: piso "${cellText(r[1])}" sem o rótulo ao lado`);
+        }
+      }
+    }
+
+    // (c) o texto vem com as aspas como entidade; compara o texto limpo.
+    if (/<th\b[^>]*>\s*Placed\s*<\/th>/i.test(html)) {
+      comRegistro++;
+      if (placed && !cellText(html).includes(placed)) {
+        problems.push(`${rel(f)}: tem coluna "Placed" e não diz o que ela quer dizer`);
+      }
+    }
+
+    // (d)
+    const st = h.last_declared?.runner_status;
+    const marcado = /data-runner-status="(non_runner|reserve)"/.exec(html)?.[1] ?? null;
+    if ((st === 'non_runner' || st === 'reserve') && marcado !== st) {
+      problems.push(`${rel(f)}: é ${st} no cartão e a página não diz`);
+      fora++;
+    } else if (st === 'runner' && marcado) {
+      problems.push(`${rel(f)}: corre, e a página diz ${marcado}`);
+    } else if (st && st !== 'runner') fora++;
+  }
+  if (!comRegistro) problems.push('nenhuma página com coluna "Placed" conferida — a (c) não olhou nada');
+
+  check(`Piso, "Placed" e non-runner definidos na /horse (${comRegistro} com "Placed", ${fora} fora da corrida)`, problems);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

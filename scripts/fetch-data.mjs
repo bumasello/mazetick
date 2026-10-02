@@ -144,7 +144,7 @@ for (const src of SOURCES) {
     ...stampProblems('src/data/horses-index.json', index),
     ...edProblems,
   ];
-  if (card.schema !== 'horses_v4') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v4"`);
+  if (card.schema !== 'horses_v5') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v5"`);
 
   // A DECLARAÇÃO DA JANELA É OBRIGATÓRIA, e é conferida na chegada.
   // Sem ela a página volta a dizer "all progeny in our archive" sobre um
@@ -169,6 +169,25 @@ for (const src of SOURCES) {
     }
     if (cov.pct >= 100) {
       problems.push('breeding_coverage: pct 100 — se a fonte consertou, a declaração sai da página; confira antes');
+    }
+  }
+  // horses_v5: as definições que a tela usa vêm da origem, e são conferidas
+  // AQUI. Rótulo vazio na tela vira "good" sem dizer que junta o standard do
+  // all-weather, e "Placed" sem dizer que não é o each-way da corrida.
+  if (!Array.isArray(card.going_bands) || !card.going_bands.length) {
+    problems.push('horses.json: falta `going_bands` — o piso na tela ficaria sem definição');
+  } else {
+    for (const b of card.going_bands) {
+      if (!b.key || !b.label) problems.push(`going_bands: faixa ${JSON.stringify(b)} sem key ou label`);
+    }
+  }
+  if (!card.placed?.label || !(card.placed?.positions > 0)) {
+    problems.push('horses.json: falta `placed` — "Placed" na tela ficaria sem definição');
+  }
+  const situacoes = new Set(['runner', 'non_runner', 'reserve']);
+  for (const h of card.horses ?? []) {
+    if (!situacoes.has(h.race?.runner_status)) {
+      problems.push(`${h.slug}: runner_status ${JSON.stringify(h.race?.runner_status)} fora de ${[...situacoes].join('/')}`);
     }
   }
   if (index.schema !== 'horses_index_v1') problems.push(`horses-index.json: schema "${index.schema}", esperado "horses_index_v1"`);

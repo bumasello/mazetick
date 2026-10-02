@@ -47,7 +47,10 @@ export interface HorseRecord {
   as_of: string;
   status: Status;
   history_through: string;
-  last_declared: { date: string; venue: string; off_utc: string; going: string; distance: string };
+  last_declared: { date: string; venue: string; off_utc: string; going: string; distance: string;
+                   /** Situação no ÚLTIMO cartão lido daquele dia (horses_v5). Sai do
+                    *  número do cartão: "NR" quando o cavalo sai, "R21" quando é reserva. */
+                   runner_status: RunnerStatus };
   career: { runs: number; wins: number; places: number; win_pct: number | null; place_pct: number | null };
   by_going: Group[];
   by_course: Group[];
@@ -135,6 +138,16 @@ export interface IndexEntry {
  * é o `label`, que também vem da origem: recompor "up to 6f" a partir de
  * `0 → 7` seria a página derivando texto que nenhum script emite.
  */
+export type RunnerStatus = 'runner' | 'non_runner' | 'reserve';
+
+/** Faixa de terreno (horses_v5). O rótulo diz o que ela JUNTA, e sai da mesma
+ *  lista que classifica no produtor: "good" inclui o standard do all-weather, e
+ *  sem isto o leitor não teria como saber. */
+export interface GoingBand {
+  key: string;
+  label: string;
+}
+
 export interface DistanceBand {
   key: string;
   from_furlongs: number;
@@ -152,6 +165,10 @@ export interface Card {
   note: string;
   history_depth: { from: string; through: string; horses: number };
   distance_bands: DistanceBand[];
+  going_bands: GoingBand[];
+  /** O que "placed" quer dizer em toda tabela: 1º a 3º qualquer que seja o
+   *  campo — e não os termos de each-way, que é o produto do resto do site. */
+  placed: { positions: number; label: string };
   debutants: number;
   no_record: number;
   /** Cavalos do cartão que dividem nome com outro no arquivo, e as corridas que
@@ -307,7 +324,7 @@ export const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
  * leitor não tem como conferir, e é a checagem 29 que recusa o build — a página
  * não disfarça a lacuna com o nome dela.
  */
-export const bandLabel = (bands: DistanceBand[], key: string): string | undefined =>
+export const bandLabel = (bands: { key: string; label: string }[], key: string): string | undefined =>
   bands.find((b) => b.key === key)?.label;
 
 /** O rótulo curto do estado, o mesmo do índice e da margem. */

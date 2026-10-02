@@ -32,7 +32,7 @@ import HorseStatTable from '../../components/HorseStatTable.astro';
 import DataAge from '../../components/DataAge.astro';
 import {
   loadRecords, loadCard, horseMeta, statusSentence, statusLabel, plural, bandLabel,
-  type HorseRecord, type DistanceBand,
+  type HorseRecord, type DistanceBand, type GoingBand,
 } from '../../lib/horses';
 import { archiveLine, breedingLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine, atCourse, atDistance, recentLine, daysSince } from '../../lib/horse-copy.mjs';
 import { raceTime, raceZone } from '../../lib/time';
@@ -47,6 +47,8 @@ export function getStaticPaths() {
     generatedAt: card.generated_at,
     cardDate: card.horses[0]?.as_of ?? null,
     bands: card.distance_bands ?? [],
+    goingBands: card.going_bands ?? [],
+    placed: card.placed,
     breeding: card.breeding_coverage ?? null,
   };
   return loadRecords().map((h) => ({ params: { slug: h.slug }, props: { h, stamp } }));
@@ -59,6 +61,8 @@ interface Props {
     generatedAt: string;
     cardDate: string | null;
     bands: DistanceBand[];
+    goingBands: GoingBand[];
+    placed: { positions: number; label: string };
     breeding: { complete_through: string; partial_from: string;
                 runners_in_window: number; with_breeding: number; pct: number } | null;
   };
@@ -85,6 +89,18 @@ const meta = horseMeta(h);
 const canonical = canonicalUrl(Astro.url.pathname, Astro.site);
 const decl = h.last_declared;
 const zone = raceZone(decl.off_utc);
+
+/**
+ * A situação no último cartão lido daquele dia. Um non-runner continua com
+ * página — ele foi declarado, e o registro até a data vale —, mas a página não
+ * pode dizer "declared" e parar aí: Mister Class saiu às 11:00 de 02/10 e a
+ * página o mostrava na corrida das 13:56. Medido no mesmo dia: 52 de 508.
+ */
+const situacao = decl.runner_status === 'non_runner'
+  ? 'non-runner: withdrawn by the card we last read that day'
+  : decl.runner_status === 'reserve'
+    ? 'reserve: not in the field when we last read the card that day'
+    : null;
 
 const hasGroups = h.by_going.length + h.by_course.length + h.by_distance.length > 0;
 const connections = [
@@ -231,13 +247,21 @@ const jsonLd = {
         </div>
         <div>
           <dt>Last declared</dt>
+          {/* Mesma regra do "Distance band" abaixo: cada parte no seu elemento,
+              para o HTML servido nunca colar "2026<span…>non-runner". */}
           <dd>
-            {decl.venue}, {raceTime(decl.off_utc)} {zone}, {ukDate(decl.date)}
+            <span class="key">{decl.venue}, {raceTime(decl.off_utc)} {zone}, {ukDate(decl.date)}</span>
+            {situacao && <span class="band" data-runner-status={decl.runner_status}>{situacao}</span>}
           </dd>
         </div>
         <div>
-          <dt>Going that day</dt>
-          <dd>{decl.going}</dd>
+          <dt>Going on the card</dt>
+          <dd>
+            <span class="key">{decl.going}</span>
+            {bandLabel(stamp.goingBands, decl.going) && (
+              <span class="band">{bandLabel(stamp.goingBands, decl.going)}</span>
+            )}
+          </dd>
         </div>
         <div>
           <dt>Distance band</dt>
@@ -323,6 +347,10 @@ const jsonLd = {
       <DataAge collectedThrough={stamp.collectedThrough} generatedAt={stamp.generatedAt} />
     </div>
     <div class="rail-block">
+      <span class="rail-label">Placed</span>
+      <p class="rail-note" data-placed-rule>Finished {stamp.placed.label}.</p>
+    </div>
+    <div class="rail-block">
       <span class="rail-label">No look-ahead</span>
       <p class="rail-note">
         Every figure below uses only races run before the date above. Nothing here
@@ -373,7 +401,13 @@ const jsonLd = {
             because a rate without one is a guess with a decimal point.
           </p>
 
-          {h.by_going.length > 0 && <HorseStatTable firstCol="Going" rows={h.by_going.map((g) => ({ label: g.key, group: g }))} />}
+          {h.by_going.length > 0 && (
+            <HorseStatTable
+              firstCol="Going"
+              subPlain
+              rows={h.by_going.map((g) => ({ label: g.key, sub: bandLabel(stamp.goingBands, g.key), group: g }))}
+            />
+          )}
           {h.by_course.length > 0 && <HorseStatTable firstCol="Course" rows={h.by_course.map((g) => ({ label: g.key, group: g }))} />}
           {h.by_distance.length > 0 && (
             <HorseStatTable
@@ -390,7 +424,7 @@ const jsonLd = {
             and distance are grouped into bands by us, and{' '}
             <strong>each band carries the range it covers</strong>, because a rate over
             &ldquo;staying&rdquo; is unreadable without it; the course is as the record
-            names it.
+            names it, with all-weather and turf at the same course kept apart.
           </p>
         </>
       ) : (
