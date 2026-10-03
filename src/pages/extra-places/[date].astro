@@ -46,8 +46,29 @@ const r = resumoDe(e);
 const mudancas = mudancasDe(e).filter((m) => m.termo);
 
 const frac = (f: [number, number]) => (f[0] === 1 && f[1] === 1 ? 'win only' : `${f[0]}/${f[1]}`);
-const hora = (iso: string) => `${iso.slice(11, 16)} UTC`;
 const rotulo = raceDate(`${e.edition}T12:00:00Z`);
+/**
+ * ⚠️ A edição é das corridas DISPUTADAS em `e.edition`, e quase toda mudança é
+ * vista na VÉSPERA: a corrida entra na coleta às 06:00 do dia anterior e o lote
+ * da casa sai nessa mesma manhã. Medido em 2026-10-03: 228 de 229.
+ *
+ * Até então a página dizia "15 of 45 races changed terms on Mon 28 Sept" e
+ * mostrava "08:00 UTC" sem dia, sobre mudanças vistas no domingo 27. O número
+ * estava certo e a data estava errada — e era justamente a página para onde o
+ * post de correção no fórum aponta. Agora a hora carrega o dia, sempre.
+ */
+// Só a hora: para a margem, onde o dia já está dito ("Last read that day").
+const hora = (iso: string) => `${iso.slice(11, 16)} UTC`;
+const visto = (iso: string) => `${raceDate(iso)}, ${iso.slice(11, 16)} UTC`;
+const antesDoDia = mudancas.filter((m) => m.para.at.slice(0, 10) < e.edition).length;
+const noDia = mudancas.length - antesDoDia;
+const quando = mudancas.length === 0
+  ? ''
+  : noDia === 0
+    ? (mudancas.length === 1 ? 'It was seen before race day.' : 'All of them were seen before race day.')
+    : antesDoDia === 0
+      ? (mudancas.length === 1 ? 'It was seen on race day.' : 'All of them were seen on race day.')
+      : `${antesDoDia} ${antesDoDia === 1 ? 'was' : 'were'} seen before race day and ${noDia} on the day.`;
 const zone = e.races.length ? raceZone(e.races[0].off_utc) : 'UK time';
 
 const corridas = [...e.races].sort((a, b) => a.off_utc.localeCompare(b.off_utc));
@@ -66,7 +87,7 @@ const jsonLd = {
   name: `Each-way terms, ${rotulo}`,
   description:
     `Hourly record of Paddy Power each-way place terms for ${r.corridas} UK and Irish ` +
-    `races run on ${rotulo}, with the time of every change.`,
+    `races run on ${rotulo}, with the day and time of every change.`,
   temporalCoverage: e.edition,
   dateModified: e.collected_through,
   isAccessibleForFree: true,
@@ -81,7 +102,7 @@ const jsonLd = {
 
 <BaseLayout
   title={`Each-way terms, ${rotulo} — mazetick`}
-  description={`What Paddy Power's each-way place terms were on ${rotulo}, hour by hour, across ${r.corridas} UK and Irish races.`}
+  description={`Paddy Power's each-way place terms for the ${r.corridas} UK and Irish races run on ${rotulo}, read hour by hour from the day before.`}
 >
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
@@ -89,18 +110,20 @@ const jsonLd = {
     <p class="mono kicker">Each-way terms. Edition of {e.edition}.</p>
     <h1 class="display title">
       {r.corridasQueMudaram === 0
-        ? `No race changed its each-way terms on ${rotulo}`
-        : `${r.corridasQueMudaram} of ${r.corridas} races changed terms on ${rotulo}`}
+        ? `No race run on ${rotulo} had its each-way terms changed`
+        : `${r.corridasQueMudaram} of the ${r.corridas} races run on ${rotulo} had their terms changed`}
     </h1>
   </header>
 
   <div class="spread">
     <div class="body">
       <p class="lead">
-        We read Paddy Power&rsquo;s published each-way terms once an hour. This is the
-        record for {rotulo}: {r.corridas} UK and Irish races, {r.mudancas}{' '}
+        We read Paddy Power&rsquo;s published each-way terms once an hour, from the
+        morning before the race. This is the record for the races run on {rotulo}:{' '}
+        {r.corridas} UK and Irish races, {r.mudancas}{' '}
         {r.mudancas === 1 ? 'change' : 'changes'} to the place terms, and {r.acimaDaEscada}{' '}
         {r.acimaDaEscada === 1 ? 'race' : 'races'} paying above the bookmaker&rsquo;s own ladder.
+        {quando && <>{' '}<span data-seen-when>{quando}</span></>}
         {r.soCampo > 0 && (
           <>
             {' '}A further {r.soCampo} {r.soCampo === 1 ? 'reading' : 'readings'} recorded only
@@ -162,7 +185,7 @@ const jsonLd = {
             <tbody>
               {mudancas.map((m) => (
                 <tr>
-                  <td class="num">{hora(m.para.at)}</td>
+                  <td class="num">{visto(m.para.at)}</td>
                   <td>
                     {m.corrida.venue} {raceTime(m.corrida.off_utc)}
                   </td>
@@ -186,8 +209,8 @@ const jsonLd = {
             </tbody>
           </table>
           <p class="note caption">
-            The hour is when we <em>saw</em> the change, not when it was made: we read on
-            the hour, so a change shown at 10:00 happened some time after 09:00.
+            The day and hour are when we <em>saw</em> the change, not when it was made: we
+            read on the hour, so a change shown at 10:00 happened some time after 09:00.
           </p>
         </section>
       )}

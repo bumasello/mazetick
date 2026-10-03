@@ -1799,6 +1799,49 @@ const LETTER_SEGMENT = 'letter';
   check(`Piso, "Placed" e non-runner definidos na /horse (${comRegistro} com "Placed", ${fora} fora da corrida)`, problems);
 }
 
+// 37. Na edição, toda mudança diz o DIA em que foi vista.
+//
+//     A edição é das corridas DISPUTADAS numa data, e quase toda mudança de
+//     termo é vista na véspera (228 de 229, medido em 2026-10-03). Até então a
+//     página dizia "15 of 45 races changed terms on Mon 28 Sept" e mostrava
+//     "08:00 UTC" sem dia, sobre mudanças vistas no domingo 27. Número certo,
+//     data errada — e nenhuma checagem de forma via.
+//
+//     (a) toda célula "Seen at" traz dia e hora;
+//     (b) a página com mudança diz quantas foram antes do dia da corrida;
+//     (c) o título não volta a datar a MUDANÇA pela data da corrida.
+{
+  const problems = [];
+  let celulas = 0, comMudanca = 0;
+  for (const f of pages) {
+    if (!/^extra-places[/\\]\d{4}-\d{2}-\d{2}\.html$/.test(rel(f))) continue;
+    const html = read(f);
+    const titulo = (html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? '').replace(/\s+/g, ' ');
+    if (/changed (its each-way )?terms on /.test(titulo)) {
+      problems.push(`${rel(f)}: o título data a mudança pela data da corrida`);
+    }
+    let aqui = 0;
+    for (const tb of html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+      const first = tb[1].match(/<th\b[^>]*>([\s\S]*?)<\/th>/i);
+      if (!first || first[1].replace(/<[^>]+>/g, '').trim() !== 'Seen at') continue;
+      for (const r of tb[1].matchAll(/<tr\b[^>]*>\s*<td\b[^>]*>([\s\S]*?)<\/td>/gi)) {
+        const c = r[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        aqui++;
+        if (!/^[A-Z][a-z]{2} \d{1,2} [A-Z][a-z]+, \d{2}:\d{2} UTC$/.test(c)) {
+          problems.push(`${rel(f)}: "Seen at" sem o dia — "${c}"`);
+        }
+      }
+    }
+    celulas += aqui;
+    if (aqui > 0) {
+      comMudanca++;
+      if (!/data-seen-when/.test(html)) problems.push(`${rel(f)}: tem mudança e não diz se foi antes do dia da corrida`);
+    }
+  }
+  if (!celulas) problems.push('nenhuma célula "Seen at" conferida — a checagem não olhou nada');
+  check(`Toda mudança de termo com o dia em que foi vista (${celulas} em ${comMudanca} edições)`, [...new Set(problems)]);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);
