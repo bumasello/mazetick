@@ -6,7 +6,8 @@
  * quatro coisas que têm de existir ANTES do primeiro link, não antes da
  * inscrição: mecanismo de `#ad`, página de termos, `/about` dizendo quem opera,
  * e meio de recebimento. Esta é a segunda. As outras três seguem abertas, e a
- * terceira é decisão do Bruno porque publica dado pessoal dele.
+ * terceira é decisão do Bruno porque publica dado pessoal dele. (Feita em
+ * 2026-10-03: `/about#who`.)
  *
  * ⚠️ E O QUE ELA NÃO FAZ. Não inventa entidade, jurisdição nem CNPJ. Onde o
  * fato depende dele, a página diz o que é verdade hoje e nada além — inventar
@@ -16,7 +17,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import RailIndex from '../components/RailIndex.astro';
 
-const reviewed = '27 September 2026';
+const reviewed = '3 October 2026';
 
 // Os títulos têm de bater LITERALMENTE com os <h2> do corpo — checagem 22.
 const sections = [
@@ -55,7 +56,8 @@ const sections = [
           in time and say so.
         </p>
         <p>
-          The site is published by an individual, not a company, and is not affiliated
+          The site is published by an individual, not a company &mdash;{' '}
+          <a href="/about#who">the About page says who</a> &mdash; and is not affiliated
           with any bookmaker, exchange, racecourse or regulator.
         </p>
 

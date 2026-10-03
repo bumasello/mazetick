@@ -9,6 +9,7 @@ const sections = [
   { id: 'will-not', title: 'What we will not do' },
   { id: 'how', title: 'How the numbers are made' },
   { id: 'sources', title: 'Where the data comes from' },
+  { id: 'who', title: 'Who runs this' },
   { id: 'contact', title: 'Contact' },
 ];
 ---
@@ -89,6 +90,37 @@ const sections = [
           and results come from a licensed racing data feed. Derived statistics — strike
           rates by going, by course, by distance — are our own calculations over those
           records, and are described where they appear.
+        </p>
+
+        {/*
+          Quem opera. Decidido pelo Bruno em 2026-10-03: nome e sobrenome, e só o
+          país. É o que o formulário de afiliado pede — e, antes disso, é o que um
+          site que cobra carimbo de todo número deve sobre si mesmo.
+
+          ⚠️ Só fato de hoje. Nada de "Ltd", nada de conclusão jurídica. A frase
+          sobre links pagos repete a de /terms e MUDA JUNTO com ela: no dia do
+          primeiro link de afiliado, as duas páginas passam a dizer quem paga e
+          desde quando.
+        */}
+        <h2 id="who">Who runs this</h2>
+        <p>
+          mazetick is run by one person, <strong>Bruno Masello</strong>, an individual
+          based in Brazil. There is no company behind it and no staff. The
+          &ldquo;we&rdquo; on these pages is editorial: the collection, the
+          calculations, the writing and the mistakes are his.
+        </p>
+        <p>
+          mazetick is not a bookmaker. It takes no bets, holds no customer money and
+          holds no gambling licence; it publishes measurements. As the{" "}
+          <a href="/terms">terms</a> say, at the time of writing it carries no paid
+          links of any kind. If that changes, this page will say who pays, and since
+          when.
+        </p>
+        <p>
+          The code that builds the site is public at{" "}
+          <a href="https://github.com/bumasello/mazetick">github.com/bumasello/mazetick</a>,
+          and so are the data files it publishes, at{" "}
+          <a href="https://github.com/bumasello/mazetick-data">github.com/bumasello/mazetick-data</a>.
         </p>
 
         <h2 id="contact">Contact</h2>
