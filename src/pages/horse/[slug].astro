@@ -251,7 +251,7 @@ const jsonLd = {
               para o HTML servido nunca colar "2026<span…>non-runner". */}
           <dd>
             <span class="key">{decl.venue}, {raceTime(decl.off_utc)} {zone}, {ukDate(decl.date)}</span>
-            {situacao && <span class="band" data-runner-status={decl.runner_status}>{situacao}</span>}
+            {situacao && <span class="band wrap" data-runner-status={decl.runner_status}>{situacao}</span>}
           </dd>
         </div>
         <div>
@@ -259,7 +259,7 @@ const jsonLd = {
           <dd>
             <span class="key">{decl.going}</span>
             {bandLabel(stamp.goingBands, decl.going) && (
-              <span class="band">{bandLabel(stamp.goingBands, decl.going)}</span>
+              <span class="band wrap">{bandLabel(stamp.goingBands, decl.going)}</span>
             )}
           </dd>
         </div>
@@ -593,6 +593,12 @@ const jsonLd = {
      quebrava o preâmbulo em três e deixava o ponto final órfão. Num aviso, a
      qualificação vem entre parênteses. */
   .ident .band { display: inline; color: var(--ink-faint); white-space: nowrap; }
+  /* ⚠️ `nowrap` serve ao rótulo CURTO da faixa de distância ("7f to 1m1f"),
+     que não deve partir no meio. O rótulo do piso e o de non-runner têm 50 a
+     80 caracteres: sem quebrar, a página de cavalo ficou com 600px a 690px de
+     largura num celular de 390px, de 02/10 a 06/10, nos três motores. Achado
+     por `scripts/navegadores.mjs`, e invisível ao verify, que não mede layout. */
+  .ident .band.wrap { white-space: normal; }
   .ident .band::before { content: " ("; }
   .ident .band::after  { content: ")"; }
   /* Na margem o carimbo empilha: 300px não comportam a linha do .age em fila. */
