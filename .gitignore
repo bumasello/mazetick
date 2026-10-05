@@ -5,3 +5,7 @@ dist/
 .DS_Store
 src/data/*.json
 src/data/horses/
+# Baixadas do mazetick-data a cada build (fetch-data apaga a pasta e regrava).
+# A fonte de verdade das edições congeladas é o repositório de dados; uma
+# segunda cópia aqui só poderia divergir em silêncio.
+src/data/extra-places/
