@@ -9,6 +9,7 @@ method: "Each-way terms read hourly from one bookmaker's own public race pages, 
 measured: 2026-09-14
 derivation: "scripts/ew_terms_audit.py@3b94cc2"
 published: 2026-09-14
+updated: 2026-10-05
 verdict: negative
 order: 2
 limits:
@@ -78,34 +79,36 @@ Across nine days there were **81 changes to each-way terms**. Sorting them:
 
 **In 54 promotions, the fraction did not improve once.** Either it was cut in the same move, or it was already at the worse level with nothing left to cut.
 
-So the extra place is not a gift. It is a trade: one more place to finish in, each of them paying less. Whether that trade is good depends on the race and on the bet, and this article does not tell you which — but it is a trade, and it is not described anywhere the bettor can see.
+So the extra place comes with a cut: one more place to finish in, each of them paying less. This article first called that "not a gift" and left the value of the trade open. **We have since measured it, and the extra place came out ahead in every price band**: see [One more place at a fifth beat three at a quarter](/research/extra-place-value). The cut is real, and it is not described anywhere the bettor can see. *(Corrected 5 October 2026.)*
 
 A typical one: a handicap that opened at **3 places at 1/4** and, at 09:00, became **4 at 1/5**. A fourth place appeared. The other three got 20% smaller.
 
 ## Places also get taken away
 
-Twenty-six of the 81 changes removed a place. Twenty-two of those came with the field shrinking — a non-runner, which is ordinary and expected; fewer horses, fewer places.
+Twenty-six of the 81 changes removed a place. Twenty-two of those came at the same reading as a shrinking field: a non-runner, which is ordinary and expected. Fewer horses, fewer places.
 
-**Four did not.** In these, the field was unchanged and the offer was simply withdrawn:
+**The other four we first reported as offers withdrawn with the field unchanged. That was wrong, and this section was corrected on 5 October 2026.**
 
 <div class="table-scroll">
 <table class="dense">
   <thead>
     <tr>
       <th scope="col">Course</th><th scope="col">When</th>
-      <th scope="col">Was</th><th scope="col">Became</th><th scope="col" class="num">Field</th>
+      <th scope="col">Was</th><th scope="col">Became</th><th scope="col" class="num">Field at that reading</th>
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Course">Leicester</td><td data-label="When" class="n">8 Sep, 11:00</td><td data-label="Was" class="n">3 at 1/5</td><td data-label="Became" class="n">2 at 1/4</td><td data-label="Field" class="num">9, unchanged</td></tr>
-    <tr><td data-label="Course">Galway</td><td data-label="When" class="n">8 Sep, 11:00</td><td data-label="Was" class="n">5 at 1/5</td><td data-label="Became" class="n">4 at 1/5</td><td data-label="Field" class="num">16, unchanged</td></tr>
-    <tr><td data-label="Course">Goodwood</td><td data-label="When" class="n">8 Sep, 14:00</td><td data-label="Was" class="n">4 at 1/5</td><td data-label="Became" class="n">3 at 1/5</td><td data-label="Field" class="num">12, unchanged</td></tr>
-    <tr><td data-label="Course">Doncaster</td><td data-label="When" class="n">11 Sep, 09:00</td><td data-label="Was" class="n">5 at 1/5</td><td data-label="Became" class="n">4 at 1/5</td><td data-label="Field" class="num">17, unchanged</td></tr>
+    <tr><td data-label="Course">Leicester</td><td data-label="When" class="n">8 Sep, 11:00</td><td data-label="Was" class="n">3 at 1/5</td><td data-label="Became" class="n">2 at 1/4</td><td data-label="Field at that reading" class="num">9</td></tr>
+    <tr><td data-label="Course">Galway</td><td data-label="When" class="n">8 Sep, 11:00</td><td data-label="Was" class="n">5 at 1/5</td><td data-label="Became" class="n">4 at 1/5</td><td data-label="Field at that reading" class="num">16</td></tr>
+    <tr><td data-label="Course">Goodwood</td><td data-label="When" class="n">8 Sep, 14:00</td><td data-label="Was" class="n">4 at 1/5</td><td data-label="Became" class="n">3 at 1/5</td><td data-label="Field at that reading" class="num">12</td></tr>
+    <tr><td data-label="Course">Doncaster</td><td data-label="When" class="n">11 Sep, 09:00</td><td data-label="Was" class="n">5 at 1/5</td><td data-label="Became" class="n">4 at 1/5</td><td data-label="Field at that reading" class="num">17</td></tr>
   </tbody>
 </table>
 </div>
 
-This is the direction that costs the bettor, and it is the half that gets no coverage anywhere. Somebody who backed each-way that morning expecting the extra place did not have it by the afternoon. Four cases in nine days is not common. It is also not zero, and there is no way to find out except by writing down what the terms were, hour by hour.
+In each of the four, the field was the same as it had been one hour earlier. That is what we tested, and it is the wrong test. The field was smaller than it had been earlier in the day: the non-runner came out at one reading and the place terms followed at a later one. Compared against the largest field seen for the race, instead of against the previous reading, all four follow a field that had already shrunk. They are late adjustments, not withdrawn offers.
+
+The daily records for [8 September](/extra-places/2026-09-08) and [11 September](/extra-places/2026-09-11) apply the stricter test and say so. The first removal it could not explain came three weeks into the record, on the page for [29 September](/extra-places/2026-09-29).
 
 ## The terms move at nine o'clock
 
