@@ -1,0 +1,313 @@
+---
+/**
+ * A edição de um dia do /movers: o que o livro de ofertas fez, corredor a
+ * corredor, e quão incomum foi cada movimento PARA AQUELE PREÇO.
+ *
+ * Irmã de `/extra-places/[date]`, e não a página de hoje com outra data. A de
+ * hoje está pela metade por construção — parte das corridas ainda não correu
+ * quando olhamos. Esta é o registro terminado: toda corrida foi observada até
+ * a largada, e é a única versão que fica completa.
+ *
+ * ⚠️ "INCOMUM" É JULGADO CONTRA O QUE SE SABIA NA VÉSPERA. O percentil de cada
+ * movimento é a posição dele entre os movimentos medidos até o dia anterior à
+ * edição, e nada depois. A página diz contra quantos dias foi julgada, porque
+ * a mesma pergunta feita hoje teria outra resposta — e a resposta de hoje não
+ * é a que valia naquele dia.
+ *
+ * ⚠️ NENHUM NÚMERO AQUI VEM DE FORA DESTA EDIÇÃO. `resumoMv` só olha
+ * `e.runners`.
+ *
+ * ⚠️ NADA DE PREVISÃO. Tudo descreve o que o mercado FEZ. A regra 1 do site
+ * proíbe sugerir o que vai acontecer, e a nossa própria medição desautoriza.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StatFigure from '../../components/StatFigure.astro';
+import { carregarEdicoesMovers, porCorrida, resumoMv } from '../../lib/edicoes-movers';
+import type { EdicaoMv, CorredorMv } from '../../lib/edicoes-movers';
+import { carregarEdicoes } from '../../lib/edicoes';
+import { raceTime, raceZone, raceDate, beforeOff } from '../../lib/time';
+
+export function getStaticPaths() {
+  const todas = carregarEdicoesMovers();
+  // O arquivo de each-way começa depois deste (06/09 contra 25/08): o link para
+  // a edição irmã só existe quando a página irmã existe.
+  const comEachWay = new Set(carregarEdicoes().map((x) => x.edition));
+  return todas.map((e, i) => ({
+    params: { date: e.edition },
+    props: {
+      e,
+      // Mais nova primeiro, então o "anterior" no tempo está DEPOIS na lista.
+      maisNova: todas[i - 1]?.edition ?? null,
+      maisVelha: todas[i + 1]?.edition ?? null,
+      total: todas.length,
+      temEachWay: comEachWay.has(e.edition),
+    },
+  }));
+}
+
+interface Props {
+  e: EdicaoMv;
+  maisNova: string | null;
+  maisVelha: string | null;
+  total: number;
+  temEachWay: boolean;
+}
+
+const { e, maisNova, maisVelha, total, temEachWay } = Astro.props;
+const r = resumoMv(e);
+const grupos = porCorrida(e);
+const notaveis = e.runners.filter((c) => c.notable);
+const rotulo = raceDate(`${e.edition}T12:00:00Z`);
+const zone = e.runners.length ? raceZone(e.runners[0].off_utc) : 'UK time';
+const dias = e.baseline.days;
+
+const pc = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
+const odds = (n: number) => n.toFixed(2);
+const hora = (iso: string) => `${iso.slice(11, 16)} UTC`;
+
+/** O mesmo texto da página viva, no passado: é registro, não leitura ao vivo. */
+function raridade(c: CorredorMv): string {
+  const dir = c.move_pct < 0 ? 'shortening' : 'drift';
+  if (c.percentile <= 0 || c.percentile >= 100) return `a larger ${dir} than any measured at this price by then`;
+  if (c.percentile <= 5) return `bigger than ${100 - c.percentile}% of moves measured at this price by then`;
+  return `bigger than ${c.percentile}% of moves measured at this price by then`;
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: `Market movers, ${rotulo}`,
+  description:
+    `Record of Smarkets order-book prices for ${r.corredores} runners in ${r.corridas} UK and Irish ` +
+    `races run on ${rotulo}: first and last price seen before the off, and how unusual each move was for its price.`,
+  temporalCoverage: e.edition,
+  dateModified: e.collected_through,
+  isAccessibleForFree: true,
+  creator: { '@type': 'Organization', name: 'mazetick' },
+  includedInDataCatalog: {
+    '@type': 'DataCatalog',
+    name: 'mazetick market movers archive',
+    url: 'https://mazetick.com/movers',
+  },
+};
+---
+
+<BaseLayout
+  title={`Market movers, ${rotulo} — mazetick`}
+  description={`${r.notaveis} of ${r.corredores} UK and Irish runners on ${rotulo} moved further than usual for their price, judged against ${dias} earlier days. The finished record, every price stamped against the off.`}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <header class="mast">
+    <p class="mono kicker">Order book. Smarkets. Edition of {e.edition}.</p>
+    <h1 class="display title">
+      {r.notaveis === 0
+        ? `No runner on ${rotulo} moved further than usual for its price`
+        : `${r.notaveis} of the ${r.corredores} runners on ${rotulo} moved further than usual for their price`}
+    </h1>
+  </header>
+
+  <div class="spread">
+    <div class="body">
+      <p class="lead">
+        We sample the Smarkets order book every fifteen minutes until the off. This is the
+        finished record for the races run on {rotulo}: {r.corredores} runners in {r.corridas}{' '}
+        {r.corridas === 1 ? 'race' : 'races'}, each with the first and the last price we saw
+        before it ran. <span data-mv-summary>{r.notaveis} of them moved further than usual for
+        their price.</span>
+      </p>
+      <p>
+        &ldquo;Usual&rdquo; is judged against the {dias} days we had collected before this one,
+        and nothing later. A move is compared with what had been measured by the evening
+        before, so the count above does not change as the archive grows.
+      </p>
+
+      <div class="figures">
+        <StatFigure value={String(r.corredores)} label="runners tracked to the off" />
+        <StatFigure value={String(r.corridas)} label={r.corridas === 1 ? 'race' : 'races'} />
+        <StatFigure value={String(r.notaveis)} label="outside the usual range" accent />
+        <StatFigure value={`${dias}d`} label="of earlier collection it was judged against" />
+      </div>
+
+      {notaveis.length > 0 && (
+        <section>
+          <h2 class="section-rule">Outside the usual range</h2>
+          <table class="dense" data-mv-table="notable">
+            <thead>
+              <tr>
+                <th scope="col">Race</th>
+                <th scope="col">Runner</th>
+                <th scope="col" class="num">First seen</th>
+                <th scope="col" class="num">Last seen</th>
+                <th scope="col" class="num">Move</th>
+                <th scope="col" class="num">Last look</th>
+                <th scope="col">How unusual for this price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notaveis.map((c) => (
+                <tr>
+                  <td data-label="Race">{c.venue} {raceTime(c.off_utc)}</td>
+                  <td data-label="Runner">{c.runner}</td>
+                  <td data-label="First seen" class="num faint">{odds(c.first.mid)}</td>
+                  <td data-label="Last seen" class="num">{odds(c.latest.mid)}</td>
+                  <td data-label="Move" class="num"><strong>{pc(c.move_pct)}</strong></td>
+                  <td data-label="Last look" class="num faint">{beforeOff(c.latest.mins_to_off)}</td>
+                  <td data-label="How unusual for this price">{raridade(c)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="note caption">
+            Prices are the mid of the best back and lay on Smarkets, in decimal odds. A
+            negative move is a price shortening. &ldquo;Last look&rdquo; is how long before
+            the off we last saw a two-sided book for that runner. Race times are {zone}.
+          </p>
+        </section>
+      )}
+
+      <section>
+        <h2 class="section-rule">Every runner that day</h2>
+        <p class="note">
+          Grouped by race, and within a race from the largest shortening to the largest
+          drift, so that money leaving one runner for another shows at the two ends of the
+          same block.
+        </p>
+        {grupos.map((g) => (
+          <div class="corrida">
+            <h3 class="corrida-titulo">
+              {g.venue} {raceTime(g.off_utc)}
+              <span class="faint">
+                {' '}{g.runners.length} {g.runners.length === 1 ? 'runner' : 'runners'}
+                {g.notable > 0 && <>, {g.notable} outside the usual range</>}
+              </span>
+            </h3>
+            <table class="dense" data-mv-table="race">
+              <thead>
+                <tr>
+                  <th scope="col">Runner</th>
+                  <th scope="col" class="num">First seen</th>
+                  <th scope="col" class="num">Last seen</th>
+                  <th scope="col" class="num">Move</th>
+                  <th scope="col" class="num">Last look</th>
+                  <th scope="col" class="num">Spread</th>
+                </tr>
+              </thead>
+              <tbody>
+                {g.runners.map((c) => (
+                  <tr>
+                    <td data-label="Runner" class={c.notable ? 'above' : ''}>{c.runner}</td>
+                    <td data-label="First seen" class="num faint">{odds(c.first.mid)}</td>
+                    <td data-label="Last seen" class="num">{odds(c.latest.mid)}</td>
+                    <td data-label="Move" class="num">{pc(c.move_pct)}</td>
+                    <td data-label="Last look" class="num faint">{beforeOff(c.latest.mins_to_off)}</td>
+                    <td data-label="Spread" class="num faint">
+                      {c.latest.spread_pct == null ? 'one-sided' : `${c.latest.spread_pct.toFixed(1)}%`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+        <p class="note caption">
+          &ldquo;One-sided&rdquo; means the book had no back or no lay at our last look, so
+          there was no spread to quote. It is the state of the book, not missing data.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="section-rule">What &ldquo;usual&rdquo; meant that day</h2>
+        <p>
+          The reference each move was judged against: every move we had measured over the{' '}
+          {dias} days before this one, by the price the runner opened at. The median is near
+          zero in every band. What changes with the price is how far a move normally goes.
+        </p>
+        <table class="dense" data-mv-table="baseline">
+          <thead>
+            <tr>
+              <th scope="col">Opening price</th>
+              <th scope="col" class="num">Moves measured</th>
+              <th scope="col" class="num">5th pct</th>
+              <th scope="col" class="num">25th</th>
+              <th scope="col" class="num">Median</th>
+              <th scope="col" class="num">75th</th>
+              <th scope="col" class="num">95th pct</th>
+            </tr>
+          </thead>
+          <tbody>
+            {e.baseline.bands.map((b) => (
+              <tr>
+                <td data-label="Opening price">{b.from} to {b.to}</td>
+                <td data-label="Moves measured" class="num">{b.n.toLocaleString('en-GB')}</td>
+                <td data-label="5th pct" class="num">{pc(b.p5)}</td>
+                <td data-label="25th" class="num faint">{pc(b.p25)}</td>
+                <td data-label="Median" class="num faint">{pc(b.p50)}</td>
+                <td data-label="75th" class="num faint">{pc(b.p75)}</td>
+                <td data-label="95th pct" class="num">{pc(b.p95)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="note caption">
+          A runner is counted as outside the usual range when its move sits at or below the
+          5th percentile, or at or above the 95th, for its band. A runner whose opening price
+          falls in a band with fewer than 100 measured moves is left out of the record
+          rather than judged against too little.
+        </p>
+      </section>
+
+      <nav class="edicoes">
+        {maisVelha && <a href={`/movers/${maisVelha}`}>&larr; {maisVelha}</a>}
+        <a href="/movers">Today and all editions</a>
+        {maisNova && <a href={`/movers/${maisNova}`}>{maisNova} &rarr;</a>}
+      </nav>
+    </div>
+
+    <aside class="rail">
+      <p class="note"><strong>Edition {e.edition}</strong></p>
+      <p class="note">Frozen. This page does not change once the day closes.</p>
+      <ul class="note proveniencia">
+        <li>Last read that day: {hora(e.collected_through)}</li>
+        <li>Judged against {dias} earlier {dias === 1 ? 'day' : 'days'} of collection</li>
+        <li>One of {total} editions</li>
+        {temEachWay && (
+          <li>Each-way terms for the same day: <a href={`/extra-places/${e.edition}`}>edition {e.edition}</a></li>
+        )}
+      </ul>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  /* `.dense` é global em base.css, com o comportamento de celular. Aqui fica
+     só o que é desta página. */
+  .figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-6);
+    margin: var(--sp-6) 0;
+  }
+  .corrida { margin-top: var(--sp-6); }
+  .corrida-titulo {
+    font-family: var(--font-label);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    margin: 0 0 var(--sp-2);
+  }
+  .corrida-titulo .faint { color: var(--ink-faint); font-weight: 400; }
+  .proveniencia {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-3) 0 0;
+  }
+  .proveniencia li + li { margin-top: var(--sp-1); }
+  .edicoes {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    margin-top: var(--sp-8);
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--rule);
+  }
+</style>

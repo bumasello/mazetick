@@ -45,6 +45,7 @@ const PAGINAS = [
   ['extra-places', '/extra-places'],
   ['edicao', '/extra-places/2026-09-28'],
   ['movers', '/movers'],
+  ['edicao-movers', '/movers/2026-10-02'],
   ['horse', '/horse'],
   ['letra-s', '/horse/letter/s'],
   ['cavalo', '/horse/annaf'],

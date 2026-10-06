@@ -15,10 +15,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import StatFigure from '../../components/StatFigure.astro';
 import { carregarEdicoes, mudancasDe, resumoDe } from '../../lib/edicoes';
 import type { Edicao, CorridaEdicao } from '../../lib/edicoes';
+import { carregarEdicoesMovers } from '../../lib/edicoes-movers';
 import { raceTime, raceZone, raceDate } from '../../lib/time';
 
 export function getStaticPaths() {
   const todas = carregarEdicoes();
+  const comMovers = new Set(carregarEdicoesMovers().map((x) => x.edition));
   return todas.map((e, i) => ({
     params: { date: e.edition },
     props: {
@@ -27,6 +29,7 @@ export function getStaticPaths() {
       maisNova: todas[i - 1]?.edition ?? null,
       maisVelha: todas[i + 1]?.edition ?? null,
       total: todas.length,
+      temMovers: comMovers.has(e.edition),
     },
   }));
 }
@@ -36,9 +39,10 @@ interface Props {
   maisNova: string | null;
   maisVelha: string | null;
   total: number;
+  temMovers: boolean;
 }
 
-const { e, maisNova, maisVelha, total } = Astro.props;
+const { e, maisNova, maisVelha, total, temMovers } = Astro.props;
 const r = resumoDe(e);
 // ⚠️ SÓ as que mexeram no TERMO. Os outros pontos do histórico são saída de
 // não-corredor, e chamá-los de mudança de termo inflou a manchete em 3,5×
@@ -287,6 +291,9 @@ const jsonLd = {
         <li>Last read that day: {hora(e.collected_through)}</li>
         <li>House ladder from {e.ladder_days} {e.ladder_days === 1 ? 'day' : 'days'} of collection</li>
         <li>One of {total} editions</li>
+        {temMovers && (
+          <li>Order book for the same day: <a href={`/movers/${e.edition}`}>edition {e.edition}</a></li>
+        )}
       </ul>
     </aside>
   </div>

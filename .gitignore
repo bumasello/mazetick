@@ -9,3 +9,4 @@ src/data/horses/
 # A fonte de verdade das edições congeladas é o repositório de dados; uma
 # segunda cópia aqui só poderia divergir em silêncio.
 src/data/extra-places/
+src/data/movers/

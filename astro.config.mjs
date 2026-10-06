@@ -90,6 +90,23 @@ const dataPorEdicao = new Map();
   }
 }
 
+// As edições do /movers são congeladas do mesmo jeito, e levam o mesmo lastmod.
+/** @type {Map<string,string>} */
+const dataPorEdicaoMv = new Map();
+{
+  const dir = 'src/data/movers';
+  const arquivos = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
+    : [];
+  if (arquivos.length === 0) {
+    throw new Error(`${dir} vazio ou ausente — rode \`npm run data\` antes do build.`);
+  }
+  for (const arq of arquivos) {
+    const d = JSON.parse(fs.readFileSync(`${dir}/${arq}`, 'utf8'));
+    if (d.collected_through) dataPorEdicaoMv.set(d.edition, d.collected_through);
+  }
+}
+
 // A home mostra movers e o acervo, então ela muda com os dois.
 const dataDaHome = maior(movers.generated_at, indiceCavalos.generated_at);
 
@@ -108,6 +125,9 @@ function lastmodDe(url) {
 
   const edicao = rota.match(/^\/extra-places\/(\d{4}-\d{2}-\d{2})$/)?.[1];
   if (edicao) return dataPorEdicao.get(edicao) ?? null;
+
+  const edicaoMv = rota.match(/^\/movers\/(\d{4}-\d{2}-\d{2})$/)?.[1];
+  if (edicaoMv) return dataPorEdicaoMv.get(edicaoMv) ?? null;
 
   switch (rota) {
     case '/': return dataDaHome;

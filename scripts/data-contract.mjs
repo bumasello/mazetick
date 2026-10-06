@@ -96,6 +96,14 @@ export const DATA_CONTRACT = [
     stamps: ['edition', 'collected_through'],
     nullable: [],
   },
+  {
+    // A irmã da anterior, para o livro de ofertas. Mesma regra e mesmo motivo:
+    // sem `generated_at`, com o carimbo da coleta daquele dia.
+    name: 'movers (edição congelada)',
+    match: (p) => /^src\/data\/movers\/\d{4}-\d{2}-\d{2}\.json$/.test(p),
+    stamps: ['edition', 'collected_through'],
+    nullable: [],
+  },
 ];
 
 export const contractFor = (relPath) =>

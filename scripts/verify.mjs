@@ -1842,6 +1842,69 @@ const LETTER_SEGMENT = 'letter';
   check(`Toda mudança de termo com o dia em que foi vista (${celulas} em ${comMudanca} edições)`, [...new Set(problems)]);
 }
 
+// 38. O arquivo do /movers: 1:1 com os dados, e a página não diz mais que eles.
+//
+//     Irmã da 34. A edição é o registro TERMINADO de um dia, congelado, e o
+//     número da manchete — quantos corredores ficaram fora do intervalo usual —
+//     sai do campo `notable` de cada corredor.
+//
+//     (a) toda edição no dado tem página, e toda página tem edição;
+//     (b) o índice em /movers liga todas elas;
+//     (c) a contagem da frase de abertura é a do dado, e a tabela de notáveis
+//         tem exatamente essas linhas;
+//     (d) todo corredor do dado aparece na página — cortar a lista para
+//         emagrecer o HTML tiraria do ar o que o arquivo promete guardar;
+//     (e) a página diz contra quantos dias anteriores foi julgada.
+{
+  const problems = [];
+  const dir = 'src/data/movers';
+  const dias = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', '')).sort()
+    : [];
+  const paginas = pages
+    .map((f) => rel(f).match(/^movers[/\\](\d{4}-\d{2}-\d{2})\.html$/)?.[1])
+    .filter(Boolean)
+    .sort();
+  if (dias.length === 0) problems.push(`${dir}: nenhuma edição — a checagem não teria o que conferir`);
+  for (const d of dias) if (!paginas.includes(d)) problems.push(`edição ${d} do movers tem dado e NÃO tem página`);
+  for (const d of paginas) if (!dias.includes(d)) problems.push(`página movers/${d} existe e NÃO tem dado`);
+
+  const idx = pages.find((f) => rel(f) === 'movers.html');
+  if (!idx) problems.push('movers.html não foi gerada');
+  else {
+    const ligadas = new Set([...read(idx).matchAll(/href="\/movers\/(\d{4}-\d{2}-\d{2})"/g)].map((m) => m[1]));
+    for (const d of dias) if (!ligadas.has(d)) problems.push(`/movers não liga a edição ${d}`);
+  }
+
+  let linhas = 0;
+  for (const d of dias) {
+    const f = pages.find((x) => rel(x).replace(/\\/g, '/') === `movers/${d}.html`);
+    if (!f) continue;
+    const html = read(f);
+    const doc = JSON.parse(read(`${dir}/${d}.json`));
+    const notaveis = doc.runners.filter((c) => c.notable).length;
+    const txt = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    // (c)
+    const dito = Number(txt.match(/(\d+) of them moved further than usual/)?.[1] ?? NaN);
+    if (dito !== notaveis) problems.push(`movers/${d}: a abertura diz ${dito} fora do usual e o dado tem ${notaveis}`);
+    const tabela = html.match(/<table\b[^>]*data-mv-table="notable"[^>]*>([\s\S]*?)<\/table>/i)?.[1] ?? '';
+    const nLinhas = (tabela.match(/<tr\b/gi) || []).length - (tabela ? 1 : 0);
+    if (notaveis > 0 && nLinhas !== notaveis) problems.push(`movers/${d}: tabela de notáveis com ${nLinhas} linhas, o dado tem ${notaveis}`);
+    // (d)
+    const noHtml = [...html.matchAll(/<table\b[^>]*data-mv-table="race"[^>]*>([\s\S]*?)<\/table>/gi)]
+      .reduce((n, m) => n + (m[1].match(/<tr\b/gi) || []).length - 1, 0);
+    linhas += noHtml;
+    if (noHtml !== doc.runners.length) problems.push(`movers/${d}: ${noHtml} corredores na página, ${doc.runners.length} no dado`);
+    // (e)
+    if (!txt.includes(`judged against the ${doc.baseline.days} days`) && !txt.includes(`Judged against ${doc.baseline.days} earlier`)) {
+      problems.push(`movers/${d}: não diz que foi julgada contra ${doc.baseline.days} dias`);
+    }
+  }
+  if (dias.length && linhas === 0) problems.push('nenhuma linha de corredor conferida — a (d) não olhou nada');
+
+  check(`Arquivo do /movers íntegro (${dias.length} edições, ${paginas.length} páginas, ${linhas} corredores)`, [...new Set(problems)]);
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

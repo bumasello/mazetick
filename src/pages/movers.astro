@@ -4,6 +4,7 @@ import StatFigure from '../components/StatFigure.astro';
 import DataAge from '../components/DataAge.astro';
 import { raceTime, raceZone, beforeOff } from '../lib/time';
 import data from '../data/movers.json';
+import { carregarEdicoesMovers, resumoMv } from '../lib/edicoes-movers';
 
 type Band = { from: number; to: number; n: number; p5: number; p25: number; p50: number; p75: number; p95: number };
 type Runner = {
@@ -128,6 +129,10 @@ function rarity(r: Runner): string {
   if (r.percentile >= 95) return `bigger than ${r.percentile}% of moves measured at this price`;
   return `ordinary for this price`;
 }
+
+// O arquivo: uma edição por dia fechado, congelada. Ver `movers/[date].astro`.
+const edicoes = carregarEdicoesMovers().map((e) => ({ dia: e.edition, dias: e.baseline.days, r: resumoMv(e) }));
+const totalArquivado = edicoes.reduce((t, x) => t + x.r.corredores, 0);
 
 const widest = bands[bands.length - 1];
 const tightest = bands[0];
@@ -419,6 +424,44 @@ const tightest = bands[0];
         ))}
       </tbody>
     </table>
+  </section>
+
+  <section>
+    <h2 class="section-rule">Earlier editions</h2>
+    <p>
+      Every closed day is kept as the finished record: each race watched to the off.{' '}
+      {edicoes.length} {edicoes.length === 1 ? 'edition' : 'editions'},{' '}
+      {totalArquivado.toLocaleString('en-GB')} runners.
+    </p>
+    <table class="dense" data-mv-table="editions">
+      <thead>
+        <tr>
+          <th scope="col">Edition</th>
+          <th scope="col" class="num">Runners</th>
+          <th scope="col" class="num">Races</th>
+          <th scope="col" class="num">Outside the usual range</th>
+          <th scope="col" class="num">Judged against</th>
+        </tr>
+      </thead>
+      <tbody>
+        {edicoes.map(({ dia, dias, r }) => (
+          <tr>
+            <td data-label="Edition"><a href={`/movers/${dia}`}>{dia}</a></td>
+            <td data-label="Runners" class="num">{r.corredores}</td>
+            <td data-label="Races" class="num">{r.corridas}</td>
+            <td data-label="Outside the usual range" class="num">{r.notaveis}</td>
+            <td data-label="Judged against" class="num">{dias}d</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p class="note caption">
+      An edition does not change once its day closes. Each one judges its moves against
+      the days collected before it and nothing later, which is what the last column says.{' '}
+      <strong>Do not read the third column as a trend:</strong> by construction about one
+      runner in ten falls outside the 5th to 95th percentile, so the count mostly follows
+      the number of runners.
+    </p>
   </section>
 
   <p class="note foot caption on-axis">

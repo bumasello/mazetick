@@ -22,6 +22,7 @@ import path from 'node:path';
 import { untarGz } from './untar.mjs';
 import { stampProblems } from './data-contract.mjs';
 import { conferirEdicoes } from './edicoes-contrato.mjs';
+import { conferirEdicoesMovers } from './movers-contrato.mjs';
 
 const REPO = 'bumasello/mazetick-data';
 const RAW = `https://raw.githubusercontent.com/${REPO}/main/data`;
@@ -133,6 +134,16 @@ for (const src of SOURCES) {
     if (m) edicoes.set(m[1], buf.toString('utf8'));
   }
   const edProblems = conferirEdicoes(edicoes);
+
+  // As edições do /movers, do mesmo tarball e pelo mesmo motivo. Conferidas
+  // por contrato próprio: a forma é outra (corredores, e não corridas) e há
+  // duas conferências que só existem lá — ver `movers-contrato.mjs`.
+  const edicoesMv = new Map();
+  for (const [nome, buf] of entries) {
+    const m = nome.match(/\/data\/movers\/(\d{4}-\d{2}-\d{2})\.json$/);
+    if (m) edicoesMv.set(m[1], buf.toString('utf8'));
+  }
+  const mvProblems = conferirEdicoesMovers(edicoesMv);
   // ⚠️ DIZER QUANTAS. Um portão silencioso que passa é indistinguível de um
   // portão que não achou nada para conferir — foi assim que o índice de
   // criação entrou zerado em 26/09 e o guarda aprovou.
@@ -143,6 +154,7 @@ for (const src of SOURCES) {
     ...stampProblems('src/data/horses.json', card),
     ...stampProblems('src/data/horses-index.json', index),
     ...edProblems,
+    ...mvProblems,
   ];
   if (card.schema !== 'horses_v5') problems.push(`horses.json: schema "${card.schema}", esperado "horses_v5"`);
 
@@ -332,6 +344,22 @@ for (const src of SOURCES) {
     fs.writeFileSync(path.join(DIR_ED, `${dia}.json`), texto);
     bytesEd += texto.length;
   }
+  const DIR_MV = 'src/data/movers';
+  fs.rmSync(DIR_MV, { recursive: true, force: true });
+  fs.mkdirSync(DIR_MV, { recursive: true });
+  let bytesMv = 0;
+  let nCorredoresMv = 0;
+  for (const [dia, texto] of edicoesMv) {
+    fs.writeFileSync(path.join(DIR_MV, `${dia}.json`), texto);
+    bytesMv += texto.length;
+    nCorredoresMv += JSON.parse(texto).runners.length;
+  }
+  const diasMv = [...edicoesMv.keys()].sort();
+  console.log(
+    `✓ edições do movers: ${edicoesMv.size} dias (${diasMv[0]} → ${diasMv[diasMv.length - 1]}), ` +
+      `${nCorredoresMv} corredores, ${(bytesMv / 1024).toFixed(0)}KB`,
+  );
+
   const dias = [...edicoes.keys()].sort();
   console.log(
     `✓ edições: ${edicoes.size} dias (${dias[0]} → ${dias[dias.length - 1]}), ` +
