@@ -57,13 +57,10 @@ export function conferirEdicoesMovers(edicoes) {
       problems.push(e.message);
       continue;
     }
-    // ⚠️ TRANSIÇÃO de 2026-10-06: as edições v1 traziam corredores de pistas
-    // alemãs e de Taif, e estão sendo reemitidas como v2. Enquanto o
-    // repositório de dados tiver das duas, o portão aceita as duas; v1 sai
-    // daqui assim que a reemissão estiver no ar.
-    if (doc.schema !== 'movers_edition_v1' && doc.schema !== SCHEMA_ATUAL) {
-      problems.push(`movers ${dia}: schema "${doc.schema}"`);
-    }
+    // v1 não entra mais: as edições v1 traziam corredores de pistas alemãs e
+    // de Taif e foram todas reemitidas como v2 em 2026-10-06. Uma v1 aqui é
+    // edição velha voltando ao repositório de dados.
+    if (doc.schema !== SCHEMA_ATUAL) problems.push(`movers ${dia}: schema "${doc.schema}"`);
     if (doc.schema === SCHEMA_ATUAL) {
       // (f) PAÍS — a página diz "UK and Irish runners". O filtro da origem já
       // errou duas vezes deixando passar o que não previa; aqui a pergunta é

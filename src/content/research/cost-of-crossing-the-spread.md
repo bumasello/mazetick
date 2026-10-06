@@ -1,14 +1,15 @@
 ---
 title: "Crossing the spread costs 3.5%, and our first measurement was wrong"
 dek: "We measured the cost of trading a race market, published the figure internally, and abandoned a strategy partly because of it. Then we found the bug: one line of our filter read the year out of a URL instead of the course, so a third of the quotes were not British or Irish racing at all."
-description: "212,373 order-book quotes over 26 days: crossing the spread costs 3.53%. Our first figure was inflated by a filter that never filtered."
-sample: "212,373 quotes, 1,089 races, 26 consecutive days, UK & Ireland"
+description: "203,065 order-book quotes over 25 days: crossing the spread costs 3.5%. Our first figure was inflated by a filter that never filtered, and the fix still leaked."
+sample: "203,065 quotes, 972 races, 25 consecutive days, UK & Ireland"
 window: "20 August – 13 September 2026"
-windowShort: "26 days, Aug–Sep 2026"
+windowShort: "25 days, Aug–Sep 2026"
 method: "Best available prices on both sides of the exchange book, sampled every 15 minutes, expressed as a percentage of the mid price and in exchange ticks."
 measured: 2026-09-13
-derivation: "src/services/ml/eval/smarkets-spread.ts@1cf7e69"
+derivation: "src/oneTimeScript/spread_smarkets.ts@9fe7198"
 published: 2026-09-13
+updated: 2026-10-06
 verdict: negative
 order: 5
 limits:
@@ -16,7 +17,8 @@ limits:
   - "Quoted spread is not realised cost. An order that waits rather than crossing can do better, at the price of not always being filled — and an unfilled leg on a two-legged trade is its own loss."
   - "There is no profit figure here, and that is deliberate. The net-return scenarios we previously computed were derived from this same curve and inherited the same contamination. They have been withdrawn rather than corrected, and will not be quoted again until they are recomputed."
   - "The signal these costs are compared against was measured on a window already used for other tests. Nothing in this correction changes that, and nothing here should be read as reviving the strategy."
-  - "26 consecutive days of one late-summer period, on one exchange. The daily medians were stable across all of them, which is evidence against a day effect, not proof of a year-round figure."
+  - "Near the off the sample is thin: the book is read every fifteen minutes, so each race gives about one snapshot inside the last quarter of an hour, and snapshots with a crossed or locked book are left out. Read that column as an order of size, not to the decimal."
+  - "25 consecutive days of one late-summer period, on one exchange. The daily medians were stable across all of them, which is evidence against a day effect, not proof of a year-round figure."
 ---
 
 For about three weeks we believed that crossing the spread in a race market cost **4.35%** of the price, against a signal worth 5.39% — that trading away 81% of your edge before the position was even open. We had written down in advance that we would abandon the idea if execution cost exceeded 80% of the gross. It did, and we did.
@@ -47,9 +49,23 @@ An earlier draft of this very article contained the sentence: *"Note that the bo
 
 **Finding something surprising in your data is not the same as discovering something.** The first question has to be whether the instrument is broken, and here the instrument was broken in a way the data itself was announcing.
 
+## The fix still leaked
+
+*This section was added on 6 October 2026, and every figure below it was recomputed.*
+
+The corrected filter worked by exclusion: a course was British or Irish unless its name ended in a country code on our list. The list had `ger` for Germany. The exchange writes `de`. Saudi Arabia and Mauritius were not on the list at all.
+
+So the "clean" measurement we published on 13 September was not clean. **9,308 of its 212,373 quotes, from 117 of its 1,089 races, were German, Saudi and Mauritian meetings**, most of them with an almost empty book. We also wrote "26 days" for a window that holds 25.
+
+We found it the same way as the first time, by measuring again. Before quoting this article somewhere else we had the figures reproduced from the raw files by a process that had not seen them. The totals did not match, and the difference had a name.
+
+The morning figures barely move, because almost none of those meetings trade in our morning. The headline cost goes from 3.53% to 3.51%. Near the off it is another matter: in the 8 to 13 band the published width was 6.4%, and the right figure is 4.9%.
+
+The filter no longer works by exclusion. A course is on the list of British and Irish courses, or it carries a known foreign suffix, or the measurement stops and names it. A list of what to leave out fails silently every time the source produces a value nobody listed, and it has now done that to us twice.
+
 ## What the clean measurement says
 
-26 consecutive days, 20 August to 13 September 2026: **212,373 quotes across 1,089 UK and Irish races**, the book sampled every fifteen minutes.
+25 consecutive days, 20 August to 13 September 2026: **203,065 quotes across 972 UK and Irish races**, the book sampled every fifteen minutes.
 
 <div class="table-scroll">
 <table class="dense">
@@ -63,20 +79,20 @@ An earlier draft of this very article contained the sentence: *"Note that the bo
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Band">4 – 8</td><td data-label="Morning width" class="num">7.1%</td><td data-label="Ticks" class="num">3.0</td><td data-label="Afternoon" class="num">5.6%</td><td data-label="Near off" class="num">3.8%</td></tr>
-    <tr><td data-label="Band">8 – 13</td><td data-label="Morning width" class="num">11.7%</td><td data-label="Ticks" class="num">3.2</td><td data-label="Afternoon" class="num">9.0%</td><td data-label="Near off" class="num">6.4%</td></tr>
-    <tr><td data-label="Band">13 – 20</td><td data-label="Morning width" class="num">14.9%</td><td data-label="Ticks" class="num">5.0</td><td data-label="Afternoon" class="num">11.7%</td><td data-label="Near off" class="num">8.3%</td></tr>
+    <tr><td data-label="Band">4 – 8</td><td data-label="Morning width" class="num">7.0%</td><td data-label="Ticks" class="num">3.0</td><td data-label="Afternoon" class="num">5.5%</td><td data-label="Near off" class="num">3.5%</td></tr>
+    <tr><td data-label="Band">8 – 13</td><td data-label="Morning width" class="num">11.7%</td><td data-label="Ticks" class="num">3.2</td><td data-label="Afternoon" class="num">9.0%</td><td data-label="Near off" class="num">4.9%</td></tr>
+    <tr><td data-label="Band">13 – 20</td><td data-label="Morning width" class="num">14.9%</td><td data-label="Ticks" class="num">5.0</td><td data-label="Afternoon" class="num">11.4%</td><td data-label="Near off" class="num">8.1%</td></tr>
   </tbody>
 </table>
 </div>
 
-Those figures are the **width** of the book — the whole gap between the two sides. Crossing it costs **half** of that against the mid price, because you cross one side, not both. The distinction matters: at odds 4 to 8 in the morning the book is 7.1% wide and entering a position costs 3.53%.
+Those figures are the **width** of the book — the whole gap between the two sides. Crossing it costs **half** of that against the mid price, because you cross one side, not both. The distinction matters: at odds 4 to 8 in the morning the book is 7.0% wide and entering a position costs 3.51%.
 
-The book tightens through the day in every band, by roughly half between morning and the off. That is what an order book is supposed to do, and it is the first sign that the instrument is now reading something real.
+The book tightens through the day in every band, by about half or more between morning and the off. That is what an order book is supposed to do, and it is the first sign that the instrument is now reading something real.
 
 ## The decisive cell
 
-The signal we were evaluating entered at a median price of about 5.85 — the first row, in the morning. That cell holds **14,187 quotes**.
+The signal we were evaluating entered at a median price of about 5.85 — the first row, in the morning. That cell holds **14,124 quotes** from 885 races.
 
 <div class="table-scroll">
 <table class="dense">
@@ -91,17 +107,19 @@ The signal we were evaluating entered at a median price of about 5.85 — the fi
     </tr>
   </thead>
   <tbody>
-    <tr><td data-label="Measure">Width, % of price</td><td data-label="p10" class="num">3.4</td><td data-label="p25" class="num">5.2</td><td data-label="median" class="num"><strong>7.1</strong></td><td data-label="p75" class="num">10.1</td><td data-label="p90" class="num">14.1</td></tr>
+    <tr><td data-label="Measure">Width, % of price</td><td data-label="p10" class="num">3.4</td><td data-label="p25" class="num">5.1</td><td data-label="median" class="num"><strong>7.0</strong></td><td data-label="p75" class="num">9.9</td><td data-label="p90" class="num">13.8</td></tr>
     <tr><td data-label="Measure">In ticks</td><td data-label="p10" class="num">—</td><td data-label="p25" class="num">2.0</td><td data-label="median" class="num"><strong>3.0</strong></td><td data-label="p75" class="num">4.0</td><td data-label="p90" class="num">6.0</td></tr>
   </tbody>
 </table>
 </div>
 
-Half of that median width is what entering costs against the mid price: **3.53%**, against a gross signal of 5.39%. **65% of the edge, consumed on entry** — and that is one side only, before any cost of getting out.
+Half of that median width is what entering costs against the mid price: **3.51%**, against a gross signal of 5.39%. **65% of the edge, consumed on entry** — and that is one side only, before any cost of getting out.
 
 Twenty-two per cent of quotes show a two-tick book, 72% fit within four ticks, and 91% within six. Liquidity was never the constraint — the amount available at the best price had a median of about £45, with £12 at the tenth percentile, which is ample for any stake under discussion.
 
-The daily median for this cell sat between **6.0% and 8.4% on every one of the 25 days with a usable sample**, with no outlier. We had suspected that our single measured day — a Thursday of a major festival — was unrepresentatively liquid, and had held this article back on those grounds. It was not: at 7.6% it is the **widest** day in the set, not the tightest. The bias we feared ran the other way, and the thing that was actually wrong was not the sample at all.
+The daily median for this cell sat between **6.0% and 8.4% on every one of the 25 days with a usable sample**, with no outlier. We had suspected that our single measured day — a Thursday of a major festival — was unrepresentatively liquid, and had held this article back on those grounds. It was not: at 7.6% it sits in the wider half of the set, not the tighter. The thing that was actually wrong was not the sample at all.
+
+*(Corrected 6 October 2026. This paragraph first said the festival Thursday was the widest day in the set. It is not: six days were wider, and the widest was 31 August at 8.35%. The claim had been written without the script printing the daily figures. It prints them now.)*
 
 ## What this changes, and what it does not
 

@@ -11,8 +11,9 @@ const mal = (n, d) => { falhas += 1; console.error(`  ✗ ${n}\n      ${d}`); };
 
 /** Uma edição válida, para cada caso estragar UMA coisa de cada vez. */
 const boa = (dia = '2026-09-10', dias = 12) => ({
-  schema: 'movers_edition_v1',
+  schema: 'movers_edition_v2',
   edition: dia,
+  ...(dia <= '2026-10-05' ? { reissued: { on: '2026-10-06', reason: 'Reissued.' } } : {}),
   collected_through: `${dia}T21:45:02Z`,
   baseline: { days: dias, bands: [{ from: 3, to: 5, n: 400, p5: -20, p25: -6, p50: 0, p75: 7, p95: 30 }] },
   runners: [{
@@ -68,6 +69,7 @@ const mudaV2 = (f, dia) => { const d = v2(dia); f(d); return d; };
   p.length === 0 ? ok('v2 reemitida e v2 nova passam') : mal('v2 reemitida e v2 nova passam', p.join(' | '));
 }
 acusa('schema desconhecido', [muda((d) => { d.schema = 'movers_edition_v3'; })], 'schema');
+acusa('edição v1 voltando', [muda((d) => { d.schema = 'movers_edition_v1'; })], 'schema "movers_edition_v1"');
 acusa('v2 com pista alemã', [mudaV2((d) => { d.runners[0].venue = 'Baden Baden De'; })], 'FORA de UK/IRE');
 acusa('v2 com pista saudita', [mudaV2((d) => { d.runners[0].venue = 'Taif Ksa'; })], 'FORA de UK/IRE');
 acusa('v2 antiga sem dizer que foi reemitida', [mudaV2((d) => { delete d.reissued; })], 'reissued');
