@@ -1905,6 +1905,73 @@ const LETTER_SEGMENT = 'letter';
   check(`Arquivo do /movers íntegro (${dias.length} edições, ${paginas.length} páginas, ${linhas} corredores)`, [...new Set(problems)]);
 }
 
+// 39. A /horse só liga a uma edição que FALA daquela corrida ou daquele cavalo.
+//
+//     O link nasce de um casamento entre três fontes que nomeiam pista e
+//     instante de jeitos diferentes (src/lib/horse-edicoes.mjs), e os dois
+//     modos de errar são silenciosos: casar a corrida errada põe no ar um link
+//     que não cumpre o que diz, e não casar nenhuma tira 7 mil links sem que
+//     nada falhe — link ausente é um resultado válido. Em 06/10 a primeira
+//     versão perdeu 1.560 cavalos de areia assim.
+//
+//     Conferido no HTML servido, sem reusar o módulo que fez o casamento:
+//     (a) a data do link é a da corrida declarada na mesma página;
+//     (b) a edição de each-way ligada nomeia a pista da corrida;
+//     (c) a edição do livro ligada nomeia o cavalo;
+//     (d) havendo edições e cavalos declarados nesses dias, há links.
+{
+  const problems = [];
+  const chave = (t) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const semTag = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#39;|&apos;|&rsquo;/g, "'");
+  const cache = new Map();
+  const edicao = (secao, d) => {
+    const k = `${secao}/${d}`;
+    if (!cache.has(k)) {
+      const f = pages.find((x) => rel(x).replace(/\\/g, '/') === `${k}.html`);
+      cache.set(k, f ? chave(semTag(read(f))) : null);
+    }
+    return cache.get(k);
+  };
+  const porSlug = new Map(horseRecords.map((h) => [h.slug, h]));
+  let ew = 0, mv = 0;
+  for (const f of horsePages) {
+    const html = read(f);
+    const bloco = html.match(/<dd\b[^>]*data-declared="(\d{4}-\d{2}-\d{2})"[^>]*>([\s\S]*?)<\/dd>/i);
+    if (!bloco) continue;
+    const h = porSlug.get(rel(f).replace(/\\/g, '/').replace(/^horse\//, '').replace(/\.html$/, ''));
+    if (!h) { problems.push(`${rel(f)}: tem link de edição e não achei o registro`); continue; }
+    for (const a of bloco[2].matchAll(/<a\b[^>]*href="\/(extra-places|movers)\/(\d{4}-\d{2}-\d{2})"[^>]*>/gi)) {
+      const [, secao, d] = a;
+      if (d !== bloco[1] || d !== h.last_declared.date) {
+        problems.push(`${rel(f)}: liga ${secao}/${d} e a corrida declarada é de ${h.last_declared.date}`);
+        continue;
+      }
+      const texto = edicao(secao, d);
+      if (texto === null) { problems.push(`${rel(f)}: liga ${secao}/${d}, que não foi gerada`); continue; }
+      if (secao === 'extra-places') {
+        ew += 1;
+        const pista = chave(h.last_declared.venue.replace(/\s*\([^)]*\)\s*$/, ''));
+        if (!texto.includes(pista)) problems.push(`${rel(f)}: extra-places/${d} não nomeia ${h.last_declared.venue}`);
+      } else {
+        mv += 1;
+        const nome = chave(h.name.replace(/\s*\([A-Z]{2,3}\)\s*$/, ''));
+        if (!texto.includes(nome)) problems.push(`${rel(f)}: movers/${d} não nomeia ${h.name}`);
+      }
+    }
+  }
+  // (d)
+  const dias = (dir) => new Set(fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((x) => x.endsWith('.json')).map((x) => x.replace('.json', '')) : []);
+  const diasEw = dias('src/data/extra-places');
+  const diasMv = dias('src/data/movers');
+  const candEw = horseRecords.filter((h) => diasEw.has(h.last_declared.date)).length;
+  const candMv = horseRecords.filter((h) => diasMv.has(h.last_declared.date)).length;
+  if (candEw > 0 && ew < candEw * 0.8) problems.push(`só ${ew} de ${candEw} cavalos declarados em dia com edição de each-way têm link — o casamento quebrou`);
+  if (candMv > 0 && mv < candMv * 0.6) problems.push(`só ${mv} de ${candMv} cavalos declarados em dia com edição do livro têm link — o casamento quebrou`);
+
+  check(`/horse ligada às edições (${ew} links de each-way, ${mv} do livro de ofertas)`, problems.slice(0, 20));
+}
+
 console.log();
 if (fail.length) {
   console.error(`FALHOU: ${fail.map((f) => f.name).join(' · ')}`);

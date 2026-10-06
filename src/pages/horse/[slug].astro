@@ -37,6 +37,9 @@ import {
 import { archiveLine, breedingLine, ukDate, rideWithHorse, yardWithHorse, pairingLine, sireAtDistanceLine, atCourse, atDistance, recentLine, daysSince } from '../../lib/horse-copy.mjs';
 import { raceTime, raceZone } from '../../lib/time';
 import { canonicalUrl } from '../../lib/canonical';
+import { carregarEdicoes } from '../../lib/edicoes';
+import { carregarEdicoesMovers } from '../../lib/edicoes-movers';
+import { indexarEdicoes, ligarCavalo } from '../../lib/horse-edicoes.mjs';
 
 export function getStaticPaths() {
   // O cartão é lido UMA vez e viaja nas props. Lido dentro da página, seriam
@@ -51,11 +54,20 @@ export function getStaticPaths() {
     placed: card.placed,
     breeding: card.breeding_coverage ?? null,
   };
-  return loadRecords().map((h) => ({ params: { slug: h.slug }, props: { h, stamp } }));
+  // As edições também se leem UMA vez. A ligação é calculada aqui e viaja
+  // pronta: a página só sabe para qual data apontar, ou que não há o que
+  // apontar (ver src/lib/horse-edicoes.mjs).
+  const indice = indexarEdicoes(carregarEdicoes(), carregarEdicoesMovers());
+  return loadRecords().map((h) => ({
+    params: { slug: h.slug },
+    props: { h, stamp, edicoes: ligarCavalo(indice, h.name, h.last_declared) },
+  }));
 }
 
 interface Props {
   h: HorseRecord;
+  /** A data da edição que traz a última corrida declarada, ou nulo. */
+  edicoes: { eachWay: string | null; movers: string | null };
   stamp: {
     collectedThrough: string | null;
     generatedAt: string;
@@ -67,7 +79,7 @@ interface Props {
                 runners_in_window: number; with_breeding: number; pct: number } | null;
   };
 }
-const { h, stamp } = Astro.props;
+const { h, stamp, edicoes } = Astro.props;
 
 /**
  * ⚠️ O CARIMBO DE COLETA É DO CARTÃO, NÃO DO REGISTRO — e os dois divergem.
@@ -254,6 +266,16 @@ const jsonLd = {
             {situacao && <span class="band wrap" data-runner-status={decl.runner_status}>{situacao}</span>}
           </dd>
         </div>
+        {/* A ligação com o arquivo. Cada link só aparece quando a edição
+            daquele dia traz ESTA corrida (each-way) ou ESTE cavalo (livro de
+            ofertas); dia ainda aberto não tem edição, e o bloco some inteiro.
+            Tudo numa linha só, pelo mesmo motivo do bloco acima. */}
+        {(edicoes.eachWay || edicoes.movers) && (
+          <div>
+            <dt>Our record of that day</dt>
+            <dd data-declared={decl.date}>{edicoes.eachWay && <a href={`/extra-places/${edicoes.eachWay}`} data-edition="each-way">each-way terms</a>}{edicoes.eachWay && edicoes.movers && ' and '}{edicoes.movers && <a href={`/movers/${edicoes.movers}`} data-edition="movers">order book</a>}</dd>
+          </div>
+        )}
         <div>
           <dt>Going on the card</dt>
           <dd>
