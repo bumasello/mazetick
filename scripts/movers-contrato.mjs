@@ -19,6 +19,17 @@ import { exigir, exigirLista } from './shape.mjs';
  *     julgada, e esse número só pode crescer de uma edição para a seguinte. Se
  *     cair, a base de uma edição antiga foi refeita com outro acervo.
  */
+const SCHEMA_ATUAL = 'movers_edition_v2';
+/** Última edição que chegou a ser publicada como v1. Espelha o produtor. */
+const REEMITIDAS_ATE = '2026-10-05';
+/**
+ * O nome da pista vem do slug do Smarkets com as palavras em maiúscula
+ * inicial, e pista de fora termina no código do país: "Baden Baden De",
+ * "Taif Ksa". Nenhuma pista de UK/IRE termina assim — "Ffos Las" e "Bangor On
+ * Dee" terminam em palavra, não em código desta lista.
+ */
+const SUFIXO_DE_PAIS = / (Aus|Usa|Fra|Rsa|Jpn|Nz|De|Ksa|Mu|Uae|Can|Hkg|Sgp|Swe|Nor|Ger|Ity|Esp|Arg|Chi|Kor|Ind|Per)$/;
+
 export function conferirEdicoesMovers(edicoes) {
   const problems = [];
   if (edicoes.size === 0) {
@@ -46,7 +57,31 @@ export function conferirEdicoesMovers(edicoes) {
       problems.push(e.message);
       continue;
     }
-    if (doc.schema !== 'movers_edition_v1') problems.push(`movers ${dia}: schema "${doc.schema}"`);
+    // ⚠️ TRANSIÇÃO de 2026-10-06: as edições v1 traziam corredores de pistas
+    // alemãs e de Taif, e estão sendo reemitidas como v2. Enquanto o
+    // repositório de dados tiver das duas, o portão aceita as duas; v1 sai
+    // daqui assim que a reemissão estiver no ar.
+    if (doc.schema !== 'movers_edition_v1' && doc.schema !== SCHEMA_ATUAL) {
+      problems.push(`movers ${dia}: schema "${doc.schema}"`);
+    }
+    if (doc.schema === SCHEMA_ATUAL) {
+      // (f) PAÍS — a página diz "UK and Irish runners". O filtro da origem já
+      // errou duas vezes deixando passar o que não previa; aqui a pergunta é
+      // feita de novo, na chegada, sobre o nome que vai para a tela.
+      const fora = doc.runners.filter((c) => SUFIXO_DE_PAIS.test(String(c.venue)));
+      if (fora.length) {
+        problems.push(`movers ${dia}: ${fora.length} corredor(es) em pista de FORA de UK/IRE, ex. ${fora[0].venue}`);
+      }
+      // (g) REEMISSÃO — edição que já foi publicada com outro conteúdo tem de
+      // dizer que foi reemitida, quando e por quê; e só essas.
+      const deviaTer = dia <= REEMITIDAS_ATE;
+      if (deviaTer && !(doc.reissued && doc.reissued.on && doc.reissued.reason)) {
+        problems.push(`movers ${dia}: foi publicada como v1 e a v2 não traz \`reissued\` com data e motivo`);
+      }
+      if (!deviaTer && 'reissued' in doc) {
+        problems.push(`movers ${dia}: traz \`reissued\` e nunca foi publicada com outro conteúdo`);
+      }
+    }
     if (doc.edition !== dia) {
       problems.push(`movers ${dia}: campo edition diz "${doc.edition}" — o nome do arquivo e o conteúdo discordam`);
     }

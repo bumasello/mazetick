@@ -39,6 +39,12 @@ export interface EdicaoMv {
   note: string;
   baseline: { days: number; bands: FaixaMv[] };
   collected_through: string;
+  /**
+   * Só nas edições que chegaram a ser publicadas com outro conteúdo. Em
+   * 06/10/2026 as de até 05/10 foram reemitidas: o filtro de país deixava
+   * passar pistas alemãs e de Taif. A página tem de dizer isso.
+   */
+  reissued?: { on: string; reason: string };
   runners: CorredorMv[];
 }
 

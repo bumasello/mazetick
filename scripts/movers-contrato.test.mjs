@@ -57,5 +57,30 @@ acusa('base abaixo do piso', [boa('2026-09-10', 3)], 'piso de 5');
 acusa('chave trocada no corredor',
   [muda((d) => { d.runners[0].pct = d.runners[0].percentile; delete d.runners[0].percentile; })], 'percentile');
 
+// A reemissão de 2026-10-06: v2, sem pista de fora, e dizendo que foi reemitida.
+const v2 = (dia = '2026-09-10', dias = 12) => ({
+  ...boa(dia, dias), schema: 'movers_edition_v2',
+  ...(dia <= '2026-10-05' ? { reissued: { on: '2026-10-06', reason: 'Reissued.' } } : {}),
+});
+const mudaV2 = (f, dia) => { const d = v2(dia); f(d); return d; };
+{
+  const p = conferirEdicoesMovers(mapa(v2('2026-10-05', 40), v2('2026-10-06', 41)));
+  p.length === 0 ? ok('v2 reemitida e v2 nova passam') : mal('v2 reemitida e v2 nova passam', p.join(' | '));
+}
+acusa('schema desconhecido', [muda((d) => { d.schema = 'movers_edition_v3'; })], 'schema');
+acusa('v2 com pista alemã', [mudaV2((d) => { d.runners[0].venue = 'Baden Baden De'; })], 'FORA de UK/IRE');
+acusa('v2 com pista saudita', [mudaV2((d) => { d.runners[0].venue = 'Taif Ksa'; })], 'FORA de UK/IRE');
+acusa('v2 antiga sem dizer que foi reemitida', [mudaV2((d) => { delete d.reissued; })], 'reissued');
+acusa('v2 reemitida sem motivo', [mudaV2((d) => { d.reissued = { on: '2026-10-06' }; })], 'reissued');
+acusa('v2 nova dizendo que foi reemitida',
+  [mudaV2((d) => { d.reissued = { on: '2026-10-06', reason: 'x' }; }, '2026-10-06')], 'nunca foi publicada');
+{
+  // Pista de UK/IRE cujo nome termina em palavra curta NÃO é pista de fora.
+  const d = v2(); d.runners[0].venue = 'Bangor On Dee';
+  const e = v2('2026-09-11', 13); e.runners[0].venue = 'Ffos Las';
+  const p = conferirEdicoesMovers(mapa(d, e));
+  p.length === 0 ? ok('Bangor On Dee e Ffos Las passam') : mal('Bangor On Dee e Ffos Las passam', p.join(' | '));
+}
+
 console.log(falhas ? `\n${falhas} caso(s) NÃO acusado(s).` : '\nTodos os modos de falha são acusados.');
 process.exit(falhas ? 1 : 0);

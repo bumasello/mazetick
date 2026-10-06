@@ -81,7 +81,7 @@ const jsonLd = {
     `Record of Smarkets order-book prices for ${r.corredores} runners in ${r.corridas} UK and Irish ` +
     `races run on ${rotulo}: first and last price seen before the off, and how unusual each move was for its price.`,
   temporalCoverage: e.edition,
-  dateModified: e.collected_through,
+  dateModified: e.reissued ? e.reissued.on : e.collected_through,
   isAccessibleForFree: true,
   creator: { '@type': 'Organization', name: 'mazetick' },
   includedInDataCatalog: {
@@ -116,6 +116,9 @@ const jsonLd = {
         before it ran. <span data-mv-summary>{r.notaveis} of them moved further than usual for
         their price.</span>
       </p>
+      {e.reissued && (
+        <p class="note" data-reissued={e.reissued.on}><strong>Corrected.</strong> {e.reissued.reason}</p>
+      )}
       <p>
         &ldquo;Usual&rdquo; is judged against the {dias} days we had collected before this one,
         and nothing later. A move is compared with what had been measured by the evening
@@ -266,7 +269,9 @@ const jsonLd = {
 
     <aside class="rail">
       <p class="note"><strong>Edition {e.edition}</strong></p>
-      <p class="note">Frozen. This page does not change once the day closes.</p>
+      {e.reissued
+        ? <p class="note">Frozen. Reissued once, on {e.reissued.on}, to remove runners from outside the UK and Ireland.</p>
+        : <p class="note">Frozen. This page does not change once the day closes.</p>}
       <ul class="note proveniencia">
         <li>Last read that day: {hora(e.collected_through)}</li>
         <li>Judged against {dias} earlier {dias === 1 ? 'day' : 'days'} of collection</li>

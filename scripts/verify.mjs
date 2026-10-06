@@ -1854,7 +1854,8 @@ const LETTER_SEGMENT = 'letter';
 //         tem exatamente essas linhas;
 //     (d) todo corredor do dado aparece na página — cortar a lista para
 //         emagrecer o HTML tiraria do ar o que o arquivo promete guardar;
-//     (e) a página diz contra quantos dias anteriores foi julgada.
+//     (e) a página diz contra quantos dias anteriores foi julgada;
+//     (f) edição reemitida (campo `reissued`) diz na página que foi, e quando.
 {
   const problems = [];
   const dir = 'src/data/movers';
@@ -1895,6 +1896,10 @@ const LETTER_SEGMENT = 'letter';
       .reduce((n, m) => n + (m[1].match(/<tr\b/gi) || []).length - 1, 0);
     linhas += noHtml;
     if (noHtml !== doc.runners.length) problems.push(`movers/${d}: ${noHtml} corredores na página, ${doc.runners.length} no dado`);
+    // (f) edição reemitida diz que foi, e nenhuma outra diz
+    const marca = html.match(/data-reissued="([^"]+)"/)?.[1] ?? null;
+    if (doc.reissued && marca !== doc.reissued.on) problems.push(`movers/${d}: foi reemitida em ${doc.reissued.on} e a página não diz`);
+    if (!doc.reissued && marca) problems.push(`movers/${d}: a página diz que foi reemitida e o dado não`);
     // (e)
     if (!txt.includes(`judged against the ${doc.baseline.days} days`) && !txt.includes(`Judged against ${doc.baseline.days} earlier`)) {
       problems.push(`movers/${d}: não diz que foi julgada contra ${doc.baseline.days} dias`);
