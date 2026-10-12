@@ -28,7 +28,7 @@ const REEMITIDAS_ATE = '2026-10-05';
  * "Taif Ksa". Nenhuma pista de UK/IRE termina assim — "Ffos Las" e "Bangor On
  * Dee" terminam em palavra, não em código desta lista.
  */
-const SUFIXO_DE_PAIS = / (Aus|Usa|Fra|Rsa|Jpn|Nz|De|Ksa|Mu|Uae|Can|Hkg|Sgp|Swe|Nor|Ger|Ity|Esp|Arg|Chi|Kor|Ind|Per)$/;
+export const SUFIXO_DE_PAIS = / (Aus|Usa|Fra|Rsa|Jpn|Nz|De|Ksa|Mu|Uae|Can|Hkg|Sgp|Swe|Nor|Ger|Ity|Esp|Arg|Chi|Kor|Ind|Per)$/;
 
 export function conferirEdicoesMovers(edicoes) {
   const problems = [];

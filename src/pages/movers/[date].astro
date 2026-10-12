@@ -177,7 +177,7 @@ const jsonLd = {
           same block.
         </p>
         {grupos.map((g) => (
-          <div class="corrida">
+          <div class="corrida" id={g.slug}>
             <h3 class="corrida-titulo">
               {g.venue} {raceTime(g.off_utc)}
               <span class="faint">
@@ -293,7 +293,10 @@ const jsonLd = {
     gap: var(--sp-6);
     margin: var(--sp-6) 0;
   }
-  .corrida { margin-top: var(--sp-6); }
+  .corrida { margin-top: var(--sp-6); scroll-margin-top: var(--sp-6); }
+  /* Quem chega pela página de um cavalo cai nesta corrida: o sublinhado diz
+     qual é, sem cor — verde aqui quer dizer outra coisa. */
+  .corrida:target .corrida-titulo { text-decoration: underline; }
   .corrida-titulo {
     font-family: var(--font-label);
     font-size: var(--fs-label);

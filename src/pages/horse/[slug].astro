@@ -67,7 +67,7 @@ export function getStaticPaths() {
 interface Props {
   h: HorseRecord;
   /** A data da edição que traz a última corrida declarada, ou nulo. */
-  edicoes: { eachWay: string | null; movers: string | null };
+  edicoes: { eachWay: string | null; movers: string | null; eachWayAnchor: string | null; moversAnchor: string | null };
   stamp: {
     collectedThrough: string | null;
     generatedAt: string;
@@ -273,7 +273,7 @@ const jsonLd = {
         {(edicoes.eachWay || edicoes.movers) && (
           <div>
             <dt>Our record of that day</dt>
-            <dd data-declared={decl.date}>{edicoes.eachWay && <a href={`/extra-places/${edicoes.eachWay}`} data-edition="each-way">each-way terms</a>}{edicoes.eachWay && edicoes.movers && ' and '}{edicoes.movers && <a href={`/movers/${edicoes.movers}`} data-edition="movers">order book</a>}</dd>
+            <dd data-declared={decl.date}>{edicoes.eachWay && <a href={`/extra-places/${edicoes.eachWay}${edicoes.eachWayAnchor ? `#${edicoes.eachWayAnchor}` : ''}`} data-edition="each-way">each-way terms</a>}{edicoes.eachWay && edicoes.movers && ' and '}{edicoes.movers && <a href={`/movers/${edicoes.movers}${edicoes.moversAnchor ? `#${edicoes.moversAnchor}` : ''}`} data-edition="movers">order book</a>}</dd>
           </div>
         )}
         <div>

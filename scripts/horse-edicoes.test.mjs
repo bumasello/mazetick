@@ -6,52 +6,53 @@ import { indexarEdicoes, ligarCavalo, chaveNome } from '../src/lib/horse-edicoes
 const ew = [{
   edition: '2026-09-30',
   races: [
-    { venue: 'Kempton', off_utc: '2026-09-30T16:30:00Z' },
+    { venue: 'Kempton', off_utc: '2026-09-30T16:30:00Z', slug: 'kempton-2026-09-30-1630' },
     { venue: 'Newmarket', off_utc: '2026-09-30T13:00:00Z' },
   ],
 }];
 const mv = [{
   edition: '2026-09-30',
   runners: [
-    { venue: 'Kempton', off_utc: '2026-09-30T16:30:00Z', runner: "Night's Edge" },
+    { venue: 'Kempton', off_utc: '2026-09-30T16:30:00Z', runner: "Night's Edge", slug: 'kempton-2026-09-30-1630' },
   ],
 }];
 const idx = indexarEdicoes(ew, mv);
 const decl = (venue, off_utc, date = '2026-09-30') => ({ venue, off_utc, date });
+const datas = (l) => ({ eachWay: l.eachWay, movers: l.movers });
 
 // 1. O cartão grava +01:00 e a edição grava Z: é o mesmo instante.
 assert.deepEqual(
-  ligarCavalo(idx, 'Nights Edge (IRE)', decl('Kempton', '2026-09-30T17:30:00+01:00')),
+  datas(ligarCavalo(idx, 'Nights Edge (IRE)', decl('Kempton', '2026-09-30T17:30:00+01:00'))),
   { eachWay: '2026-09-30', movers: '2026-09-30' },
 );
 
 // 2. Mesma hora, outra pista: Bellewstown não herda a corrida de Kempton.
 assert.deepEqual(
-  ligarCavalo(idx, 'Nights Edge', decl('Bellewstown', '2026-09-30T17:30:00+01:00')),
+  datas(ligarCavalo(idx, 'Nights Edge', decl('Bellewstown', '2026-09-30T17:30:00+01:00'))),
   { eachWay: null, movers: null },
 );
 
 // 3. A corrida está na edição de each-way, o cavalo não está no livro.
 assert.deepEqual(
-  ligarCavalo(idx, 'Outro Cavalo', decl('Kempton', '2026-09-30T17:30:00+01:00')),
+  datas(ligarCavalo(idx, 'Outro Cavalo', decl('Kempton', '2026-09-30T17:30:00+01:00'))),
   { eachWay: '2026-09-30', movers: null },
 );
 
 // 4. A corrida está no each-way e NENHUM corredor dela está no livro.
 assert.deepEqual(
-  ligarCavalo(idx, 'Nights Edge', decl('Newmarket', '2026-09-30T14:00:00+01:00')),
+  datas(ligarCavalo(idx, 'Nights Edge', decl('Newmarket', '2026-09-30T14:00:00+01:00'))),
   { eachWay: '2026-09-30', movers: null },
 );
 
 // 5. Dia sem edição (o dia ainda não fechou): nenhum link.
 assert.deepEqual(
-  ligarCavalo(idx, 'Nights Edge', decl('Kempton', '2026-10-07T17:30:00+01:00', '2026-10-07')),
+  datas(ligarCavalo(idx, 'Nights Edge', decl('Kempton', '2026-10-07T17:30:00+01:00', '2026-10-07'))),
   { eachWay: null, movers: null },
 );
 
 // 6. A data declarada manda: a mesma corrida sob outra data não casa.
 assert.deepEqual(
-  ligarCavalo(idx, 'Nights Edge', decl('Kempton', '2026-09-30T17:30:00+01:00', '2026-09-29')),
+  datas(ligarCavalo(idx, 'Nights Edge', decl('Kempton', '2026-09-30T17:30:00+01:00', '2026-09-29'))),
   { eachWay: null, movers: null },
 );
 
@@ -59,7 +60,7 @@ assert.deepEqual(
 const torto = indexarEdicoes(
   [{ edition: '2026-09-30', races: [{ venue: 'Kempton', off_utc: 'sem hora' }] }], []);
 assert.deepEqual(
-  ligarCavalo(torto, 'X', decl('Kempton', 'sem hora')),
+  datas(ligarCavalo(torto, 'X', decl('Kempton', 'sem hora'))),
   { eachWay: null, movers: null },
 );
 
@@ -74,4 +75,15 @@ const pistas = indexarEdicoes(
 assert.equal(ligarCavalo(pistas, 'X', decl('Wolverhampton (AW)', '2026-09-30T19:00:00+01:00')).eachWay, '2026-09-30');
 assert.equal(ligarCavalo(pistas, 'X', decl('Epsom', '2026-09-30T15:00:00+01:00')).movers, '2026-09-30');
 
-console.log('horse-edicoes: 9 casos passaram');
+// 10. A âncora é o slug da corrida na edição de DESTINO, e nula sem link.
+{
+  const l = ligarCavalo(idx, 'Nights Edge (IRE)', decl('Kempton', '2026-09-30T17:30:00+01:00'));
+  assert.equal(l.eachWayAnchor, 'kempton-2026-09-30-1630');
+  assert.equal(l.moversAnchor, 'kempton-2026-09-30-1630');
+  const semLivro = ligarCavalo(idx, 'Outro Cavalo', decl('Kempton', '2026-09-30T17:30:00+01:00'));
+  assert.equal(semLivro.moversAnchor, null);
+  // edição sem slug (Newmarket no dado de teste): link sem âncora, não erro.
+  assert.equal(ligarCavalo(idx, 'X', decl('Newmarket', '2026-09-30T14:00:00+01:00')).eachWayAnchor, null);
+}
+
+console.log('horse-edicoes: 10 casos passaram');

@@ -15,6 +15,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { inlineScripts, NON_EXECUTABLE_TYPES, sha256 } from './headers.mjs';
 import { stampProblems } from './data-contract.mjs';
+import { SUFIXO_DE_PAIS } from './movers-contrato.mjs';
 import { STATUS_COPY, ARCHIVE_PREFIX, ukDate, artigo } from '../src/lib/horse-copy.mjs';
 
 const DIST = 'dist';
@@ -1916,6 +1917,15 @@ const LETTER_SEGMENT = 'letter';
   }
   if (dias.length && linhas === 0) problems.push('nenhuma linha de corredor conferida — a (d) não olhou nada');
 
+  // (g) o /movers DO DIA também: o mesmo filtro de país o alimenta, e a
+  //     página diz "UK and Irish". As edições são conferidas na chegada; o
+  //     arquivo do dia não era conferido em lugar nenhum.
+  if (fs.existsSync('src/data/movers.json')) {
+    const hoje = JSON.parse(read('src/data/movers.json'));
+    const fora = (hoje.runners || []).filter((c) => SUFIXO_DE_PAIS.test(String(c.venue)));
+    if (fora.length) problems.push(`movers.json do dia: ${fora.length} corredor(es) em pista de fora de UK/IRE, ex. ${fora[0].venue}`);
+  }
+
   check(`Arquivo do /movers íntegro (${dias.length} edições, ${paginas.length} páginas, ${linhas} corredores)`, [...new Set(problems)]);
 }
 
@@ -1932,7 +1942,8 @@ const LETTER_SEGMENT = 'letter';
 //     (a) a data do link é a da corrida declarada na mesma página;
 //     (b) a edição de each-way ligada nomeia a pista da corrida;
 //     (c) a edição do livro ligada nomeia o cavalo;
-//     (d) havendo edições e cavalos declarados nesses dias, há links.
+//     (d) havendo edições e cavalos declarados nesses dias, há links;
+//     (e) a âncora do link é um id que existe na página da edição.
 {
   const problems = [];
   const chave = (t) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1946,22 +1957,37 @@ const LETTER_SEGMENT = 'letter';
     }
     return cache.get(k);
   };
+  const cacheIds = new Map();
+  const ids = (secao, d) => {
+    const k = `${secao}/${d}`;
+    if (!cacheIds.has(k)) {
+      const f = pages.find((x) => rel(x).replace(/\\/g, '/') === `${k}.html`);
+      cacheIds.set(k, new Set(f ? [...read(f).matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]) : []));
+    }
+    return cacheIds.get(k);
+  };
   const porSlug = new Map(horseRecords.map((h) => [h.slug, h]));
-  let ew = 0, mv = 0;
+  let ew = 0, mv = 0, ancoras = 0, semAncora = 0;
   for (const f of horsePages) {
     const html = read(f);
     const bloco = html.match(/<dd\b[^>]*data-declared="(\d{4}-\d{2}-\d{2})"[^>]*>([\s\S]*?)<\/dd>/i);
     if (!bloco) continue;
     const h = porSlug.get(rel(f).replace(/\\/g, '/').replace(/^horse\//, '').replace(/\.html$/, ''));
     if (!h) { problems.push(`${rel(f)}: tem link de edição e não achei o registro`); continue; }
-    for (const a of bloco[2].matchAll(/<a\b[^>]*href="\/(extra-places|movers)\/(\d{4}-\d{2}-\d{2})"[^>]*>/gi)) {
-      const [, secao, d] = a;
+    for (const a of bloco[2].matchAll(/<a\b[^>]*href="\/(extra-places|movers)\/(\d{4}-\d{2}-\d{2})(?:#([^"]+))?"[^>]*>/gi)) {
+      const [, secao, d, ancora] = a;
       if (d !== bloco[1] || d !== h.last_declared.date) {
         problems.push(`${rel(f)}: liga ${secao}/${d} e a corrida declarada é de ${h.last_declared.date}`);
         continue;
       }
       const texto = edicao(secao, d);
       if (texto === null) { problems.push(`${rel(f)}: liga ${secao}/${d}, que não foi gerada`); continue; }
+      // (e) a âncora leva a uma corrida que existe naquela página, e é a da
+      //     pista certa: o slug começa pelo nome da pista como a edição o escreve.
+      if (ancora) {
+        ancoras += 1;
+        if (!ids(secao, d).has(ancora)) problems.push(`${rel(f)}: liga ${secao}/${d}#${ancora}, e a página não tem esse id`);
+      } else semAncora += 1;
       if (secao === 'extra-places') {
         ew += 1;
         const pista = chave(h.last_declared.venue.replace(/\s*\([^)]*\)\s*$/, ''));
@@ -1983,7 +2009,9 @@ const LETTER_SEGMENT = 'letter';
   if (candEw > 0 && ew < candEw * 0.8) problems.push(`só ${ew} de ${candEw} cavalos declarados em dia com edição de each-way têm link — o casamento quebrou`);
   if (candMv > 0 && mv < candMv * 0.6) problems.push(`só ${mv} de ${candMv} cavalos declarados em dia com edição do livro têm link — o casamento quebrou`);
 
-  check(`/horse ligada às edições (${ew} links de each-way, ${mv} do livro de ofertas)`, problems.slice(0, 20));
+  if (ew + mv > 0 && semAncora > 0) problems.push(`${semAncora} link(s) de edição sem âncora de corrida — a edição veio sem slug`);
+
+  check(`/horse ligada às edições (${ew} links de each-way, ${mv} do livro de ofertas, ${ancoras} com âncora)`, problems.slice(0, 20));
 }
 
 // 40. O índice de busca da /horse é um arquivo à parte, e cobre o acervo todo.

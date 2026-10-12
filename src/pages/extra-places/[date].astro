@@ -233,7 +233,7 @@ const jsonLd = {
           </thead>
           <tbody>
             {corridas.map((c) => (
-              <tr>
+              <tr id={c.slug}>
                 <td>
                   {c.venue} {raceTime(c.off_utc)}
                   {c.extra_place && <span class="above"> above ladder</span>}
@@ -300,6 +300,10 @@ const jsonLd = {
 </BaseLayout>
 
 <style>
+  /* A linha da corrida é destino de link vindo da página do cavalo. */
+  tr[id] { scroll-margin-top: var(--sp-6); }
+  tr[id]:target td:first-child { text-decoration: underline; }
+
   /*
     ⚠️ NADA de estilo para `.dense` aqui. Ela já é global em base.css, e lá
     inclui o comportamento abaixo de 720px (`.dense tr { display: block }`).

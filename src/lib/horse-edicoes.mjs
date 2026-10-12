@@ -45,21 +45,25 @@ const instante = (s) => {
  * `carregarEdicoesMovers()`.
  */
 export function indexarEdicoes(edicoesEw, edicoesMv) {
+  // Por data, chave -> slug da corrida NA PRÓPRIA EDIÇÃO. O slug é o `id` da
+  // corrida na página da edição, então o link cai direto nela. Cada coleção
+  // tem o seu: o livro de ofertas escreve "epsom-downs" onde a de each-way
+  // escreve "epsom", e a âncora tem de ser a da página de destino.
   const ew = new Map();
   for (const e of edicoesEw) {
-    const corridas = new Set();
+    const corridas = new Map();
     for (const r of e.races) {
       const t = instante(r.off_utc);
-      if (t !== null) corridas.add(`${chavePista(r.venue)}|${t}`);
+      if (t !== null) corridas.set(`${chavePista(r.venue)}|${t}`, r.slug ?? null);
     }
     ew.set(e.edition, corridas);
   }
   const mv = new Map();
   for (const e of edicoesMv) {
-    const corredores = new Set();
+    const corredores = new Map();
     for (const r of e.runners) {
       const t = instante(r.off_utc);
-      if (t !== null) corredores.add(`${chavePista(r.venue)}|${t}|${chaveNome(r.runner)}`);
+      if (t !== null) corredores.set(`${chavePista(r.venue)}|${t}|${chaveNome(r.runner)}`, r.slug ?? null);
     }
     mv.set(e.edition, corredores);
   }
@@ -67,15 +71,25 @@ export function indexarEdicoes(edicoesEw, edicoesMv) {
 }
 
 /**
- * Para onde a última corrida declarada aponta. Cada lado é a data da edição
- * ou nulo; nulo quer dizer "não há o que mostrar", e a página não põe link.
+ * Para onde a última corrida declarada aponta. `eachWay` e `movers` são a data
+ * da edição ou nulo; nulo quer dizer "não há o que mostrar", e a página não põe
+ * link. `eachWayAnchor` e `moversAnchor` são o `id` da corrida naquela página,
+ * ou nulo se a edição não traz slug: aí o link vai para o topo da página.
  */
 export function ligarCavalo(indice, nome, decl) {
+  const vazio = { eachWay: null, movers: null, eachWayAnchor: null, moversAnchor: null };
   const t = instante(decl.off_utc);
-  if (t === null) return { eachWay: null, movers: null };
+  if (t === null) return vazio;
   const corrida = `${chavePista(decl.venue)}|${t}`;
+  const noEw = indice.ew.get(decl.date);
+  const noMv = indice.mv.get(decl.date);
+  const chaveMv = `${corrida}|${chaveNome(nome)}`;
+  const temEw = Boolean(noEw?.has(corrida));
+  const temMv = Boolean(noMv?.has(chaveMv));
   return {
-    eachWay: indice.ew.get(decl.date)?.has(corrida) ? decl.date : null,
-    movers: indice.mv.get(decl.date)?.has(`${corrida}|${chaveNome(nome)}`) ? decl.date : null,
+    eachWay: temEw ? decl.date : null,
+    movers: temMv ? decl.date : null,
+    eachWayAnchor: temEw ? (noEw.get(corrida) ?? null) : null,
+    moversAnchor: temMv ? (noMv.get(chaveMv) ?? null) : null,
   };
 }
