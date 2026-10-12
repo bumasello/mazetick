@@ -1219,6 +1219,14 @@ const LETTER_SEGMENT = 'letter';
                      ...(h.by_course || []).map((g) => g.key)]) {
       if (n) scrubbed = scrubbed.split(n).join('·');
     }
+    // ⚠️ E O SLUG, que é o nome do cavalo em minúsculas dentro da URL. Em
+    //    08/10/2026 foi declarado um cavalo chamado "Debutante": o nome saía
+    //    pela raspagem acima, mas a canônica e o JSON-LD trazem
+    //    `/horse/debutante`, e "debut" é palavra proibida no estado
+    //    `has_history`. A checagem falhou em TODO build por quatro dias e o
+    //    site ficou parado em 07/10 sem ninguém ser avisado. Só a ocorrência
+    //    como caminho é raspada: a palavra solta no texto continua proibida.
+    scrubbed = scrubbed.split(`/horse/${slug}`).join('/horse/·');
     for (const bad of copy.forbidden) {
       if (scrubbed.toLowerCase().includes(bad.toLowerCase())) {
         problems.push(`${rel(f)} (${h.status}): a página usa a palavra do OUTRO estado — "${bad}"`);
