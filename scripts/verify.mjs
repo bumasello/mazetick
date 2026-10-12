@@ -10,6 +10,7 @@
  * geradas, nunca uma amostra e nunca uma região.
  */
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { inlineScripts, NON_EXECUTABLE_TYPES, sha256 } from './headers.mjs';
@@ -1983,6 +1984,53 @@ const LETTER_SEGMENT = 'letter';
   if (candMv > 0 && mv < candMv * 0.6) problems.push(`só ${mv} de ${candMv} cavalos declarados em dia com edição do livro têm link — o casamento quebrou`);
 
   check(`/horse ligada às edições (${ew} links de each-way, ${mv} do livro de ofertas)`, problems.slice(0, 20));
+}
+
+// 40. O índice de busca da /horse é um arquivo à parte, e cobre o acervo todo.
+//
+//     Até 11/10/2026 o índice viajava dentro da porta da /horse, e com 9 mil
+//     cavalos eram 92 KB comprimidos de uma página de 111 KB, pagos por quem
+//     nunca busca. Agora é /horse-index.json, pedido na primeira digitação.
+//     Três coisas podem dar errado em silêncio, e o HTML continuaria bonito:
+//     (a) o arquivo não ser gerado, ou vir vazio — a busca diria "did not
+//         load" para todo mundo;
+//     (b) o índice e as páginas divergirem — nome que leva a 404, ou cavalo
+//         que existe e a busca não acha;
+//     (c) o índice voltar para dentro da porta, e ela engordar de novo. O teto
+//         de 40 KB comprimidos é folga sobre os 24 KB medidos em 12/10.
+{
+  const problems = [];
+  const arq = 'dist/horse-index.json';
+  let doc = null;
+  if (!fs.existsSync(arq)) problems.push(`${arq} não foi gerado — a busca da /horse não tem o que pedir`);
+  else {
+    try { doc = JSON.parse(read(arq)); } catch (e) { problems.push(`${arq} não parseia — ${e.message}`); }
+  }
+  let linhas = 0;
+  if (doc) {
+    if (!Array.isArray(doc.rows) || !Array.isArray(doc.dates)) problems.push(`${arq}: sem \`rows\` ou \`dates\``);
+    else {
+      linhas = doc.rows.length;
+      const slugs = new Set(horsePages.map((f) => rel(f).replace(/\\/g, '/').replace(/^horse\//, '').replace(/\.html$/, '')));
+      const noIndice = new Set(doc.rows.map((r) => r[0]));
+      if (linhas === 0) problems.push(`${arq}: índice vazio`);
+      for (const r of doc.rows) {
+        if (!slugs.has(r[0])) { problems.push(`índice aponta para /horse/${r[0]}, que não tem página`); break; }
+        if (!r[1] || !(r[2] >= 0 && r[2] < doc.dates.length)) { problems.push(`índice: linha torta para ${r[0]}`); break; }
+      }
+      const fora = [...slugs].filter((x) => !noIndice.has(x));
+      if (fora.length) problems.push(`${fora.length} página(s) de cavalo fora do índice de busca, ex. ${fora[0]}`);
+    }
+  }
+  let kb = 0;
+  if (horseIndexPage) {
+    const html = read(horseIndexPage);
+    if (!/data-hz-index-url="\/horse-index\.json"/.test(html)) problems.push('horse.html não aponta para /horse-index.json');
+    if (/<script[^>]*type="application\/json"/i.test(html)) problems.push('horse.html voltou a embutir JSON — o índice é arquivo à parte');
+    kb = zlib.gzipSync(Buffer.from(html), { level: 9 }).length / 1024;
+    if (kb > 40) problems.push(`horse.html pesa ${kb.toFixed(1)} KB comprimida — o teto é 40`);
+  }
+  check(`Índice de busca da /horse à parte e completo (${linhas} nomes; porta com ${kb.toFixed(1)} KB)`, problems);
 }
 
 console.log();

@@ -7,7 +7,7 @@ window: "20 August – 13 September 2026"
 windowShort: "25 days, Aug–Sep 2026"
 method: "Best available prices on both sides of the exchange book, sampled every 15 minutes, expressed as a percentage of the mid price and in exchange ticks."
 measured: 2026-09-13
-derivation: "src/oneTimeScript/spread_smarkets.ts@9fe7198"
+derivation: "src/oneTimeScript/spread_smarkets.ts@320b77e"
 published: 2026-09-13
 updated: 2026-10-06
 verdict: negative

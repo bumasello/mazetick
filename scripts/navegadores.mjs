@@ -133,7 +133,13 @@ for (const [motor, tipo] of Object.entries(MOTORES)) {
           m.buscaVisivel = (await campo.count()) > 0 && (await campo.isVisible());
           if (m.buscaVisivel) {
             await campo.fill('ann');
-            await pagina.waitForTimeout(200);
+            // O índice é um arquivo pedido na primeira digitação (desde 11/10):
+            // esperar o resultado, não um tempo fixo.
+            await pagina.waitForFunction(
+              () => document.querySelectorAll('[data-hz-results] li').length > 0
+                || /did not load|No horse/.test(document.querySelector('[data-hz-find-count]')?.textContent ?? ''),
+              null, { timeout: 15000 },
+            ).catch(() => {});
             m.busca = await pagina.evaluate(() => ({
               resultados: document.querySelectorAll('[data-hz-results] li').length,
               frase: document.querySelector('[data-hz-find-count]')?.textContent?.slice(0, 80),

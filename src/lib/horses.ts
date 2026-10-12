@@ -343,3 +343,26 @@ export function statusSentence(h: HorseRecord): string {
   if (h.status === 'no_record') return STATUS_COPY.no_record.sentence();
   return STATUS_COPY.has_history.sentence({ asOf: h.as_of, runs: h.career.runs });
 }
+
+/**
+ * O índice de busca: slug, nome e data da última declaração, para o acervo todo.
+ *
+ * Array de arrays e não de objetos, de propósito — sem nomes de chave repetidos
+ * milhares de vezes —, e a data entra como ÍNDICE de uma lista curta em vez de
+ * texto. É DERIVADO NOSSO: nome de cavalo declarado é fato de registro público
+ * e a lista é a do nosso acervo. Não há campo de fornecedor aqui, e a checagem
+ * 16 confere isso no arquivo servido.
+ *
+ * Uma função só, usada pelo endpoint `/horse-index.json` e pela porta da
+ * `/horse` (que só precisa da contagem): duas montagens do mesmo índice
+ * divergiriam em silêncio.
+ */
+export function searchIndexOf(records: HorseRecord[]): { dates: string[]; rows: [string, string, number][] } {
+  const dias = [...new Set(records.map((h) => h.last_declared.date))].sort();
+  return {
+    // Formatadas AQUI, não no cliente: formatar no navegador seria uma segunda
+    // implementação de data ao lado de `ukDate`.
+    dates: dias.map((d) => ukDate(d)),
+    rows: records.map((h) => [h.slug, h.name, dias.indexOf(h.last_declared.date)]),
+  };
+}

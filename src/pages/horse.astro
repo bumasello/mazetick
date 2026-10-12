@@ -77,27 +77,6 @@ const headline =
       ? `${plural(records.length, 'horse')} in the archive, and no declarations on the last card we read`
       : `${plural(onCard.length, 'horse')} declared on the ${ukDate(newest as string)} card, out of ${records.length.toLocaleString('en-GB')} we hold`;
 
-/**
- * O índice de busca: slug, nome e data da última declaração, para o acervo todo.
- *
- * Array de arrays e não de objetos, de propósito — sem nomes de chave repetidos
- * três mil vezes —, e a data entra como ÍNDICE de uma lista curta em vez de
- * texto: há oito datas distintas para 3.094 registros, então repetir
- * "2026-09-19" três mil vezes custava 37 KB por nada. Medido: 136 KB → 99 KB
- * crus. E é DERIVADO NOSSO: nome de cavalo declarado é fato de
- * registro público e a lista é a do nosso acervo. Não há campo de fornecedor
- * aqui, o que a checagem 16 confere varrendo também o JSON EMBUTIDO no HTML, e
- * não só os arquivos `.json` — um `<script type="application/json">` é tão
- * público quanto um arquivo, e era um buraco na varredura.
- */
-const searchDates = [...new Set(records.map((h) => h.last_declared.date))].sort();
-const searchIndex = {
-  // Formatadas AQUI, não no cliente: são oito strings, e formatar no navegador
-  // significaria uma segunda implementação de data ao lado de `ukDate` — duas
-  // implementações da mesma regra divergem, que é a lição do hash da CSP.
-  dates: searchDates.map((d) => ukDate(d)),
-  rows: records.map((h) => [h.slug, h.name, searchDates.indexOf(h.last_declared.date)]),
-};
 ---
 <BaseLayout
   title="Horse form by going, course and distance — mazetick"
@@ -180,11 +159,12 @@ const searchIndex = {
 
         O bloco nasce oculto e só o script o revela: sem JavaScript ele não
         existe, e quem chega sem script navega pelo A–Z abaixo, que é HTML puro.
-        A lista de nomes viaja num <script type="application/json"> — não é
-        executada, é lida do DOM — e cobre todos, porque busca que só alcança
-        uma letra é pior produto que uma página um pouco maior.
+        A lista de nomes NÃO viaja na página: é o arquivo /horse-index.json,
+        pedido na primeira vez que o campo é usado. Cobre o acervo inteiro,
+        porque busca que só alcança uma letra é pior produto, e quem não busca
+        não paga por ela.
       */}
-      <section class="find" data-hz-find data-js-only hidden>
+      <section class="find" data-hz-find data-hz-index-url="/horse-index.json" data-hz-total={records.length} data-js-only hidden>
         <h2 id="find" class="section-rule">Find a horse</h2>
         <form class="findbar" role="search">
           <label class="sr-only" for="hz-find">Horse name</label>
@@ -266,12 +246,6 @@ const searchIndex = {
         </>
       )}
 
-      {/*
-        O índice de nomes. `application/json` não é executado pelo navegador —
-        é lido do DOM pelo script abaixo. Fica no fim porque é o maior bloco da
-        página e nada acima dele depende dele para renderizar.
-      */}
-      <script type="application/json" data-hz-index set:html={JSON.stringify(searchIndex)} />
     </>
   )}
 </BaseLayout>
@@ -402,73 +376,101 @@ const searchIndex = {
   */
   (function () {
     // --- 1. busca -----------------------------------------------------------
+    // O índice é pedido UMA vez, na primeira vez que o campo é usado (foco ou
+    // digitação), e não no carregamento: a maioria dos leitores nunca busca.
     var bloco = document.querySelector('[data-hz-find]');
-    var cru = document.querySelector('[data-hz-index]');
-    if (bloco && cru) {
+    if (bloco && window.fetch) {
+      var campo = document.getElementById('hz-find');
+      var saida = document.querySelector('[data-hz-results]');
+      var conta = document.querySelector('[data-hz-find-count]');
+      var url = bloco.getAttribute('data-hz-index-url');
+      var TETO = 40;
       var lista = null;
-      try {
-        lista = JSON.parse(cru.textContent);
-      } catch (e) {
-        lista = null;
-      }
-      // O índice chega como { dates, rows }: a data de cada linha é um índice
-      // na lista curta de datas, não a string repetida três mil vezes.
-      var datas = lista && lista.dates ? lista.dates : [];
-      lista = lista && lista.rows ? lista.rows : null;
-      if (lista && lista.length) {
-        var campo = document.getElementById('hz-find');
-        var saida = document.querySelector('[data-hz-results]');
-        var conta = document.querySelector('[data-hz-find-count]');
-        var TETO = 40;
+      var datas = [];
+      var estado = 'parado'; // parado | pedindo | pronto | falhou
 
-        bloco.hidden = false;
+      bloco.hidden = false;
 
-        var buscar = function () {
-          var q = campo.value.trim().toLowerCase();
-          saida.textContent = '';
-          if (q.length < 2) {
-            conta.textContent =
-              q.length === 1
-                ? 'Two letters or more, please: one letter would match most of the archive.'
-                : 'Type two letters or more. This searches every horse we hold, not just the card below.';
-            return;
-          }
-          var achados = [];
-          for (var i = 0; i < lista.length; i++) {
-            if (lista[i][1].toLowerCase().indexOf(q) >= 0) achados.push(lista[i]);
-          }
-          var frag = document.createDocumentFragment();
-          for (var j = 0; j < achados.length && j < TETO; j++) {
-            var li = document.createElement('li');
-            var a = document.createElement('a');
-            a.href = '/horse/' + achados[j][0];
-            a.textContent = achados[j][1];
-            var quando = document.createElement('span');
-            quando.className = 'when';
-            quando.textContent = 'last declared ' + (datas[achados[j][2]] || 'date unknown');
-            li.appendChild(a);
-            li.appendChild(quando);
-            frag.appendChild(li);
-          }
-          saida.appendChild(frag);
-          if (achados.length === 0) {
-            conta.textContent =
-              'No horse in the archive has that in its name. We hold ' + lista.length + '.';
-          } else if (achados.length > TETO) {
-            conta.textContent =
-              'Showing the first ' + TETO + ' of ' + achados.length + ' matches. Type more of the name to narrow it.';
-          } else {
-            conta.textContent = achados.length + (achados.length === 1 ? ' match.' : ' matches.');
-          }
-        };
+      var buscar = function () {
+        var q = campo.value.trim().toLowerCase();
+        saida.textContent = '';
+        if (q.length < 2) {
+          conta.textContent =
+            q.length === 1
+              ? 'Two letters or more, please: one letter would match most of the archive.'
+              : 'Type two letters or more. This searches every horse we hold, not just the card below.';
+          return;
+        }
+        if (estado === 'falhou') {
+          conta.textContent = 'The list of names did not load. The letters below reach every horse we hold.';
+          return;
+        }
+        if (estado !== 'pronto') {
+          conta.textContent = 'Loading the list of names.';
+          return;
+        }
+        var achados = [];
+        for (var i = 0; i < lista.length; i++) {
+          if (lista[i][1].toLowerCase().indexOf(q) >= 0) achados.push(lista[i]);
+        }
+        var frag = document.createDocumentFragment();
+        for (var j = 0; j < achados.length && j < TETO; j++) {
+          var li = document.createElement('li');
+          var a = document.createElement('a');
+          a.href = '/horse/' + achados[j][0];
+          a.textContent = achados[j][1];
+          var quando = document.createElement('span');
+          quando.className = 'when';
+          quando.textContent = 'last declared ' + (datas[achados[j][2]] || 'date unknown');
+          li.appendChild(a);
+          li.appendChild(quando);
+          frag.appendChild(li);
+        }
+        saida.appendChild(frag);
+        if (achados.length === 0) {
+          conta.textContent =
+            'No horse in the archive has that in its name. We hold ' + lista.length + '.';
+        } else if (achados.length > TETO) {
+          conta.textContent =
+            'Showing the first ' + TETO + ' of ' + achados.length + ' matches. Type more of the name to narrow it.';
+        } else {
+          conta.textContent = achados.length + (achados.length === 1 ? ' match.' : ' matches.');
+        }
+      };
 
-        campo.addEventListener('input', buscar);
-        bloco.querySelector('form').addEventListener('submit', function (ev) {
-          ev.preventDefault();
-          buscar();
-        });
+      var pedir = function () {
+        if (estado !== 'parado') return;
+        estado = 'pedindo';
+        fetch(url)
+          .then(function (r) {
+            if (!r.ok) throw new Error('http ' + r.status);
+            return r.json();
+          })
+          .then(function (doc) {
+            if (!doc || !doc.rows || !doc.rows.length) throw new Error('vazio');
+            lista = doc.rows;
+            datas = doc.dates || [];
+            estado = 'pronto';
+          })
+          .catch(function () {
+            estado = 'falhou';
+          })
+          .then(buscar);
+      };
+
+      campo.addEventListener('focus', pedir);
+      campo.addEventListener('input', function () {
+        pedir();
         buscar();
-      }
+      });
+      bloco.querySelector('form').addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        pedir();
+        buscar();
+      });
+      // O navegador pode restaurar o que estava digitado ao voltar à página.
+      if (campo.value.trim().length >= 2) pedir();
+      buscar();
     }
 
     // --- 2. filtro do cartão ------------------------------------------------
