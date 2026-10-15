@@ -67,6 +67,16 @@ const dates = [...new Set(rows.map((h) => h.last_declared.date))].sort();
 // Título e descrição saem dos NÚMEROS desta letra, não de um gabarito: contagem,
 // primeiro e último nome, e a janela de declarações que ela cobre.
 const first = rows[0]?.name;
+
+/**
+ * A página abre nas 50 primeiras quando a letra é grande. Decisão do Bruno em
+ * 14/10/2026: a letra S tinha 1.016 cavalos e 40 mil pixels no celular.
+ * O HTML servido continua trazendo TODAS as linhas (sem JavaScript, e para o
+ * indexador, a página é a lista inteira); quem corta é o script, e a frase de
+ * contagem diz que cortou e como ver o resto.
+ */
+const CORTE = 50;
+const abreCortada = rows.length > 100;
 const last = rows[rows.length - 1]?.name;
 const title = rows.length
   ? `Horses beginning with ${upper} — ${plural(rows.length, 'record')} — mazetick`
@@ -142,8 +152,8 @@ const jsonLd = {
         <div class="f">
           <label for="hz-limit">Rows</label>
           <select id="hz-limit">
-            <option value="50">First 50</option>
-            <option value="0" selected>All {rows.length.toLocaleString('en-GB')}</option>
+            <option value={String(CORTE)} selected={abreCortada}>First {CORTE}</option>
+            <option value="0" selected={!abreCortada}>All {rows.length.toLocaleString('en-GB')}</option>
           </select>
         </div>
         <button type="reset" class="reset">Clear</button>
@@ -295,7 +305,10 @@ const jsonLd = {
       if (vazio) vazio.hidden = mostradas !== 0;
       if (rotulo) {
         var txt = 'Showing ' + mostradas + ' of ' + linhas.length + ' on this page';
-        if (casadas > mostradas) {
+        if (!needle && casadas > mostradas) {
+          txt = 'Showing the first ' + mostradas + ' of ' + linhas.length +
+            ' on this page. Choose All under Rows to see every one';
+        } else if (casadas > mostradas) {
           txt += ' — ' + casadas + ' match, and the rest are past the row limit you chose';
         }
         rotulo.textContent = txt + '. This page is one letter of the archive, not all of it.';
