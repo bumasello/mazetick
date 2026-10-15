@@ -261,33 +261,73 @@ export function horseMeta(h: HorseRecord): { title: string; description: string 
       ? `Jockey ${h.jockey.name} rides at ${rate(h.jockey.win_pct)} from ${h.jockey.runs}.`
       : 'We hold no record for the yard or the rider either.';
 
+  // ⚠️ O TÍTULO RESPONDE À CONSULTA, e a consulta é "<nome> horse". Medido no
+  // Search Console de 12/10/2026: 297 de 339 consultas, 90% das impressões,
+  // terminam em " horse"; posição média 9, CTR de 0,5%. O título antigo
+  // ("Annaf: 42 runs, 7 wins to 1 Oct 2026 — mazetick") não dizia nem que era
+  // um cavalo nem o que a página é. O novo diz as duas coisas com as palavras
+  // de quem busca, mantém o número COM a data (regra 4) e larga o sufixo
+  // "— mazetick": o Google já mostra o nome do site acima do título, e com ele
+  // o título de um nome médio passava de 60 caracteres e era cortado na data.
+  //
+  // ⛔ Hipótese com mecanismo, não conserto garantido. Com ~8 cliques por
+  // semana não há como testar duas versões lado a lado; o que dá é comparar o
+  // CTR das páginas de cavalo antes e depois, sabendo que a posição também
+  // mexe nele.
+  //
+  // A descrição abre pela IDENTIDADE (idade, sexo, treinador), que é o que
+  // confirma a quem busca que achou o cavalo certo, e só depois dá o registro.
+  const quem = identidade(h);
+  // Depois da frase de identidade o nome não se repete, nem o do treinador:
+  // "She has run before…", "The yard runs at…".
+  const pron = h.ident?.sex === 'filly' || h.ident?.sex === 'mare' ? 'She' : 'He';
+  const sujeito = quem ? pron : h.name;
+  const connCurta = quem && h.trainer
+    ? `The yard runs at ${rate(h.trainer.win_pct)} from ${h.trainer.runs}.`
+    : conn;
+
   if (h.status === 'debut') {
     return {
-      title: `${h.name}: no recorded run before ${ukDateShort(h.as_of)} — mazetick`,
-      description: `${h.name} is declared at ${decl} with no recorded run before that date in our archive. ${conn}`,
+      title: `${h.name} horse record: no run before ${ukDateShort(h.as_of)}`,
+      description: `${quem ? `${quem}. ` : ''}${sujeito} is declared at ${decl} with no recorded run before that date in our archive. ${connCurta}`,
     };
   }
   if (h.status === 'no_record') {
     return {
-      title: `${h.name}: ran before, not in our archive — mazetick`,
-      description: `${h.name} has run before, but those races are not in our archive, so we publish no figures of our own for it. Declared at ${decl}. ${conn}`,
+      title: `${h.name} horse record: ran before, not in our archive`,
+      description: `${quem ? `${quem}. ` : ''}${sujeito} has run before, but those races are not in our archive, so we publish no figures of our own. Declared at ${decl}. ${connCurta}`,
     };
   }
 
   const c = h.career;
   const g = biggest(h.by_going);
   const co = biggest(h.by_course);
-  const bits = [
-    `${h.name}: ${plural(c.runs, 'run')}, ${plural(c.wins, 'win')} and ${c.places} placed in our archive to ${ukDate(h.history_through)}.`,
-  ];
+  const registro = `${plural(c.runs, 'run')}, ${plural(c.wins, 'win')} and ${c.places} placed in our archive to ${ukDate(h.history_through)}.`;
+  const bits = [quem ? `${quem}: ${registro}` : `${h.name}: ${registro}`];
   if (g) bits.push(`${rate(g.win_pct)} from ${g.runs} on ${g.key}.`);
   if (co) bits.push(`${rate(co.win_pct)} from ${co.runs} at ${co.key}.`);
   if (!g && !co) bits.push('No going, course or distance band reaches the two runs we require before quoting a rate.');
+  bits.push(`Last declared at ${decl}.`);
 
   return {
-    title: `${h.name}: ${plural(c.runs, 'run')}, ${plural(c.wins, 'win')} to ${ukDateShort(h.history_through)} — mazetick`,
+    title: `${h.name} horse record: ${plural(c.runs, 'run')}, ${plural(c.wins, 'win')} to ${ukDateShort(h.history_through)}`,
     description: bits.join(' '),
   };
+}
+
+/**
+ * "Annaf is a 7yo horse trained by Michael Appleby", só com o que temos.
+ * A idade e o treinador são os do ÚLTIMO CARTÃO em que o cavalo foi declarado;
+ * sem idade nem sexo não há frase, e quem chama cai no nome sozinho.
+ */
+function identidade(h: HorseRecord): string | null {
+  const idade = h.ident?.age ? `${h.ident.age}yo` : null;
+  const sexo = h.ident?.sex ?? null;
+  if (!idade && !sexo) return null;
+  const artigoIndef = /^8|^11|^18/.test(h.ident?.age ?? '') ? 'an' : 'a';
+  const oQue = [idade, sexo ?? 'racehorse'].filter(Boolean).join(' ');
+  const treinador = h.trainer?.name ? ` trained by ${h.trainer.name}` : '';
+  return `${h.name} is ${idade ? artigoIndef : /^[aeiou]/.test(oQue) ? 'an' : 'a'} ${oQue}${treinador}`;
 }
 
 /**
