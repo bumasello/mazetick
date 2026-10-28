@@ -23,10 +23,43 @@ import { untarGz } from './untar.mjs';
 import { stampProblems } from './data-contract.mjs';
 import { conferirEdicoes } from './edicoes-contrato.mjs';
 import { conferirEdicoesMovers } from './movers-contrato.mjs';
+import { execFileSync } from 'node:child_process';
 
 const REPO = 'bumasello/mazetick-data';
-const RAW = `https://raw.githubusercontent.com/${REPO}/main/data`;
-const TARBALL = `https://codeload.github.com/${REPO}/tar.gz/refs/heads/main`;
+
+/**
+ * ⚠️ O DADO SE BAIXA PELO COMMIT, NÃO PELO NOME DO BRANCH.
+ *
+ * `raw.githubusercontent.com/.../main/...` e o tarball de `refs/heads/main`
+ * passam por cache de alguns minutos. O publicador aciona a Cloudflare logo
+ * depois do push, e em 27/10/2026 o build das 21:38 UTC baixou a versão das
+ * 16:00: o site publicou dado de cinco horas antes com cara de novo, e o vigia
+ * acusou `site_parado`. Endereço por SHA nunca fica velho em cache, porque o
+ * conteúdo de um commit não muda.
+ *
+ * O SHA vem do `git ls-remote`, que fala o protocolo do git e não passa pelo
+ * cache nem pelo limite da API. Se ele falhar, cai no branch e AVISA: build
+ * com dado possivelmente velho é melhor que build nenhum, e o vigia confere.
+ */
+function refDoDado() {
+  try {
+    const saida = execFileSync('git', ['ls-remote', `https://github.com/${REPO}`, 'refs/heads/main'],
+      { encoding: 'utf8', timeout: 30_000 });
+    const sha = saida.split(/\s+/)[0];
+    if (/^[0-9a-f]{40}$/.test(sha)) {
+      console.log(`  dado do commit ${sha.slice(0, 10)} de ${REPO}`);
+      return sha;
+    }
+  } catch (e) {
+    console.warn(`  ⚠️ git ls-remote falhou (${e.message.split('\n')[0]}) — baixando pelo branch main, que pode vir do cache`);
+  }
+  return 'main';
+}
+const REF = refDoDado();
+const RAW = `https://raw.githubusercontent.com/${REPO}/${REF}/data`;
+const TARBALL = REF === 'main'
+  ? `https://codeload.github.com/${REPO}/tar.gz/refs/heads/main`
+  : `https://codeload.github.com/${REPO}/tar.gz/${REF}`;
 
 const SOURCES = [
   { name: 'extra-places', url: `${RAW}/extra-places.json`, schema: 'extra_places_v1', out: 'src/data/extra-places.json', listKey: 'races' },
